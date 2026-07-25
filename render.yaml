@@ -10,3 +10,5 @@ services:
         value: 5000
       - key: JWT_SECRET
         generateValue: true
+      - key: DATABASE_URL
+        value: "file:./dev.db"
