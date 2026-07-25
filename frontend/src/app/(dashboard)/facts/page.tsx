@@ -15,7 +15,7 @@ export default function FactsPage() {
 
   const fetchFacts = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/facts");
+      const res = await fetch("https://biology-backend-vw8k.onrender.com/api/facts");
       const data = await res.json();
       setFacts(data);
     } catch (error) {

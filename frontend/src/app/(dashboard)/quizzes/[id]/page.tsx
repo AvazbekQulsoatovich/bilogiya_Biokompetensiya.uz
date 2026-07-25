@@ -23,7 +23,7 @@ export default function QuizSolverPage() {
 
   const fetchQuiz = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/quizzes/${params.id}`);
+      const res = await fetch(`https://biology-backend-vw8k.onrender.com/api/quizzes/${params.id}`);
       const data = await res.json();
       setQuiz(data);
     } catch (error) {
@@ -49,7 +49,7 @@ export default function QuizSolverPage() {
 
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:5000/api/quizzes/${params.id}/submit`, {
+      const res = await fetch(`https://biology-backend-vw8k.onrender.com/api/quizzes/${params.id}/submit`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

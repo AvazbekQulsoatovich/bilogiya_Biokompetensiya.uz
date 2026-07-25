@@ -31,7 +31,7 @@ export default function TutorPage() {
 
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:5000/api/tutor/chat", {
+      const res = await fetch("https://biology-backend-vw8k.onrender.com/api/tutor/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

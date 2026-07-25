@@ -22,7 +22,7 @@ export default function GamesPage() {
 
   const fetchGames = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/games");
+      const res = await fetch("https://biology-backend-vw8k.onrender.com/api/games");
       if (res.ok) {
         const data = await res.json();
         setGames(data);

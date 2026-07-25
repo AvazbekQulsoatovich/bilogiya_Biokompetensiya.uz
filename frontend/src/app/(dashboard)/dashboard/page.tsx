@@ -16,7 +16,7 @@ export default function DashboardHome() {
   const fetchProgress = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:5000/api/progress", {
+      const res = await fetch("https://biology-backend-vw8k.onrender.com/api/progress", {
         headers: { ...(token ? { "Authorization": `Bearer ${token}` } : {}) }
       });
       if (res.ok) {

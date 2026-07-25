@@ -28,7 +28,7 @@ export default function TopicsPage() {
 
   const fetchTopics = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/topics");
+      const res = await fetch("https://biology-backend-vw8k.onrender.com/api/topics");
       const data = await res.json();
       setTopics(data);
     } catch (error) {
@@ -41,7 +41,7 @@ export default function TopicsPage() {
   const handleCreateTopic = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch("http://localhost:5000/api/topics", {
+      const res = await fetch("https://biology-backend-vw8k.onrender.com/api/topics", {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -67,7 +67,7 @@ export default function TopicsPage() {
 
     setUploading(true);
     try {
-      const res = await fetch(`http://localhost:5000/api/upload/${topicId}`, {
+      const res = await fetch(`https://biology-backend-vw8k.onrender.com/api/upload/${topicId}`, {
         method: "POST",
         headers: {
           ...(token ? { "Authorization": `Bearer ${token}` } : {})
@@ -193,7 +193,7 @@ export default function TopicsPage() {
                     {topic.attachments.map((file: any) => (
                       <a 
                         key={file.id} 
-                        href={`http://localhost:5000${file.fileUrl}`} 
+                        href={`https://biology-backend-vw8k.onrender.com${file.fileUrl}`} 
                         target="_blank" 
                         rel="noreferrer"
                         className="flex items-center gap-3 bg-background/50 border border-border/50 px-4 py-2 rounded-xl hover:border-primary-500/50 hover:bg-primary-500/5 transition-all"
