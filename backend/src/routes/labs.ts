@@ -35,7 +35,7 @@ router.get('/', async (req, res) => {
 // Get a single lab
 router.get('/:id', async (req, res) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const lab = await prisma.lab.findUnique({
       where: { id }
     });
@@ -51,7 +51,7 @@ router.get('/:id', async (req, res) => {
 // Complete a lab (submit result)
 router.post('/:id/complete', authenticate, async (req: AuthRequest, res) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const actualUserId = req.user?.id;
     
     if (!actualUserId) {

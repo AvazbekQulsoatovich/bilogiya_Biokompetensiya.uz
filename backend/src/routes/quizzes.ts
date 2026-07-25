@@ -52,7 +52,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const quiz = await prisma.quiz.findUnique({
-      where: { id: req.params.id },
+      where: { id: req.params.id as string },
       include: { questions: true }
     });
     if (!quiz) return res.status(404).json({ error: 'Quiz not found' });
@@ -68,7 +68,7 @@ router.get('/:id', async (req, res) => {
 // Submit quiz answers and get XP
 router.post('/:id/submit', authenticate, async (req: AuthRequest, res) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const { score, timeSpentSeconds, answers } = req.body;
     const userId = req.user?.id;
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });

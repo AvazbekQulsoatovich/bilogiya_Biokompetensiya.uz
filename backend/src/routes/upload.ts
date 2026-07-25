@@ -30,7 +30,7 @@ const upload = multer({
 // Upload attachment to a lesson
 router.post('/:lessonId', upload.single('file'), async (req, res) => {
   try {
-    const { lessonId } = req.params;
+    const lessonId = req.params.lessonId as string;
     
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
@@ -70,7 +70,7 @@ router.post('/:lessonId', upload.single('file'), async (req, res) => {
 // Get attachments for a lesson
 router.get('/:lessonId', async (req, res) => {
   try {
-    const { lessonId } = req.params;
+    const lessonId = req.params.lessonId as string;
     
     const attachments = await prisma.attachment.findMany({
       where: { lessonId }
@@ -86,7 +86,7 @@ router.get('/:lessonId', async (req, res) => {
 // Delete attachment
 router.delete('/attachment/:id', async (req, res) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     
     const attachment = await prisma.attachment.findUnique({
       where: { id }
