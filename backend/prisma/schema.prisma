@@ -1,0 +1,200 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  role         String   @default("STUDENT")
+  firstName    String
+  lastName     String
+  avatarUrl    String?
+  xp           Int      @default(0)
+  level        Int      @default(1)
+  streak       Int      @default(0)
+  coins        Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  quizAttempts QuizAttempt[]
+  researchData ResearchEvent[]
+  achievements UserAchievement[]
+  LabResult    LabResult[]
+}
+
+model Course {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  gradeLevel  Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  lessons Lesson[]
+}
+
+model Lesson {
+  id        String   @id @default(uuid())
+  courseId  String
+  title     String
+  contentMd String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  course      Course       @relation(fields: [courseId], references: [id])
+  quizzes     Quiz[]
+  attachments Attachment[]
+}
+
+model Attachment {
+  id        String   @id @default(uuid())
+  lessonId  String
+  fileName  String
+  fileUrl   String
+  fileType  String
+  createdAt DateTime @default(now())
+
+  lesson Lesson @relation(fields: [lessonId], references: [id])
+}
+
+model Quiz {
+  id        String   @id @default(uuid())
+  lessonId  String
+  title     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lesson    Lesson        @relation(fields: [lessonId], references: [id])
+  questions Question[]
+  attempts  QuizAttempt[]
+}
+
+model Question {
+  id            String   @id @default(uuid())
+  quizId        String
+  type          String
+  content       String
+  options       String? // Storing JSON as string
+  correctAnswer String // The correct string or JSON representation
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  quiz Quiz @relation(fields: [quizId], references: [id])
+}
+
+model QuizAttempt {
+  id               String   @id @default(uuid())
+  userId           String
+  quizId           String
+  score            Float
+  timeSpentSeconds Int
+  answers          String? // Storing JSON as string
+  createdAt        DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+  quiz Quiz @relation(fields: [quizId], references: [id])
+}
+
+model ResearchEvent {
+  id        String   @id @default(uuid())
+  userId    String
+  eventType String
+  metadata  String? // Storing JSON as string
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Crossword {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  createdAt   DateTime @default(now())
+
+  items CrosswordItem[]
+}
+
+model CrosswordItem {
+  id          String @id @default(uuid())
+  crosswordId String
+  word        String
+  clue        String
+  direction   String // "HORIZONTAL" or "VERTICAL"
+  row         Int
+  col         Int
+
+  crossword Crossword @relation(fields: [crosswordId], references: [id])
+}
+
+model Achievement {
+  id          String  @id @default(uuid())
+  name        String
+  description String
+  iconUrl     String?
+  xpReward    Int     @default(0)
+
+  users UserAchievement[]
+}
+
+model UserAchievement {
+  id            String   @id @default(uuid())
+  userId        String
+  achievementId String
+  unlockedAt    DateTime @default(now())
+
+  user        User        @relation(fields: [userId], references: [id])
+  achievement Achievement @relation(fields: [achievementId], references: [id])
+}
+
+model Glossary {
+  id         String  @id @default(uuid())
+  term       String  @unique
+  definition String
+  imageUrl   String?
+}
+
+model Fact {
+  id        String   @id @default(uuid())
+  title     String
+  content   String
+  imageUrl  String?
+  category  String   @default("GENERAL")
+  createdAt DateTime @default(now())
+}
+
+model Lab {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  stepsJson   String // JSON string of interactive steps
+  rewardXp    Int      @default(50)
+  createdAt   DateTime @default(now())
+
+  results LabResult[]
+}
+
+model LabResult {
+  id          String   @id @default(uuid())
+  userId      String
+  labId       String
+  completedAt DateTime @default(now())
+  score       Int      @default(100)
+
+  user User @relation(fields: [userId], references: [id])
+  lab  Lab  @relation(fields: [labId], references: [id])
+}
+
+model Game {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  type        String   @default("MEMORY")
+  contentJson String   // Storing game items JSON array
+  createdAt   DateTime @default(now())
+}
