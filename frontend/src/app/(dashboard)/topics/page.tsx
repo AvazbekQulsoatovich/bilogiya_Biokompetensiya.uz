@@ -35,7 +35,7 @@ export default function TopicsPage() {
   const fetchTopics = async () => {
     try {
       // API manzili localhostga o'zgartirildi
-      const res = await fetch("http://localhost:5000/api/topics");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/topics`);
       const data = await res.json();
       setTopics(data);
     } catch (error) {
@@ -48,7 +48,7 @@ export default function TopicsPage() {
   const handleCreateTopic = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch("http://localhost:5000/api/topics", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/topics`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -74,7 +74,7 @@ export default function TopicsPage() {
 
     setUploading(true);
     try {
-      const res = await fetch(`http://localhost:5000/api/upload/${topicId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/upload/${topicId}`, {
         method: "POST",
         headers: {
           ...(token ? { "Authorization": `Bearer ${token}` } : {})
@@ -105,7 +105,7 @@ export default function TopicsPage() {
     setUploadingVideo(true);
     
     try {
-      const res = await fetch(`http://localhost:5000/api/upload/video/${videoTopicId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/upload/video/${videoTopicId}`, {
         method: "POST",
         headers: { 
           ...(token ? { "Authorization": `Bearer ${token}` } : {})
@@ -227,7 +227,7 @@ export default function TopicsPage() {
                   <div className="aspect-video w-full max-w-3xl rounded-xl overflow-hidden shadow-lg border border-border/50">
                     {topic.videoUrl.startsWith('/uploads/') ? (
                       <video 
-                        src={`http://localhost:5000${topic.videoUrl}`} 
+                        src={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}${topic.videoUrl}`} 
                         controls 
                         className="w-full h-full object-contain bg-black"
                       />
@@ -280,7 +280,7 @@ export default function TopicsPage() {
                     {topic.attachments.map((file: any) => (
                       <a 
                         key={file.id} 
-                        href={`http://localhost:5000${file.fileUrl}`} 
+                        href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}${file.fileUrl}`} 
                         target="_blank" 
                         rel="noreferrer"
                         className="flex items-center gap-3 bg-background/50 border border-border/50 px-4 py-2 rounded-xl hover:border-primary-500/50 hover:bg-primary-500/5 transition-all"

@@ -15,7 +15,7 @@ export default function ProgressPage() {
   const fetchProgress = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:5000/api/progress", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/progress`, {
         headers: {
           ...(token ? { "Authorization": `Bearer ${token}` } : {})
         }

@@ -22,7 +22,7 @@ export default function CrosswordSolverPage() {
 
   const fetchCrossword = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/crosswords/${params.id}`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/crosswords/${params.id}`);
       const data = await res.json();
       setCrossword(data);
       initializeGrid(data.items);
@@ -95,7 +95,7 @@ export default function CrosswordSolverPage() {
   const submitCompletion = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:5000/api/crosswords/${params.id}/submit`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/crosswords/${params.id}/submit`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

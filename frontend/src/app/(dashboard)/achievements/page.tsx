@@ -15,7 +15,7 @@ export default function AchievementsPage() {
   const fetchAchievements = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:5000/api/achievements", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/achievements`, {
         headers: {
           ...(token ? { "Authorization": `Bearer ${token}` } : {})
         }

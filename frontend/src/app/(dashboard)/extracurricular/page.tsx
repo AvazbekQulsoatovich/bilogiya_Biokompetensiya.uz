@@ -30,7 +30,7 @@ export default function ExtracurricularPage() {
 
   const fetchTasks = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/extracurricular");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/extracurricular`);
       const data = await res.json();
       setTasks(data || []);
     } catch (error) {
@@ -43,7 +43,7 @@ export default function ExtracurricularPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch("http://localhost:5000/api/extracurricular", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/extracurricular`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -72,7 +72,7 @@ export default function ExtracurricularPage() {
     if (!selectedTaskId) return;
     setSubmitting(true);
     try {
-      const res = await fetch(`http://localhost:5000/api/extracurricular/${selectedTaskId}/submit`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/extracurricular/${selectedTaskId}/submit`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",

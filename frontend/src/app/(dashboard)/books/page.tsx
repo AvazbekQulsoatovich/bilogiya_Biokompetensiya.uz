@@ -29,7 +29,7 @@ export default function BooksPage() {
 
   const fetchBooks = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/books");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/books`);
       if (res.ok) {
         const data = await res.json();
         setBooks(data);
@@ -44,7 +44,7 @@ export default function BooksPage() {
   const uploadGenericFile = async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
-    const res = await fetch("http://localhost:5000/api/upload/file", {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/upload/file`, {
       method: "POST",
       body: formData
     });
@@ -69,7 +69,7 @@ export default function BooksPage() {
       }
 
       // Create Book
-      const res = await fetch("http://localhost:5000/api/books", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/books`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -104,7 +104,7 @@ export default function BooksPage() {
   const handleDelete = async (id: string) => {
     if (!confirm("Haqiqatan ham bu kitobni o'chirmoqchimisiz?")) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/books/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/books/${id}`, {
         method: "DELETE",
         headers: {
           ...(token ? { "Authorization": `Bearer ${token}` } : {})
@@ -161,7 +161,7 @@ export default function BooksPage() {
             >
               <div className="aspect-[3/4] w-full bg-foreground/5 relative overflow-hidden flex items-center justify-center">
                 {book.coverUrl ? (
-                  <img src={`http://localhost:5000${book.coverUrl}`} alt={book.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <img src={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}${book.coverUrl}`} alt={book.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 ) : (
                   <BookMarked className="w-16 h-16 text-foreground/20" />
                 )}
@@ -169,7 +169,7 @@ export default function BooksPage() {
                 {/* Overlay with read button */}
                 <div className="absolute inset-0 bg-background/60 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <a 
-                    href={`http://localhost:5000${book.pdfUrl}`} 
+                    href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}${book.pdfUrl}`} 
                     target="_blank" 
                     rel="noreferrer"
                     className="flex items-center gap-2 bg-primary-600 hover:bg-primary-500 text-white px-6 py-3 rounded-full font-medium transition-all shadow-xl shadow-primary-500/30 translate-y-4 group-hover:translate-y-0"
@@ -196,7 +196,7 @@ export default function BooksPage() {
                       <Trash2 className="w-4 h-4" />
                     </button>
                     <a 
-                      href={`http://localhost:5000${book.pdfUrl}`} 
+                      href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}${book.pdfUrl}`} 
                       download
                       className="text-foreground/50 hover:text-foreground hover:bg-foreground/5 p-2 rounded-lg transition-colors"
                       title="Yuklab olish"

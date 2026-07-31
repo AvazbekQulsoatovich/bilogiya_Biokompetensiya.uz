@@ -15,7 +15,7 @@ export default function FactsPage() {
 
   const fetchFacts = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/facts");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/facts`);
       const data = await res.json();
       setFacts(data);
     } catch (error) {

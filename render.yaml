@@ -1,14 +1,25 @@
 services:
+  # Backend API Service
   - type: web
-    name: biology-backend
+    name: bioedu-backend
     env: node
-    plan: free
-    buildCommand: "cd backend && npm install && npx prisma generate && npm run build"
-    startCommand: "cd backend && npm run start"
+    buildCommand: cd backend && npm install && npm run build
+    startCommand: cd backend && npm start
     envVars:
-      - key: PORT
-        value: 5000
+      - key: NODE_ENV
+        value: production
       - key: JWT_SECRET
         generateValue: true
-      - key: DATABASE_URL
-        value: "file:./dev.db"
+
+  # Frontend Service
+  - type: web
+    name: bioedu-frontend
+    env: node
+    buildCommand: cd frontend && npm install && npm run build
+    startCommand: cd frontend && npm start
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          name: bioedu-backend
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL

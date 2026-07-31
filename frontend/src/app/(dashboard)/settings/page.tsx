@@ -69,7 +69,7 @@ export default function SettingsPage() {
   const fetchProfile = async (authToken: string) => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/api/auth/me", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/auth/me`, {
         headers: { "Authorization": `Bearer ${authToken}` }
       });
       if (res.ok) {
@@ -94,7 +94,7 @@ export default function SettingsPage() {
       // Save phone to localStorage as it is not in the DB schema currently
       localStorage.setItem("bioedu_phone", profile.phone);
       
-      const res = await fetch("http://localhost:5000/api/auth/profile", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/auth/profile`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -130,7 +130,7 @@ export default function SettingsPage() {
 
     setSaving(true);
     try {
-      const res = await fetch("http://localhost:5000/api/auth/profile", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/auth/profile`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
