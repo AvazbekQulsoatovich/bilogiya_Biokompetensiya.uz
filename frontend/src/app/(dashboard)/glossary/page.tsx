@@ -15,7 +15,7 @@ export default function GlossaryPage() {
 
   const fetchTerms = async () => {
     try {
-      const res = await fetch("https://biology-backend-vw8k.onrender.com/api/glossary");
+      const res = await fetch("http://localhost:5000/api/glossary");
       const data = await res.json();
       setTerms(data);
     } catch (error) {

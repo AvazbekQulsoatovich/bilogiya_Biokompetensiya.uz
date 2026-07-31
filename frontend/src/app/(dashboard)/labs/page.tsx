@@ -15,7 +15,7 @@ export default function LabsPage() {
 
   const fetchLabs = async () => {
     try {
-      const res = await fetch("https://biology-backend-vw8k.onrender.com/api/labs");
+      const res = await fetch("http://localhost:5000/api/labs");
       const data = await res.json();
       setLabs(data);
     } catch (error) {

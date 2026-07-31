@@ -32,7 +32,7 @@ export default function ProfilePage() {
         return;
       }
 
-      const res = await fetch("https://biology-backend-vw8k.onrender.com/api/auth/me", {
+      const res = await fetch("http://localhost:5000/api/auth/me", {
         headers: { "Authorization": `Bearer ${token}` }
       });
       
@@ -71,7 +71,7 @@ export default function ProfilePage() {
 
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("https://biology-backend-vw8k.onrender.com/api/auth/profile", {
+      const res = await fetch("http://localhost:5000/api/auth/profile", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

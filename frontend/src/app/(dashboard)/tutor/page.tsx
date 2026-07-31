@@ -31,7 +31,7 @@ export default function TutorPage() {
 
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("https://biology-backend-vw8k.onrender.com/api/tutor/chat", {
+      const res = await fetch("http://localhost:5000/api/tutor/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -44,10 +44,10 @@ export default function TutorPage() {
       if (res.ok) {
         setMessages(prev => [...prev, { role: 'ai', text: data.reply }]);
       } else {
-        setMessages(prev => [...prev, { role: 'ai', text: "Xatolik yuz berdi. Iltimos qaytadan urinib ko'ring." }]);
+        setMessages(prev => [...prev, { role: 'ai', text: `Xato: ${data.error || 'Nomalum xatolik'}` }]);
       }
-    } catch (error) {
-      setMessages(prev => [...prev, { role: 'ai', text: "Tarmoq xatosi. Aloqani tekshiring." }]);
+    } catch (error: any) {
+      setMessages(prev => [...prev, { role: 'ai', text: `Tarmoq xatosi: ${error.message}` }]);
     } finally {
       setLoading(false);
     }

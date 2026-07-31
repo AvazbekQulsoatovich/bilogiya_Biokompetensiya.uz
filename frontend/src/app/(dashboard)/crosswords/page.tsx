@@ -15,7 +15,7 @@ export default function CrosswordsPage() {
 
   const fetchCrosswords = async () => {
     try {
-      const res = await fetch("https://biology-backend-vw8k.onrender.com/api/crosswords");
+      const res = await fetch("http://localhost:5000/api/crosswords");
       const data = await res.json();
       setCrosswords(data);
     } catch (error) {

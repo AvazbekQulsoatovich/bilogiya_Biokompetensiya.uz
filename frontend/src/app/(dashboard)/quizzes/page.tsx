@@ -23,7 +23,7 @@ export default function QuizzesPage() {
 
   const fetchQuizzes = async () => {
     try {
-      const res = await fetch("https://biology-backend-vw8k.onrender.com/api/quizzes");
+      const res = await fetch("http://localhost:5000/api/quizzes");
       const data = await res.json();
       setQuizzes(data);
     } catch (error) {
@@ -36,7 +36,7 @@ export default function QuizzesPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch("https://biology-backend-vw8k.onrender.com/api/quizzes", {
+      const res = await fetch("http://localhost:5000/api/quizzes", {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",

@@ -33,7 +33,7 @@ export default function AdminPage() {
 
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("https://biology-backend-vw8k.onrender.com/api/admin/generate", {
+      const res = await fetch("http://localhost:5000/api/admin/generate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -69,7 +69,7 @@ export default function AdminPage() {
       if (activeTab === "LAB") endpoint = "/api/admin/labs";
       if (activeTab === "QUIZ") endpoint = "/api/admin/quizzes"; // Need to implement in backend, but mock for now
 
-      const res = await fetch(`https://biology-backend-vw8k.onrender.com${endpoint}`, {
+      const res = await fetch(`http://localhost:5000${endpoint}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

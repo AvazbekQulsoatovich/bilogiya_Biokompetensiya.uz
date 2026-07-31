@@ -24,7 +24,21 @@ const storage = multer.diskStorage({
 
 const upload = multer({ 
   storage,
-  limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit
+  limits: { fileSize: 500 * 1024 * 1024 } // 500MB limit for textbooks/videos
+});
+
+// Generic file upload (for books, avatars, etc.)
+router.post('/file', upload.single('file'), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+    const fileUrl = `/uploads/${req.file.filename}`;
+    res.status(201).json({ fileUrl });
+  } catch (error) {
+    console.error('Generic upload error:', error);
+    res.status(500).json({ error: 'Failed to upload file' });
+  }
 });
 
 // Upload attachment to a lesson
@@ -66,6 +80,42 @@ router.post('/:lessonId', upload.single('file'), async (req, res) => {
     res.status(500).json({ error: 'Failed to upload file' });
   }
 });
+
+// Upload main video to a lesson
+router.post('/video/:lessonId', upload.single('file'), async (req, res) => {
+  try {
+    const lessonId = req.params.lessonId as string;
+    
+    if (!req.file) {
+      return res.status(400).json({ error: 'No video file uploaded' });
+    }
+
+    // Ensure lesson exists
+    const lesson = await prisma.lesson.findUnique({
+      where: { id: lessonId }
+    });
+
+    if (!lesson) {
+      // Clean up file if lesson doesn't exist
+      fs.unlinkSync(req.file.path);
+      return res.status(404).json({ error: 'Lesson not found' });
+    }
+
+    const fileUrl = `/uploads/${req.file.filename}`;
+
+    const updatedLesson = await prisma.lesson.update({
+      where: { id: lessonId },
+      data: { videoUrl: fileUrl }
+    });
+
+    res.status(201).json(updatedLesson);
+  } catch (error) {
+    console.error('Upload video error:', error);
+    res.status(500).json({ error: 'Failed to upload video' });
+  }
+});
+
+
 
 // Get attachments for a lesson
 router.get('/:lessonId', async (req, res) => {

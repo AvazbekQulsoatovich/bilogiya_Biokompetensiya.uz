@@ -15,6 +15,8 @@ import glossaryRoutes from './routes/glossary';
 import factsRoutes from './routes/facts';
 import adminRoutes from './routes/admin';
 import gamesRoutes from './routes/games';
+import extracurricularRoutes from './routes/extracurricular';
+import booksRoutes from './routes/books';
 import path from 'path';
 
 dotenv.config();
@@ -27,7 +29,7 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Serve static uploads
-app.use('/uploads', express.static(path.join(__dirname, '../../uploads')));
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -44,6 +46,8 @@ app.use('/api/glossary', glossaryRoutes);
 app.use('/api/facts', factsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/games', gamesRoutes);
+app.use('/api/extracurricular', extracurricularRoutes);
+app.use('/api/books', booksRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

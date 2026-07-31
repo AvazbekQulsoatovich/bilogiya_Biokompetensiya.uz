@@ -26,6 +26,7 @@ model User {
   researchData ResearchEvent[]
   achievements UserAchievement[]
   LabResult    LabResult[]
+  extracurricularSubmissions ExtracurricularTaskSubmission[]
 }
 
 model Course {
@@ -44,6 +45,7 @@ model Lesson {
   courseId  String
   title     String
   contentMd String
+  videoUrl  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -197,4 +199,36 @@ model Game {
   type        String   @default("MEMORY")
   contentJson String   // Storing game items JSON array
   createdAt   DateTime @default(now())
+}
+
+model ExtracurricularTask {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  xpReward    Int      @default(50)
+  createdAt   DateTime @default(now())
+
+  submissions ExtracurricularTaskSubmission[]
+}
+
+model ExtracurricularTaskSubmission {
+  id        String   @id @default(uuid())
+  userId    String
+  taskId    String
+  content   String
+  status    String   @default("COMPLETED")
+  createdAt DateTime @default(now())
+
+  user User                @relation(fields: [userId], references: [id])
+  task ExtracurricularTask @relation(fields: [taskId], references: [id])
+}
+
+model Book {
+  id        String   @id @default(uuid())
+  title     String
+  author    String?
+  coverUrl  String?
+  pdfUrl    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

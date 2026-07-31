@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { 
   BookOpen, Home, Microscope, BrainCircuit, Activity, LogIn, UserPlus, 
-  ClipboardList, LayoutGrid, Library, Lightbulb, Trophy, Gamepad2, Box, Medal, Target, Settings, Menu, X, LogOut, User
+  ClipboardList, LayoutGrid, Library, Lightbulb, Trophy, Gamepad2, Box, Medal, Target, Settings, Menu, X, LogOut, User, FileText, BookMarked
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { ThemeToggle } from "./ThemeToggle";
@@ -46,9 +46,11 @@ export function Sidebar() {
     { name: "Asosiy", href: "/dashboard", icon: <Home className="w-5 h-5" /> },
     { name: "Profilim", href: "/profile", icon: <User className="w-5 h-5" /> },
     { name: "Mavzular", href: "/topics", icon: <BookOpen className="w-5 h-5" /> },
+    { name: "Darsliklar", href: "/books", icon: <BookMarked className="w-5 h-5" /> },
     { name: "Virtual Laboratoriyalar", href: "/labs", icon: <Microscope className="w-5 h-5" /> },
     { name: "3D Modellar", href: "/models", icon: <Box className="w-5 h-5" /> },
     { name: "Test Topshiriqlari", href: "/quizzes", icon: <ClipboardList className="w-5 h-5" /> },
+    { name: "Darsdan tashqari topshiriqlar", href: "/extracurricular", icon: <FileText className="w-5 h-5" /> },
     { name: "Krossvordlar", href: "/crosswords", icon: <LayoutGrid className="w-5 h-5" /> },
     { name: "O'yinlar", href: "/games", icon: <Gamepad2 className="w-5 h-5" /> },
     { name: "AI Yordamchi", href: "/tutor", icon: <BrainCircuit className="w-5 h-5" /> },

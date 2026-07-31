@@ -52,4 +52,18 @@ router.post('/', authenticate, authorize(['SUPER_ADMIN']), async (req, res) => {
   }
 });
 
+// Update a topic (e.g. add videoUrl)
+router.put('/:id', authenticate, authorize(['SUPER_ADMIN']), async (req, res) => {
+  try {
+    const { videoUrl } = req.body;
+    const lesson = await prisma.lesson.update({
+      where: { id: req.params.id },
+      data: { videoUrl }
+    });
+    res.json(lesson);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update topic' });
+  }
+});
+
 export default router;

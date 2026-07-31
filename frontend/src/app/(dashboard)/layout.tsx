@@ -1,4 +1,5 @@
 import { Sidebar } from "@/components/Sidebar";
+import { GlobalAudio } from "@/components/GlobalAudio";
 
 export default function AdminLayout({
   children,
@@ -11,6 +12,7 @@ export default function AdminLayout({
       <div className="w-full md:ml-64 md:w-[calc(100%-16rem)] min-h-screen flex flex-col pt-16 md:pt-0">
         {children}
       </div>
+      <GlobalAudio />
     </div>
   );
 }

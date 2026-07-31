@@ -28,7 +28,7 @@ export default function Register() {
     setError("");
 
     try {
-      const res = await fetch("https://biology-backend-vw8k.onrender.com/api/auth/register", {
+      const res = await fetch("http://localhost:5000/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
