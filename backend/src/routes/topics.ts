@@ -10,7 +10,8 @@ router.get('/', async (req, res) => {
   try {
     const lessons = await prisma.lesson.findMany({
       include: {
-        attachments: true
+        attachments: true,
+        course: true
       }
     });
     res.json(lessons);
@@ -22,20 +23,22 @@ router.get('/', async (req, res) => {
 // Create a topic (lesson)
 router.post('/', authenticate, authorize(['SUPER_ADMIN']), async (req, res) => {
   try {
-    const { title, contentMd, courseId } = req.body;
+    const { title, contentMd, gradeLevel } = req.body;
 
-    // Default to a dummy course if not provided
-    let actualCourseId = courseId;
-    if (!actualCourseId) {
-      const course = await prisma.course.findFirst();
-      if (course) {
-        actualCourseId = course.id;
-      } else {
-        const newCourse = await prisma.course.create({
-          data: { title: 'General Biology', gradeLevel: 10, description: 'Default Course' }
-        });
-        actualCourseId = newCourse.id;
-      }
+    const targetGrade = gradeLevel ? Number(gradeLevel) : 5; // Default to 5-sinf
+
+    let actualCourseId;
+    const course = await prisma.course.findFirst({
+      where: { gradeLevel: targetGrade }
+    });
+    
+    if (course) {
+      actualCourseId = course.id;
+    } else {
+      const newCourse = await prisma.course.create({
+        data: { title: `${targetGrade}-sinf Biologiya`, gradeLevel: targetGrade, description: `${targetGrade}-sinf darsligi` }
+      });
+      actualCourseId = newCourse.id;
     }
 
     const lesson = await prisma.lesson.create({

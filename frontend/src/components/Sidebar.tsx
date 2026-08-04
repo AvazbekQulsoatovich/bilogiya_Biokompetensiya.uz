@@ -60,6 +60,7 @@ export function Sidebar() {
     { name: "Yutuqlar", href: "/achievements", icon: <Trophy className="w-5 h-5" /> },
     { name: "Reyting", href: "/leaderboard", icon: <Medal className="w-5 h-5" /> },
     { name: "Mening Maqsadlarim", href: "/goals", icon: <Target className="w-5 h-5" /> },
+    { name: "Qo'llanma", href: "/guide", icon: <FileText className="w-5 h-5" /> },
     { name: "Sozlamalar", href: "/settings", icon: <Settings className="w-5 h-5" /> },
   ];
 
@@ -71,7 +72,7 @@ export function Sidebar() {
   return (
     <>
       {/* Mobile Menu Button */}
-      <div className="md:hidden fixed top-4 left-4 z-[60]">
+      <div className="md:hidden fixed top-4 left-4 z-[60] print:hidden">
         <button 
           onClick={() => setIsOpen(!isOpen)} 
           className="p-2.5 glass bg-background/50 backdrop-blur-xl rounded-xl border border-border/50 shadow-sm"
@@ -90,6 +91,7 @@ export function Sidebar() {
 
       {/* Sidebar */}
       <aside className={`
+        print:hidden
         w-64 h-screen fixed left-0 top-0 bg-background border-r border-border shadow-[0_0_30px_rgba(0,0,0,0.05)] flex flex-col z-50
         transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}

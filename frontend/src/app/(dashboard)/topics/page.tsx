@@ -9,8 +9,9 @@ export default function TopicsPage() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newTopicTitle, setNewTopicTitle] = useState("");
+  const [newTopicGrade, setNewTopicGrade] = useState(5);
   const [selectedTopic, setSelectedTopic] = useState<any>(null);
-  
+  const [activeTab, setActiveTab] = useState<number>(5);
   // Video url add state
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const [videoTopicId, setVideoTopicId] = useState<string | null>(null);
@@ -54,10 +55,11 @@ export default function TopicsPage() {
           "Content-Type": "application/json",
           ...(token ? { "Authorization": `Bearer ${token}` } : {})
         },
-        body: JSON.stringify({ title: newTopicTitle })
+        body: JSON.stringify({ title: newTopicTitle, gradeLevel: newTopicGrade })
       });
       if (res.ok) {
         setNewTopicTitle("");
+        setNewTopicGrade(5);
         setIsModalOpen(false);
         fetchTopics();
       }
@@ -162,22 +164,28 @@ export default function TopicsPage() {
           <p className="text-foreground/60 mt-2">Darslarni o'qing, video va materiallar bilan tanishing</p>
         </div>
         
-        {userRole === "SUPER_ADMIN" && (
-          <button 
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 bg-primary-600 hover:bg-primary-500 text-white px-5 py-2.5 rounded-xl transition-all shadow-lg shadow-primary-500/20"
-          >
-            <Plus className="w-5 h-5" />
-            Yangi Mavzu
-          </button>
-        )}
+      </div>
+
+      <div className="flex gap-4 mb-6">
+        <button 
+          onClick={() => setActiveTab(5)}
+          className={`px-6 py-2 rounded-xl font-medium transition-all ${activeTab === 5 ? 'bg-primary-500 text-white shadow-lg' : 'bg-card border border-border/50 text-foreground/70 hover:bg-primary-500/10'}`}
+        >
+          5-sinf Botanika
+        </button>
+        <button 
+          onClick={() => setActiveTab(6)}
+          className={`px-6 py-2 rounded-xl font-medium transition-all ${activeTab === 6 ? 'bg-primary-500 text-white shadow-lg' : 'bg-card border border-border/50 text-foreground/70 hover:bg-primary-500/10'}`}
+        >
+          6-sinf Biologiya
+        </button>
       </div>
 
       {loading ? (
         <div className="flex justify-center p-12">
           <div className="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
-      ) : topics.length === 0 ? (
+      ) : topics.filter(t => (t.course?.gradeLevel || 5) === activeTab).length === 0 ? (
         <div className="glass p-12 text-center rounded-3xl border-dashed border-2 border-border/50">
           <BookOpen className="w-12 h-12 text-foreground/30 mx-auto mb-4" />
           <h3 className="text-xl font-medium mb-2">Hali mavzular yo'q</h3>
@@ -185,7 +193,7 @@ export default function TopicsPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-6">
-          {topics.map((topic) => (
+          {topics.filter(t => (t.course?.gradeLevel || 5) === activeTab).map((topic) => (
             <motion.div 
               key={topic.id}
               initial={{ opacity: 0, y: 10 }}
@@ -364,6 +372,17 @@ export default function TopicsPage() {
                   className="w-full bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-all"
                   placeholder="Masalan: Hujayra tuzilishi..."
                 />
+              </div>
+              <div className="mb-6">
+                <label className="block text-sm font-medium mb-2">Sinf</label>
+                <select 
+                  value={newTopicGrade}
+                  onChange={(e) => setNewTopicGrade(Number(e.target.value))}
+                  className="w-full bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-all"
+                >
+                  <option value={5}>5-sinf</option>
+                  <option value={6}>6-sinf</option>
+                </select>
               </div>
               <button 
                 type="submit"
