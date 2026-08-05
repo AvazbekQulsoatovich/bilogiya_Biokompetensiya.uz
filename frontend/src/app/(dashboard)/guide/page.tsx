@@ -16,13 +16,6 @@ export default function GuidePage() {
       const element = pdfRef.current;
       if (!element) return;
 
-      // Sifatli rasm qilib olamiz (CSS muammolarisiz)
-      const dataUrl = await toJpeg(element, { 
-        quality: 0.95, 
-        backgroundColor: '#ffffff',
-        pixelRatio: 2 // Sifatliroq chiqishi uchun
-      });
-
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
@@ -31,26 +24,43 @@ export default function GuidePage() {
 
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
+      const margin = 10;
+      const usableWidth = pdfWidth - margin * 2;
+      const usableHeight = pdfHeight - margin * 2;
+      let yOffset = margin;
 
-      const imgProps = pdf.getImageProperties(dataUrl);
-      const imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      const addElementToPdf = async (el: Element, extraSpace = 10) => {
+        const dataUrl = await toJpeg(el as HTMLElement, { 
+          quality: 0.95, 
+          backgroundColor: '#ffffff', 
+          pixelRatio: 2 
+        });
+        
+        const imgProps = pdf.getImageProperties(dataUrl);
+        const imgHeight = (imgProps.height * usableWidth) / imgProps.width;
 
-      let heightLeft = imgHeight;
-      let position = 0;
+        // Agar yangi sahifa kerak bo'lsa
+        if (yOffset + imgHeight > usableHeight && yOffset > margin) {
+          pdf.addPage();
+          yOffset = margin;
+        }
 
-      // Birinchi sahifa
-      pdf.addImage(dataUrl, 'JPEG', 0, position, pdfWidth, imgHeight);
-      heightLeft -= pdfHeight;
+        pdf.addImage(dataUrl, 'JPEG', margin, yOffset, usableWidth, imgHeight);
+        yOffset += imgHeight + extraSpace;
+      };
 
-      // Qolgan sahifalarni kesib qo'shish
-      while (heightLeft > 0) {
-        position = position - pdfHeight; 
-        pdf.addPage();
-        pdf.addImage(dataUrl, 'JPEG', 0, position, pdfWidth, imgHeight);
-        heightLeft -= pdfHeight;
+      // Header qismini olish
+      const header = element.querySelector('.text-center');
+      if (header) {
+        await addElementToPdf(header, 5);
       }
 
-      // To'g'ridan to'g'ri yuklab olish
+      // Har bir blokni alohida rasmga aylantirib PDFga qo'shish
+      const items = element.querySelectorAll('.feature-item');
+      for (let i = 0; i < items.length; i++) {
+        await addElementToPdf(items[i], 10);
+      }
+
       pdf.save('BioEdu_Qollanma.pdf');
     } catch (error: any) {
       console.error("PDF yuklashda xatolik:", error);
@@ -193,12 +203,9 @@ export default function GuidePage() {
           {features.map((feature, index) => (
             <div key={index} className="feature-item border-b border-gray-200 pb-10 last:border-0 last:pb-0" style={{ pageBreakInside: "avoid" }}>
               <h3 className="text-xl font-bold mb-4 text-black">{feature.title}</h3>
-              <p className="text-black mb-6" style={{ textAlign: "justify", color: "#000000" }}>
-                {feature.description}
-              </p>
               
               {/* Screenshot Image */}
-              <div className="w-full rounded-2xl overflow-hidden shadow-lg border border-border/50 bg-foreground/5 min-h-[200px] flex items-center justify-center relative">
+              <div className="w-full rounded-2xl overflow-hidden shadow-lg border border-border/50 bg-foreground/5 min-h-[200px] flex items-center justify-center relative mb-6">
                 <img 
                   src={feature.image} 
                   alt={feature.title} 
@@ -216,6 +223,10 @@ export default function GuidePage() {
                    <span className="font-medium text-sm">Rasm yuklanmadi yoki topilmadi</span>
                 </div>
               </div>
+
+              <p className="text-black" style={{ textAlign: "justify", color: "#000000" }}>
+                {feature.description}
+              </p>
             </div>
           ))}
         </div>
