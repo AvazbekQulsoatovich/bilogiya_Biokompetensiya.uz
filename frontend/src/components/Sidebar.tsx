@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { ThemeToggle } from "./ThemeToggle";
+import { Logo } from "./Logo";
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -96,12 +97,9 @@ export function Sidebar() {
         transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       `}>
-        {/* Logo */}
-      <div className="p-6 flex items-center gap-3 border-b border-border/50">
-        <div className="bg-gradient-to-br from-primary-500 to-primary-600 p-2 rounded-lg shadow-lg shadow-primary-500/20">
-          <BookOpen className="w-6 h-6 text-white" />
-        </div>
-        <span className="text-2xl font-bold text-foreground tracking-tight font-serif">BioEdu</span>
+      {/* Logo */}
+      <div className="p-4 flex items-center justify-center border-b border-border/50 bg-background/50 backdrop-blur-sm">
+        <Logo className="scale-90" />
       </div>
 
       {/* Main Menu */}

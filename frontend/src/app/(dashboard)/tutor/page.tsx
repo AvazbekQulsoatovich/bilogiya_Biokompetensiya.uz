@@ -6,7 +6,7 @@ import { BrainCircuit, Send, Loader2, User } from "lucide-react";
 
 export default function TutorPage() {
   const [messages, setMessages] = useState<{role: 'user' | 'ai', text: string}[]>([
-    { role: 'ai', text: "Assalomu alaykum! Men BioEdu ning sun'iy idrok yordamchisiman. Biologiya bo'yicha qanday savolingiz bor?" }
+    { role: 'ai', text: "Assalomu alaykum! Men Biokompetensiya ning sun'iy idrok yordamchisiman. Biologiya bo'yicha qanday savolingiz bor?" }
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);

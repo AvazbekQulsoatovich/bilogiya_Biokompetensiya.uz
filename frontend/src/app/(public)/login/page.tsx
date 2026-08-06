@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { BookOpen, Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Logo } from "@/components/Logo";
 
 export default function Login() {
   const router = useRouter();
@@ -41,6 +42,7 @@ export default function Login() {
       if (typeof window !== "undefined") {
         localStorage.setItem("token", data.token);
         localStorage.setItem("userRole", data.user.role);
+        localStorage.setItem("user", JSON.stringify(data.user));
         document.cookie = `token=${data.token}; path=/; max-age=86400`;
         router.push("/topics");
       }
@@ -63,12 +65,7 @@ export default function Login() {
         className="w-full max-w-md z-10"
       >
         <div className="flex justify-center mb-8">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="bg-gradient-primary p-2 rounded-lg">
-              <BookOpen className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-2xl font-bold text-gradient">BioEdu</span>
-          </Link>
+          <Logo />
         </div>
 
         <div className="glass p-8 rounded-3xl border border-border/50 shadow-2xl relative overflow-hidden">

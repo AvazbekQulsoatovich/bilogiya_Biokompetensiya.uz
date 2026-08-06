@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "BioEdu | Interaktiv Biologiya Platformasi",
-  description: "5 va 6-sinf o'quvchilari uchun mo'ljallangan zamonaviy biologiya ta'lim platformasi.",
+  title: "Biokompetensiya | Interaktiv Biologiya Platformasi",
+  description: "Biologiya fanini zamonaviy va interaktiv usulda o'rganing",
 };
 
 export default function RootLayout({

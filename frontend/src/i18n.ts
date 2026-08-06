@@ -6,7 +6,7 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 const resources = {
   en: {
     translation: {
-      "Welcome": "Welcome to BioEdu",
+      "Welcome": "Welcome to Biokompetensiya",
       "VirtualLabs": "Virtual Labs",
       "AITutor": "AI Tutor",
       "Progress": "Progress Tracking",
@@ -18,7 +18,7 @@ const resources = {
   },
   uz: {
     translation: {
-      "Welcome": "BioEdu ga xush kelibsiz",
+      "Welcome": "Biokompetensiya ga xush kelibsiz",
       "VirtualLabs": "Virtual Laboratoriyalar",
       "AITutor": "Sun'iy Intellekt Tyutori",
       "Progress": "O'zlashtirishni Kuzatish",
@@ -30,7 +30,7 @@ const resources = {
   },
   ru: {
     translation: {
-      "Welcome": "Добро пожаловать в BioEdu",
+      "Welcome": "Добро пожаловать в Biokompetensiya",
       "VirtualLabs": "Виртуальные Лаборатории",
       "AITutor": "ИИ Репетитор",
       "Progress": "Отслеживание Прогресса",

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { BookOpen, Plus, File, UploadCloud, X, FileText, Image as ImageIcon, Video, PlaySquare } from "lucide-react";
+import { BookOpen, Plus, File, UploadCloud, X, FileText, Image as ImageIcon, Video, PlaySquare, Edit, Trash } from "lucide-react";
 
 export default function TopicsPage() {
   const [topics, setTopics] = useState<any[]>([]);
@@ -12,6 +12,11 @@ export default function TopicsPage() {
   const [newTopicGrade, setNewTopicGrade] = useState(5);
   const [selectedTopic, setSelectedTopic] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<number>(5);
+  
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editTopicId, setEditTopicId] = useState<string | null>(null);
+  const [editTopicTitle, setEditTopicTitle] = useState("");
+  const [editTopicGrade, setEditTopicGrade] = useState(5);
   // Video url add state
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const [videoTopicId, setVideoTopicId] = useState<string | null>(null);
@@ -62,9 +67,57 @@ export default function TopicsPage() {
         setNewTopicGrade(5);
         setIsModalOpen(false);
         fetchTopics();
+      } else {
+        const errorData = await res.json();
+        alert(`Xatolik yuz berdi: ${errorData.error || res.statusText}`);
       }
     } catch (error) {
       console.error("Error creating topic", error);
+      alert("Tarmoq xatosi!");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Haqiqatan ham bu mavzuni o'chirmoqchimisiz?")) return;
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/topics/${id}`, {
+        method: "DELETE",
+        headers: { ...(token ? { "Authorization": `Bearer ${token}` } : {}) }
+      });
+      if (res.ok) {
+        fetchTopics();
+      } else {
+        const errorData = await res.json();
+        alert(`O'chirishda xatolik: ${errorData.error || res.statusText}`);
+      }
+    } catch (error) {
+      console.error("Failed to delete topic", error);
+      alert("Tarmoq xatosi!");
+    }
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editTopicId) return;
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/topics/${editTopicId}`, {
+        method: "PUT",
+        headers: { 
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({ title: editTopicTitle, gradeLevel: editTopicGrade })
+      });
+      if (res.ok) {
+        setIsEditModalOpen(false);
+        fetchTopics();
+      } else {
+        const errorData = await res.json();
+        alert(`Tahrirlashda xatolik: ${errorData.error || res.statusText}`);
+      }
+    } catch (error) {
+      console.error("Error updating topic", error);
+      alert("Tarmoq xatosi!");
     }
   };
 
@@ -155,7 +208,7 @@ export default function TopicsPage() {
 
   return (
     <div className="p-8 max-w-7xl mx-auto w-full">
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-3">
             <BookOpen className="text-primary-500" />
@@ -164,6 +217,15 @@ export default function TopicsPage() {
           <p className="text-foreground/60 mt-2">Darslarni o'qing, video va materiallar bilan tanishing</p>
         </div>
         
+        {userRole === "SUPER_ADMIN" && (
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-2 bg-primary-600 hover:bg-primary-500 text-white px-5 py-3 rounded-xl transition-all shadow-lg shadow-primary-500/20 font-medium"
+          >
+            <Plus className="w-5 h-5" />
+            Mavzu qo'shish
+          </button>
+        )}
       </div>
 
       <div className="flex gap-4 mb-6">
@@ -212,8 +274,27 @@ export default function TopicsPage() {
                 {userRole === "SUPER_ADMIN" && (
                   <div className="flex items-center gap-2 flex-wrap">
                     <button 
+                      onClick={() => {
+                        setEditTopicId(topic.id);
+                        setEditTopicTitle(topic.title);
+                        setEditTopicGrade(topic.course?.gradeLevel || 5);
+                        setIsEditModalOpen(true);
+                      }}
+                      className="p-2 text-blue-500 bg-blue-500/10 rounded-lg hover:bg-blue-500/20 transition-all"
+                      title="Tahrirlash"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </button>
+                    <button 
+                      onClick={() => handleDelete(topic.id)}
+                      className="p-2 text-red-500 bg-red-500/10 rounded-lg hover:bg-red-500/20 transition-all"
+                      title="O'chirish"
+                    >
+                      <Trash className="w-4 h-4" />
+                    </button>
+                    <button 
                       onClick={() => { setVideoTopicId(topic.id); setIsVideoModalOpen(true); }}
-                      className="flex items-center gap-2 text-red-500 bg-red-500/10 px-4 py-2 rounded-lg hover:bg-red-500/20 transition-all text-sm font-medium"
+                      className="flex items-center gap-2 text-purple-500 bg-purple-500/10 px-4 py-2 rounded-lg hover:bg-purple-500/20 transition-all text-sm font-medium"
                     >
                       <PlaySquare className="w-4 h-4" />
                       Video biriktirish
@@ -389,6 +470,53 @@ export default function TopicsPage() {
                 className="w-full bg-primary-600 hover:bg-primary-500 text-white font-medium py-3 rounded-xl transition-all shadow-lg shadow-primary-500/20"
               >
                 Yaratish
+              </button>
+            </form>
+          </motion.div>
+        </div>
+      )}
+      {/* Edit Topic Modal */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
+          <motion.div 
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-card border border-border/50 p-6 rounded-3xl shadow-2xl max-w-md w-full relative"
+          >
+            <button 
+              onClick={() => setIsEditModalOpen(false)}
+              className="absolute top-4 right-4 text-foreground/50 hover:text-foreground"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <h2 className="text-2xl font-bold mb-6">Mavzuni tahrirlash</h2>
+            <form onSubmit={handleEditSubmit}>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2">Mavzu nomi</label>
+                <input 
+                  type="text" 
+                  required
+                  value={editTopicTitle}
+                  onChange={(e) => setEditTopicTitle(e.target.value)}
+                  className="w-full bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+                />
+              </div>
+              <div className="mb-6">
+                <label className="block text-sm font-medium mb-2">Sinf</label>
+                <select 
+                  value={editTopicGrade}
+                  onChange={(e) => setEditTopicGrade(Number(e.target.value))}
+                  className="w-full bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+                >
+                  <option value={5}>5-sinf</option>
+                  <option value={6}>6-sinf</option>
+                </select>
+              </div>
+              <button 
+                type="submit"
+                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-3 rounded-xl transition-all shadow-lg shadow-blue-500/20"
+              >
+                Saqlash
               </button>
             </form>
           </motion.div>

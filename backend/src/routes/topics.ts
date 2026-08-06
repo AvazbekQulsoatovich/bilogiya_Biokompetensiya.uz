@@ -55,17 +55,47 @@ router.post('/', authenticate, authorize(['SUPER_ADMIN']), async (req, res) => {
   }
 });
 
-// Update a topic (e.g. add videoUrl)
+// Update a topic (e.g. add videoUrl, edit title/grade)
 router.put('/:id', authenticate, authorize(['SUPER_ADMIN']), async (req, res) => {
   try {
-    const { videoUrl } = req.body;
+    const { videoUrl, title, gradeLevel } = req.body;
+    const updateData: any = {};
+    if (videoUrl !== undefined) updateData.videoUrl = videoUrl;
+    if (title !== undefined) updateData.title = title;
+    
+    if (gradeLevel !== undefined) {
+      const targetGrade = Number(gradeLevel);
+      let course = await prisma.course.findFirst({ where: { gradeLevel: targetGrade } });
+      if (!course) {
+        course = await prisma.course.create({
+          data: { title: `${targetGrade}-sinf Biologiya`, gradeLevel: targetGrade, description: `${targetGrade}-sinf darsligi` }
+        });
+      }
+      updateData.courseId = course.id;
+    }
+
     const lesson = await prisma.lesson.update({
       where: { id: req.params.id },
-      data: { videoUrl }
+      data: updateData
     });
     res.json(lesson);
   } catch (error) {
     res.status(500).json({ error: 'Failed to update topic' });
+  }
+});
+
+// Delete a topic
+router.delete('/:id', authenticate, authorize(['SUPER_ADMIN']), async (req, res) => {
+  try {
+    await prisma.attachment.deleteMany({ where: { lessonId: req.params.id } });
+    await prisma.quiz.deleteMany({ where: { lessonId: req.params.id } }); // Quizzes related to this lesson might need cascading
+    const lesson = await prisma.lesson.delete({
+      where: { id: req.params.id }
+    });
+    res.json({ message: 'Deleted successfully', lesson });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to delete topic' });
   }
 });
 

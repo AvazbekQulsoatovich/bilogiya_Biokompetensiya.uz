@@ -61,7 +61,7 @@ export default function GuidePage() {
         await addElementToPdf(items[i], 10);
       }
 
-      pdf.save('BioEdu_Qollanma.pdf');
+      pdf.save('Biokompetensiya_Qollanma.pdf');
     } catch (error: any) {
       console.error("PDF yuklashda xatolik:", error);
       alert("Xatolik yuz berdi: " + (error.message || "Yuklab olishda muammo."));
@@ -72,99 +72,213 @@ export default function GuidePage() {
 
   const features = [
     {
-      title: "1. Asosiy Oyna (Dashboard)",
-      description: "Platformaning markaziy axborot paneli. Bu yerda real vaqt rejimida foydalanuvchining o'quv jarayoni statistikasi, faollik ko'rsatkichlari (Activity metrics), to'plangan XP (Experience Points) va tangalar (Coins) miqdori vizual tarzda taqdim etiladi. Tizim avtomatik ravishda oxirgi o'zlashtirilgan materiallarni tahlil qilib, davomiylikni saqlash (Streak) uchun aqlli tavsiyalar beradi.",
-      image: "/screenshots/dashboard.png"
+      title: "1. Asosiy (Bosh sahifa)",
+      description: "Platformaning markaziy oynasi. Tizimga kirishingiz bilan birinchi bo'lib aynan shu sahifa ochiladi. Bu yerda siz o'qish jarayoningizning umumiy xulosasini ko'rasiz.",
+      subPoints: [
+        "Xush kelibsiz paneli: Kunlik faolligingiz (Streak) va to'plangan tangalaringiz (Coins) ko'rsatiladi.",
+        "Tezkor bo'limlar: Eng ko'p ishlatiladigan bo'limlarga (Mavzular, Testlar, Laboratoriya, Krossvordlar) tez o'tish tugmalari.",
+        "Joriy taraqqiyot: O'quv yili davomidagi umumiy o'zlashtirish ko'rsatkichingiz foizlarda beriladi.",
+        "So'nggi yutuqlar: Tizimda yaqinda qolga kiritgan mukofot va medallaringiz namoyish etiladi."
+      ],
+      image: "/screenshots/dashboard.png?v=2"
     },
     {
       title: "2. Profilim",
-      description: "Shaxsiy identifikatsiya va akkauntni boshqarish moduli. Foydalanuvchi o'zining biometrik va shaxsiy ma'lumotlarini tahrirlashi, xavfsizlik sozlamalarini (parolni yangilash) amalga oshirishi va o'quv natijalari tarixini kuzatishi mumkin. Barcha ma'lumotlar zamonaviy kriptografik usullar bilan himoyalangan.",
-      image: "/screenshots/profile.png"
+      description: "Sizning shaxsiy virtual xonangiz. Bu yerda butun o'qish davridagi natijalaringiz va shaxsiy ma'lumotlaringiz saqlanadi.",
+      subPoints: [
+        "Shaxsiy ma'lumotlar: Ism-sharifingiz, elektron pochtangiz va profilingizdagi rasm (avatar).",
+        "Daraja (Level): To'plagan XP ballaringiz asosida qaysi darajaga yetganingiz.",
+        "Xavfsizlik: Parolingizni istalgan vaqtda shu yerdan xavfsiz tarzda o'zgartirishingiz mumkin.",
+        "Faollik tarixi: Barcha erishgan yutuqlaringiz bitta joyda jamlangan."
+      ],
+      image: "/screenshots/profile.png?v=2"
     },
     {
-      title: "3. Mavzular va O'quv Materiallari",
-      description: "Asosiy ta'lim kontenti arxitekturasi. Modul sinflar (masalan, 5-sinf Botanika, 6-sinf Biologiya) bo'yicha tizimlashtirilgan. Har bir mavzu multimedia fayllari (videodarslar, interaktiv taqdimotlar) va nazariy matnlar bilan boyitilgan. Materiallar asinxron tarzda yuklanadi, bu esa tizim ishlash tezligi (Performance) va foydalanuvchi tajribasini (UX) sezilarli darajada oshiradi.",
-      image: "/screenshots/topics.png"
+      title: "3. Mavzular",
+      description: "Barcha biologiya darslari aynan shu yerda sinflar kesimida tartib bilan joylashgan.",
+      subPoints: [
+        "Sinflarga ajratilgan: 5-sinf (Botanika), 6-sinf (Zoologiya) kabi toifalangan.",
+        "O'qish materiallari: Har bir mavzu ichida nazariy ma'lumotlar va rang-barang rasmlar mavjud.",
+        "Videodarslar: Mavzuni yaxshiroq tushunish uchun qiziqarli va sifatli video materiallar.",
+        "Tezkor yuklanish: Hech qanday qotishlarsiz, darslarni tez va qulay o'zlashtirasiz."
+      ],
+      image: "/screenshots/topics.png?v=2"
     },
     {
       title: "4. Darsliklar",
-      description: "Raqamlashtirilgan adabiyotlar bazasi (E-Library). Respublika davlat ta'lim standartlariga mos maktab darsliklari hamda qo'shimcha ilmiy-ommabop kitoblar integratsiya qilingan. Kitoblarni oflayn o'qish imkoniyati hamda interaktiv sahifalash tizimi joriy etilgan.",
-      image: "/screenshots/books.png"
+      description: "Maktab darsliklari va qo'shimcha kitoblarning elektron kutubxonasi.",
+      subPoints: [
+        "To'liq darsliklar: Barcha sinflar uchun rasmiy biologiya darsliklari.",
+        "Varaqlab o'qish: Kitoblarni xuddi haqiqiy kitobdek elektron formatda varaqlab o'qiysiz.",
+        "Yuklab olish: Internet bo'lmagan vaqtlarda o'qish uchun PDF formatida yuklab olish imkoniyati.",
+        "Qidiruv tizimi: Kerakli adabiyotni tez va oson topish funksiyasi."
+      ],
+      image: "/screenshots/books.png?v=2"
     },
     {
       title: "5. Virtual Laboratoriyalar",
-      description: "Amaliy mashg'ulotlarni simulyatsiya qiluvchi raqamli muhit. O'quvchilar xavfsiz sharoitda, interaktiv tarzda murakkab biologik va kimyoviy jarayonlarni (masalan, fotosintez, hujayra bo'linishi) modellashtirishi mumkin. Har bir eksperiment natijalari tizim tomonidan avtomatik tarzda tahlil qilinadi va baholanadi.",
-      image: "/screenshots/labs.png"
+      description: "Xavfsiz va interaktiv muhitda kompyuter ekranida tajribalar o'tkazish bo'limi.",
+      subPoints: [
+        "Amaliy mashg'ulotlar: Fotosintez, hujayra bo'linishi kabi jarayonlarni amalda ko'rish.",
+        "Bosqichma-bosqich: Har bir tajriba o'z ketma-ketligiga va ko'rsatmalariga ega.",
+        "Natijani baholash: To'g'ri bajarilgan tajribalar uchun tizim sizga ballar beradi.",
+        "Xavfsizlik: Hech qanday reaktivlarsiz, mutlaqo xavfsiz tarzda izlanish olib borasiz."
+      ],
+      image: "/screenshots/labs.png?v=2"
     },
     {
       title: "6. 3D Modellar",
-      description: "Fazo-vizual o'rganish moduli. Inson anatomiyasi, hujayra organoidlari va mikroskopik hayvonlar tuzilishini WebGL texnologiyasi asosida uch o'lchamli (3D) formatda chuqur o'rganish imkonini beradi. Obyektlarni har tomondan aylantirish, masshtablash va qismlarga ajratib ko'rish funksiyalari mavjud.",
-      image: "/screenshots/models.png"
+      description: "Biologik obyektlarni haqiqiy o'lcham va shaklda, barcha tomonlardan ko'rish imkoniyati.",
+      subPoints: [
+        "Interaktivlik: Modellarni sichqoncha yordamida aylantirish, uzoqlashtirish va yaqinlashtirish mumkin.",
+        "Tuzilmani o'rganish: Inson organlari, hayvonot olami va o'simlik hujayralarini qismlarga ajratib ko'rish.",
+        "Tushuntirishlar: Har bir qism ustiga bosganda uning nomi va vazifasi chiqib keladi.",
+        "Vizual xotira: Ko'rib o'rganish orqali ma'lumotlarni yodda saqlash samaradorligi oshadi."
+      ],
+      image: "/screenshots/models.png?v=2"
     },
     {
       title: "7. Test Topshiriqlari",
-      description: "Bilimlarni tekshirish va baholash (Assessment) tizimi. Testlar kognitiv qiyinchilik darajalariga bo'lingan bo'lib, adaptiv xarakterga ega. Natijalar real vaqtda hisoblanib, foydalanuvchining kuchli va zaif tomonlari bo'yicha batafsil statistik analitika taqdim etiladi.",
-      image: "/screenshots/quizzes.png"
+      description: "O'z bilimingizni sinab ko'rish va mustahkamlash uchun mo'ljallangan testlar tizimi.",
+      subPoints: [
+        "Turli qiyinchiliklar: Testlar oson, o'rta va qiyin darajalarga ajratilgan.",
+        "Darhol natija: Testni tugatishingiz bilan ekranga sizning ballingiz va xatolaringiz chiqadi.",
+        "Xatolar ustida ishlash: Qaysi savollarga noto'g'ri javob berganingizni aniq ko'rib olasiz.",
+        "Mukofotlar: Yuqori natijalar uchun qo'shimcha XP ballari taqdim etiladi."
+      ],
+      image: "/screenshots/quizzes.png?v=2"
     },
     {
       title: "8. Darsdan tashqari topshiriqlar",
-      description: "Mustaqil ta'limni rivojlantirish bloki. O'qituvchilar tomonidan loyihaviy va tadqiqotga yo'naltirilgan vazifalar taqdim etiladi. Topshiriq fayllarini serverga yuklash va pedagog tomonidan baholanish jarayoni to'liq avtomatlashtirilgan.",
-      image: "/screenshots/extracurricular.png"
+      description: "O'qituvchi tomonidan beriladigan maxsus ijodiy va amaliy vazifalar majmuasi.",
+      subPoints: [
+        "Tadqiqotlar: Tabiatni o'rganish bo'yicha kichik amaliy loyihalar.",
+        "Fayl yuklash: Bajarilgan vazifani rasm yoki hujjat ko'rinishida tizimga biriktirish.",
+        "O'qituvchi bahosi: Ustozingiz yuklagan ishingizni tekshirib, shaxsiy fikr va baho qoldiradi.",
+        "Muloqot: Vazifa yuzasidan o'qituvchi bilan izohlar orqali fikr almashish."
+      ],
+      image: "/screenshots/extracurricular.png?v=2"
     },
     {
       title: "9. Krossvordlar",
-      description: "Gamifikatsiya (Gamification) elementlariga asoslangan terminologik mashqlar. Biologik atamalar, tushunchalar va ularning qonuniyatlarini kognitiv usulda yodlashga ko'maklashuvchi, intellektual salohiyatni oshiruvchi interaktiv krossvordlar to'plami.",
-      image: "/screenshots/crosswords.png"
+      description: "Biologiyaga oid atamalarni o'yin orqali yodlashga yordam beruvchi bo'lim.",
+      subPoints: [
+        "Mantiqiy fikrlash: Atamalarning izohiga qarab, ularning qaysi so'z ekanligini topish.",
+        "Lug'at boyligi: Har bir krossvord orqali yangi va murakkab ilmiy so'zlarni o'rganish.",
+        "Avtomatik tekshirish: So'z to'g'ri yozilsa, katakchalar avtomatik ravishda yashil rangga kiradi.",
+        "Qo'shimcha ballar: Krossvordni to'liq yechib bo'lgach maxsus yutuqlar beriladi."
+      ],
+      image: "/screenshots/crosswords.png?v=2"
     },
     {
       title: "10. O'yinlar",
-      description: "Ta'limiy-ko'ngilochar modul (Edutainment). Mantiqiy va xotirani charxlovchi maxsus o'yinlar orqali foydalanuvchining biologiya faniga bo'lgan qiziqishini orttirish hamda akademik o'rganish jarayonini qiziqarli ko'rinishga keltirish maqsad qilingan.",
-      image: "/screenshots/games.png"
+      description: "Dam olish va mantiqni o'stirishga qaratilgan kichik ta'limiy o'yinlar.",
+      subPoints: [
+        "Moslashtirish: Rasm va atamalarni bir-biriga mos topish (Memory game).",
+        "Tezkorlik: Vaqt chegaralangan holda berilgan savollarga eng to'g'ri javobni belgilash.",
+        "Dam olish: Dars tayyorlashdan charchaganda miyani chalg'itish uchun ajoyib vosita.",
+        "Qiziqishni oshirish: Ta'limni qiziqarli o'yinlarga aylantirish orqali fanga mehr uyg'otadi."
+      ],
+      image: "/screenshots/games.png?v=2"
     },
     {
       title: "11. AI Yordamchi",
-      description: "Generativ sun'iy intellekt (LLM) asosida ishlovchi virtual repetitor (Smart Tutor). O'quvchi tomonidan berilgan har qanday murakkab biologik savollarga ilmiy asoslangan, ammo auditoriya yoshiga moslashtirilgan, kontekstni tushungan holda zudlik bilan aniq javoblar shakllantiradi.",
-      image: "/screenshots/tutor.png"
+      description: "Sizning sutkasiga 24 soat ishlaydigan shaxsiy virtual o'qituvchingiz (Sun'iy intellekt).",
+      subPoints: [
+        "Savol-javob: Istalgan biologik jarayon yoki atama haqida chat orqali savol berishingiz mumkin.",
+        "Sodda tushuntirish: Eng qiyin mavzularni ham hayotiy misollar bilan oddiy tilda tushuntirib beradi.",
+        "Tezkorlik: Savolingizga soniyalar ichida aniq javob olasiz.",
+        "Tavsiyalar: Qanday qilib yaxshiroq o'qish bo'yicha maslahatlar ham beradi."
+      ],
+      image: "/screenshots/tutor.png?v=2"
     },
     {
       title: "12. Lug'at",
-      description: "Markazlashtirilgan va keng qamrovli terminologik ma'lumotlar bazasi. Lotin va o'zbek tillaridagi ilmiy atamalarning izohli lug'ati bo'lib, tezkor qidiruv (Live Search) algoritmi yordamida kerakli so'zni soniyaning ulushlarida topish va uning ilmiy talqinini o'rganish mumkin.",
-      image: "/screenshots/glossary.png"
+      description: "Biologiya fanidagi barcha ilmiy atama va so'zlarning izohli elektron lug'ati.",
+      subPoints: [
+        "Oson qidiruv: Kerakli so'zni yozishingiz bilan uning to'liq izohi chiqib keladi.",
+        "Ma'nolari: So'zning qanday kelib chiqqani va nimani anglatishi tushuntiriladi.",
+        "Misollar: So'zning gap ichida qanday ishlatilishi ko'rsatiladi.",
+        "Alfavit tartibi: Barcha so'zlar A-Z tartibida chiroyli ro'yxat qilingan."
+      ],
+      image: "/screenshots/glossary.png?v=2"
     },
     {
       title: "13. Qiziqarli Faktlar",
-      description: "Kognitiv qiziqishni orttiruvchi mikro-ta'lim (Microlearning) bloki. Biologiya olamidagi so'nggi ilmiy kashfiyotlar, noyob flora va fauna vakillari hamda genetik mo'jizalar haqidagi tasdiqlangan infografik va matnli ma'lumotlar davriy ravishda yangilanib boradi.",
-      image: "/screenshots/facts.png"
+      description: "Tabiat va hayvonot olami haqidagi ajoyib va hayratlanarli ma'lumotlar jamlanmasi.",
+      subPoints: [
+        "Noyob ma'lumotlar: Darsliklarda yozilmagan, lekin juda qiziqarli bo'lgan faktlar.",
+        "Kunlik yangilanish: Tez-tez yangi faktlar qo'shilib turiladi.",
+        "O'qishga oson: Ma'lumotlar qisqa, tushunarli va chiroyli rasmlar bilan bezatilgan.",
+        "Bo'lishish: Bilganlaringizni do'stlaringizga aytib berish uchun ajoyib manba."
+      ],
+      image: "/screenshots/facts.png?v=2"
     },
     {
-      title: "14. O'zlashtirish",
-      description: "Chuqurlashtirilgan analitika (Data Analytics) paneli. Foydalanuvchining ta'lim traektoriyasi, o'qishga sarflagan jami vaqti, testlardagi o'rtacha muvaffaqiyat ko'rsatkichi va o'zlashtirish dinamikasi maxsus interaktiv grafiklar (Charts) orqali batafsil aks ettiriladi.",
-      image: "/screenshots/progress.png"
+      title: "14. O'zlashtirish (Statistika)",
+      description: "O'quv yili davomidagi ta'lim ko'rsatkichlaringizni tahlil qilib beruvchi sahifa.",
+      subPoints: [
+        "Vaqt hisobi: Platformada dars o'qish uchun sarflagan jami vaqtingiz.",
+        "Test tahlili: Barcha ishlangan testlardagi o'rtacha foiz va to'g'ri javoblar nisbati.",
+        "Grafiklar: O'sish yoki pasayishni yaqqol ko'rsatib beruvchi ustunli va chiziqli grafiklar.",
+        "Kamchiliklar: Qaysi mavzularda ko'proq xato qilayotganingizni ko'rsatib turadi."
+      ],
+      image: "/screenshots/progress.png?v=2"
     },
     {
       title: "15. Yutuqlar",
-      description: "Motivatsion mukofotlash tizimi. Tizimda belgilangan muayyan akademik maqsadlarga erishganda (masalan, barcha modulni 100% natija bilan yopish yoki uzluksiz 7 kunlik faollik) avtomatik ravishda beriladigan raqamli nishonlar (Digital Badges) va unvonlar to'plami.",
-      image: "/screenshots/achievements.png"
+      description: "Faolligingiz va yaxshi baholaringiz uchun beriladigan maxsus virtual mukofotlar.",
+      subPoints: [
+        "Medallar: Muayyan marralarni egallaganda tizim avtomatik nishonlar beradi.",
+        "Unvonlar: Masalan, 'Biologiya bilimdoni', '100% natijachi' kabi maqomlar.",
+        "Kolleksiya: Olingan barcha yutuqlar maxsus javonda chiroyli tarzda saqlanadi.",
+        "Motivatsiya: Ko'proq yutuq yig'ish o'qishga bo'lgan ishtiyoqni oshiradi."
+      ],
+      image: "/screenshots/achievements.png?v=2"
     },
     {
       title: "16. Reyting",
-      description: "Raqobat muhitini shakllantiruvchi reyting moduli (Leaderboard). Barcha foydalanuvchilarning ta'limiy faoliyati va to'plagan XP ballari asosida hisoblanadigan global va hududiy reyting jadvali bo'lib, o'quvchilar o'rtasida sog'lom intellektual bellashuvni rag'batlantiradi.",
-      image: "/screenshots/leaderboard.png"
+      description: "Boshqa o'quvchilar bilan sog'lom raqobatlashish uchun yetakchilar jadvali.",
+      subPoints: [
+        "XP Ballari: To'plangan tajriba ballari asosida o'quvchilar reytingi tuziladi.",
+        "O'z o'rningiz: Minglab o'quvchilar orasida nechinchi o'rinda ekanligingizni ko'rasiz.",
+        "Top-10: Eng yaxshi natija ko'rsatgan peshqadamlar ro'yxati alohida ko'rsatiladi.",
+        "Raqobat: Yuqori o'rinlarga chiqish uchun ko'proq vazifalarni to'g'ri bajarishga intilasiz."
+      ],
+      image: "/screenshots/leaderboard.png?v=2"
     },
     {
       title: "17. Mening Maqsadlarim",
-      description: "Shaxsiy taym-menejment va vazifalarni belgilash (Goal Setting) moduli. Foydalanuvchi o'zi uchun kunlik, haftalik yoki oylik o'quv maqsadlarini (masalan, 5 ta mavzu o'qish, 100 ball to'plash) shakllantirishi va maqsadlarga erishish foizini tizim orqali monitoring qilib borishi ko'zda tutilgan.",
-      image: "/screenshots/goals.png"
+      description: "O'z oldingizga reja qo'yish va ularga erishishni kuzatib boruvchi vosita.",
+      subPoints: [
+        "Rejalashtirish: Kunlik yoki haftalik vazifalarni belgilab olish (masalan, 2 ta test yechish).",
+        "Taraqqiyot ko'rsatkichi: Rejaning necha foizi bajarilgani avtomatik hisoblanadi.",
+        "Vaqtni boshqarish: Taym-menejment ko'nikmalarini shakllantirishga yordam beradi.",
+        "Erishilgan maqsadlar: Bajarib bo'lingan rejalar ustiga chizilib, sizga mamnuniyat bag'ishlaydi."
+      ],
+      image: "/screenshots/goals.png?v=2"
     },
     {
       title: "18. Sozlamalar",
-      description: "Ilova arxitekturasi va interfeysini shaxsiylashtirish (Customization) moduli. Qorong'u/Yorug' (Dark/Light) vizual mavzularni o'zgartirish, tizim bildirishnomalarini optimallashtirish, xavfsizlik sozlamalari va til preferensiyalarini adaptatsiya qilish imkoniyatlarini taqdim etadi.",
-      image: "/screenshots/settings.png"
+      description: "Platformani aynan o'zingizning xohishingizga moslashtirish (shaxsiylashtirish) oynasi.",
+      subPoints: [
+        "Tungi rejim: Kechasi ko'z toliqmasligi uchun sayt fonini qoraytirish (Dark mode).",
+        "Bildirishnomalar: Tizimdan keladigan xabarlarni yoqish yoki o'chirish.",
+        "Ovozlar: Tugmalarni bosgandagi va yutuq olingandagi ovozlarni boshqarish.",
+        "Xavfsizlik sozlamalari: Akkauntni himoyalash va sessiyalarni nazorat qilish."
+      ],
+      image: "/screenshots/settings.png?v=2"
     },
     {
       title: "19. Boshqaruv Paneli (Admin)",
-      description: "Super Admin hamda kontent-menejerlar uchun yopiq ma'lumotlarni boshqarish tizimi (CMS - Content Management System). Foydalanuvchilarga ruxsatlarni (Role-based Access Control) taqsimlash, yangi ta'limiy kontentlar yaratish (CRUD operatsiyalari), to'lov yoki obuna monitoringini yuritish va tizim barqarorligi loglarini (System Logs) markazlashgan holda boshqarishni ta'minlaydi.",
-      image: "/screenshots/admin.png"
+      description: "Ustozlar va platformani boshqaruvchilar uchun maxsus yopiq bo'lim.",
+      subPoints: [
+        "O'quvchilar nazorati: Barcha foydalanuvchilar ro'yxati, parolini tiklash va baholarini ko'rish.",
+        "Kontent qo'shish: Yangi testlar, darslar va kitoblarni tizimga joylashtirish.",
+        "Statistika: Butun platformaning umumiy faollik ko'rsatkichlarini kuzatish.",
+        "Ruxsatlar: Oddiy o'quvchilarga bu bo'lim umuman ko'rinmaydi va faqat adminlar kira oladi."
+      ],
+      image: "/screenshots/admin.png?v=2"
     }
   ];
 
@@ -192,41 +306,50 @@ export default function GuidePage() {
       <div 
         ref={pdfRef} 
         className="bg-white p-8 rounded-3xl border border-gray-200 text-black print:border-none print:p-0 print:m-0"
-        style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "14pt", lineHeight: "1.15", color: "#000000" }}
+        style={{ fontFamily: "'Inter', 'Times New Roman', Times, serif", fontSize: "12pt", lineHeight: "1.5", color: "#111827" }}
       >
-        <div className="text-center mb-10">
-          <h2 className="text-2xl font-bold mb-2 text-black">BioEdu Tizim Qo'llanmasi</h2>
-          <p className="text-gray-700">Platformadan qanday foydalanish haqida to'liq ma'lumot.</p>
+        <div className="text-center mb-12 border-b border-gray-200 pb-8">
+          <h2 className="text-3xl font-extrabold mb-3 text-black">Biokompetensiya Tizimi</h2>
+          <p className="text-gray-600 text-lg">Platformadan to'g'ri va samarali foydalanish bo'yicha to'liq qo'llanma</p>
         </div>
 
-        <div className="space-y-12">
+        <div className="space-y-16">
           {features.map((feature, index) => (
-            <div key={index} className="feature-item border-b border-gray-200 pb-10 last:border-0 last:pb-0" style={{ pageBreakInside: "avoid" }}>
-              <h3 className="text-xl font-bold mb-4 text-black">{feature.title}</h3>
-              
-              {/* Screenshot Image */}
-              <div className="w-full rounded-2xl overflow-hidden shadow-lg border border-border/50 bg-foreground/5 min-h-[200px] flex items-center justify-center relative mb-6">
+            <div key={index} className="feature-item pb-10" style={{ pageBreakInside: "avoid" }}>
+              {/* Rasm qismi (Yuqorida) */}
+              <div className="w-full rounded-2xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 flex items-center justify-center relative mb-8 group p-2 bg-gray-50/50">
                 <img 
                   src={feature.image} 
                   alt={feature.title} 
-                  className="w-full h-auto object-cover"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                    if (target.nextElementSibling) {
-                      (target.nextElementSibling as HTMLElement).style.display = 'flex';
-                    }
-                  }} 
+                  className="max-w-full h-auto object-contain rounded-xl drop-shadow-sm transition-transform duration-500 group-hover:scale-[1.01]"
                 />
-                <div className="absolute inset-0 flex-col items-center justify-center text-foreground/40 hidden">
+                <div className="absolute inset-0 flex-col items-center justify-center text-gray-400 hidden">
                    <ImageIcon className="w-12 h-12 mb-2 opacity-50" />
-                   <span className="font-medium text-sm">Rasm yuklanmadi yoki topilmadi</span>
+                   <span className="font-medium text-sm">Rasm yuklanmadi</span>
                 </div>
               </div>
 
-              <p className="text-black" style={{ textAlign: "justify", color: "#000000" }}>
-                {feature.description}
-              </p>
+              {/* Matn qismi (Rasm tagida) */}
+              <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
+                <h3 className="text-2xl font-bold mb-3 text-primary-700">{feature.title}</h3>
+                <p className="text-gray-700 mb-5 font-medium leading-relaxed text-[13pt]">
+                  {feature.description}
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {feature.subPoints?.map((point, idx) => {
+                    const [title, ...rest] = point.split(': ');
+                    const content = rest.join(': ');
+                    return (
+                      <div key={idx} className="flex items-start gap-3 bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                        <div className="w-2 h-2 rounded-full bg-primary-500 mt-2 flex-shrink-0"></div>
+                        <p className="text-gray-600 text-[12pt] leading-relaxed">
+                          <strong className="text-gray-900 font-semibold">{title}:</strong> {content}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           ))}
         </div>

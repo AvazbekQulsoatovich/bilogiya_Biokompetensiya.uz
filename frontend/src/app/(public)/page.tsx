@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { BookOpen, Microscope, ArrowRight, BrainCircuit, Activity, Globe } from "lucide-react";
+import { Logo } from "@/components/Logo";
 
 export default function LandingPage() {
   const features = [
@@ -35,12 +36,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center gap-2">
-              <div className="bg-gradient-to-br from-secondary-500 to-secondary-600 p-2 rounded-lg shadow-lg">
-                <BookOpen className="w-6 h-6 text-primary-950" />
-              </div>
-              <span className="text-xl font-bold font-serif text-white tracking-tight">
-                BioEdu
-              </span>
+              <Logo isDark={true} />
             </div>
 
             <div className="hidden lg:flex items-center gap-8">
@@ -163,7 +159,7 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="glass border-t border-border/50 py-10 mt-20">
         <div className="max-w-7xl mx-auto px-4 text-center text-foreground/50">
-          <p>&copy; {new Date().getFullYear()} BioEdu. Barcha huquqlar himoyalangan.</p>
+          <p>&copy; {new Date().getFullYear()} Biokompetensiya. Barcha huquqlar himoyalangan.</p>
         </div>
       </footer>
     </div>
