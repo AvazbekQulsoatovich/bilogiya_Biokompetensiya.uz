@@ -8,7 +8,7 @@ export interface AuthRequest extends Request {
 }
 
 export const protect = async (req: Request, res: Response, next: NextFunction) => {
-  req.user = { id: 'ed71be41-d371-4a45-a0cd-ed8d7b590a51', role: 'SUPER_ADMIN' } as any;
+  (req as any).user = { id: 'ed71be41-d371-4a45-a0cd-ed8d7b590a51', role: 'SUPER_ADMIN' };
   return next();
 };
 

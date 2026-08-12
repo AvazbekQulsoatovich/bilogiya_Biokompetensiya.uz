@@ -166,7 +166,8 @@ router.post('/quizzes', authenticate, authorize(['SUPER_ADMIN']), async (req, re
 
 // Delete Resource
 router.delete('/:type/:id', authenticate, authorize(['SUPER_ADMIN']), async (req, res) => {
-  const { type, id } = req.params;
+  const { type } = req.params;
+  const id = req.params.id as string;
   try {
     if (type === 'crosswords') {
       await prisma.crossword.delete({ where: { id } });

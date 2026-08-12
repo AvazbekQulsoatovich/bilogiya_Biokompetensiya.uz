@@ -77,6 +77,7 @@ router.post('/', authenticate, authorize(['SUPER_ADMIN']), async (req, res) => {
 // Update a topic (e.g. add videoUrl, edit title/grade)
 router.put('/:id', authenticate, authorize(['SUPER_ADMIN']), async (req, res) => {
   try {
+    const id = req.params.id as string;
     const { videoUrl, title, gradeLevel } = req.body;
     const updateData: any = {};
     if (videoUrl !== undefined) updateData.videoUrl = videoUrl;
@@ -94,7 +95,7 @@ router.put('/:id', authenticate, authorize(['SUPER_ADMIN']), async (req, res) =>
     }
 
     const lesson = await prisma.lesson.update({
-      where: { id: req.params.id },
+      where: { id },
       data: updateData
     });
     res.json(lesson);
@@ -106,10 +107,11 @@ router.put('/:id', authenticate, authorize(['SUPER_ADMIN']), async (req, res) =>
 // Delete a topic
 router.delete('/:id', authenticate, authorize(['SUPER_ADMIN']), async (req, res) => {
   try {
-    await prisma.attachment.deleteMany({ where: { lessonId: req.params.id } });
-    await prisma.quiz.deleteMany({ where: { lessonId: req.params.id } }); // Quizzes related to this lesson might need cascading
+    const id = req.params.id as string;
+    await prisma.attachment.deleteMany({ where: { lessonId: id } });
+    await prisma.quiz.deleteMany({ where: { lessonId: id } }); // Quizzes related to this lesson might need cascading
     const lesson = await prisma.lesson.delete({
-      where: { id: req.params.id }
+      where: { id }
     });
     res.json({ message: 'Deleted successfully', lesson });
   } catch (error) {
