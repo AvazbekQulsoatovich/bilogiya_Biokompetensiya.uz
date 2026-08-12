@@ -164,4 +164,25 @@ router.post('/quizzes', authenticate, authorize(['SUPER_ADMIN']), async (req, re
   }
 });
 
+// Delete Resource
+router.delete('/:type/:id', authenticate, authorize(['SUPER_ADMIN']), async (req, res) => {
+  const { type, id } = req.params;
+  try {
+    if (type === 'crosswords') {
+      await prisma.crossword.delete({ where: { id } });
+    } else if (type === 'games') {
+      await prisma.game.delete({ where: { id } });
+    } else if (type === 'labs') {
+      await prisma.lab.delete({ where: { id } });
+    } else if (type === 'quizzes') {
+      await prisma.quiz.delete({ where: { id } });
+    } else {
+      return res.status(400).json({ error: 'Invalid type' });
+    }
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete' });
+  }
+});
+
 export default router;

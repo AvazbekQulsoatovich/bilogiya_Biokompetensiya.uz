@@ -170,12 +170,14 @@ export default function SettingsPage() {
     localStorage.setItem("bioedu_notifications", JSON.stringify(updated));
   };
 
-  const tabs = [
+  const allTabs = [
     { id: "system", name: "Tizim sozlamalari", icon: <Monitor className="w-5 h-5" /> },
-    { id: "profile", name: "Profil sozlamalari", icon: <User className="w-5 h-5" /> },
+    { id: "profile", name: "Profil sozlamalari", icon: <User className="w-5 h-5" />, requiresAuth: true },
     { id: "notifications", name: "Bildirishnomalar", icon: <Bell className="w-5 h-5" /> },
-    { id: "security", name: "Xavfsizlik", icon: <Shield className="w-5 h-5" /> },
+    { id: "security", name: "Xavfsizlik", icon: <Shield className="w-5 h-5" />, requiresAuth: true },
   ];
+  
+  const tabs = allTabs.filter(t => !t.requiresAuth || !!token);
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto w-full">

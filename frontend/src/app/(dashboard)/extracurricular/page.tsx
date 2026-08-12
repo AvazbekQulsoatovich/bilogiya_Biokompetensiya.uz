@@ -32,7 +32,11 @@ export default function ExtracurricularPage() {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/extracurricular`);
       const data = await res.json();
-      setTasks(data || []);
+      if (Array.isArray(data)) {
+        setTasks(data);
+      } else {
+        setTasks(data?.tasks || []);
+      }
     } catch (error) {
       console.error("Failed to fetch tasks", error);
     } finally {
@@ -97,21 +101,21 @@ export default function ExtracurricularPage() {
 
   return (
     <div className="p-8 max-w-7xl mx-auto w-full">
-      <div className="flex justify-between items-center mb-8">
+      <div className="bg-teal-500 rounded-[2rem] p-6 md:p-8 mb-8 text-white shadow-lg shadow-teal-500/20 flex flex-col md:flex-row md:items-center justify-between gap-6 shrink-0">
         <div className="flex items-center gap-4">
-          <div className="p-3 bg-primary-500/10 rounded-2xl">
-            <FileText className="w-8 h-8 text-primary-500" />
+          <div className="p-3 bg-white/20 backdrop-blur-sm rounded-2xl">
+            <FileText className="w-8 h-8 text-white" />
           </div>
           <div>
             <h1 className="text-3xl font-bold">Darsdan tashqari topshiriqlar</h1>
-            <p className="text-foreground/60 mt-1">Mustaqil izlanishlar va amaliy ishlar orqali qo'shimcha XP ishlang.</p>
+            <p className="text-white/80 mt-1">Mustaqil izlanishlar va amaliy ishlar orqali qo'shimcha XP ishlang.</p>
           </div>
         </div>
 
         {userRole === "SUPER_ADMIN" && (
           <button 
             onClick={() => setIsCreateModalOpen(true)}
-            className="flex items-center gap-2 bg-primary-600 hover:bg-primary-500 text-white px-5 py-2.5 rounded-xl transition-all shadow-lg shadow-primary-500/20"
+            className="flex items-center gap-2 bg-white text-teal-600 hover:bg-teal-50 px-5 py-3 rounded-xl transition-all shadow-md font-medium"
           >
             <Plus className="w-5 h-5" />
             Yangi Topshiriq
@@ -121,7 +125,7 @@ export default function ExtracurricularPage() {
 
       {loading ? (
         <div className="flex justify-center p-12">
-          <div className="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-8 h-8 border-4 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
       ) : tasks.length === 0 ? (
         <div className="glass p-12 text-center rounded-3xl border-dashed border-2 border-border/50">
@@ -136,9 +140,9 @@ export default function ExtracurricularPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="glass p-6 rounded-3xl border border-border/50 relative overflow-hidden group flex flex-col h-full hover:shadow-xl hover:shadow-primary-500/10 transition-all"
+              className="glass p-6 rounded-3xl border border-border/50 relative overflow-hidden group flex flex-col h-full hover:shadow-xl hover:shadow-teal-500/10 transition-all"
             >
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-primary" />
+              <div className="absolute top-0 left-0 w-full h-1 bg-teal-500" />
               
               <h3 className="text-xl font-bold mb-2">{task.title}</h3>
               <p className="text-foreground/60 text-sm mb-6 flex-grow whitespace-pre-wrap">
@@ -152,7 +156,7 @@ export default function ExtracurricularPage() {
                 
                 <button 
                   onClick={() => { setSelectedTaskId(task.id); setIsSubmitModalOpen(true); }}
-                  className="flex items-center gap-2 bg-primary-600 hover:bg-primary-500 text-white px-4 py-2 rounded-xl transition-all shadow-lg shadow-primary-500/20 text-sm font-medium"
+                  className="flex items-center gap-2 bg-teal-600 hover:bg-teal-500 text-white px-4 py-2 rounded-xl transition-all shadow-lg shadow-teal-500/20 text-sm font-medium"
                 >
                   Boshlash
                 </button>
@@ -213,7 +217,7 @@ export default function ExtracurricularPage() {
               </div>
               <button 
                 type="submit"
-                className="w-full bg-primary-600 hover:bg-primary-500 text-white font-medium py-3 rounded-xl shadow-lg"
+                className="w-full bg-teal-600 hover:bg-teal-500 text-white font-medium py-3 rounded-xl shadow-lg"
               >
                 Yaratish
               </button>
@@ -252,7 +256,7 @@ export default function ExtracurricularPage() {
               <button 
                 type="submit"
                 disabled={submitting}
-                className="w-full flex justify-center items-center gap-2 bg-primary-600 hover:bg-primary-500 disabled:opacity-50 text-white font-medium py-3 rounded-xl shadow-lg"
+                className="w-full flex justify-center items-center gap-2 bg-teal-600 hover:bg-teal-500 disabled:opacity-50 text-white font-medium py-3 rounded-xl shadow-lg"
               >
                 {submitting ? "Yuborilmoqda..." : <><CheckCircle className="w-5 h-5" /> Yuborish va XP olish</>}
               </button>
@@ -263,3 +267,4 @@ export default function ExtracurricularPage() {
     </div>
   );
 }
+

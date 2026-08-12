@@ -68,7 +68,7 @@ export default function GoalsPage() {
         </form>
 
         <div className="space-y-4">
-          {goals.map((goal, idx) => (
+          {(Array.isArray(goals) ? goals : []).map((goal, idx) => (
             <motion.div 
               key={goal.id}
               initial={{ opacity: 0, y: 10 }}
@@ -97,3 +97,4 @@ export default function GoalsPage() {
     </div>
   );
 }
+

@@ -21,7 +21,7 @@ export default function AchievementsPage() {
         }
       });
       const data = await res.json();
-      if (res.ok) setAchievements(data);
+      if (res.ok) setAchievements(Array.isArray(data) ? data : data?.achievements || []);
     } catch (error) {
       console.error(error);
     } finally {
@@ -43,7 +43,7 @@ export default function AchievementsPage() {
 
       {loading ? (
         <div className="flex justify-center p-12">
-          <div className="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-8 h-8 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -70,7 +70,7 @@ export default function AchievementsPage() {
               )}
               
               <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-4 ${
-                ach.unlocked ? 'bg-gradient-to-tr from-purple-600 to-primary-500 text-white shadow-xl shadow-purple-500/30' : 'bg-background border-4 border-border text-foreground/30'
+                ach.unlocked ? 'bg-gradient-to-tr from-purple-600 to-yellow-500 text-white shadow-xl shadow-purple-500/30' : 'bg-background border-4 border-border text-foreground/30'
               }`}>
                 <Award className="w-10 h-10" />
               </div>
@@ -90,3 +90,4 @@ export default function AchievementsPage() {
     </div>
   );
 }
+

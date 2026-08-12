@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { BookMarked, Plus, X, UploadCloud, FileText, Download, Trash2, Eye } from "lucide-react";
+import { BookMarked, Plus, X, UploadCloud, FileText, Download, Trash2, Eye, User } from "lucide-react";
 
 export default function BooksPage() {
   const [books, setBooks] = useState<any[]>([]);
@@ -123,7 +123,7 @@ export default function BooksPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-3">
-            <BookMarked className="text-primary-500 w-8 h-8" />
+            <BookMarked className="text-violet-500 w-8 h-8" />
             Darsliklar va Kitoblar
           </h1>
           <p className="text-foreground/60 mt-2">Elektron kitoblarni to'g'ridan-to'g'ri tizimning o'zida o'qing</p>
@@ -132,7 +132,7 @@ export default function BooksPage() {
         {userRole === "SUPER_ADMIN" && (
           <button 
             onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 bg-primary-600 hover:bg-primary-500 text-white px-5 py-2.5 rounded-xl transition-all shadow-lg shadow-primary-500/20"
+            className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white px-5 py-2.5 rounded-xl transition-all shadow-lg shadow-violet-500/20"
           >
             <Plus className="w-5 h-5" />
             Kitob qo'shish
@@ -142,7 +142,7 @@ export default function BooksPage() {
 
       {loading ? (
         <div className="flex justify-center p-12">
-          <div className="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-8 h-8 border-4 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
       ) : books.length === 0 ? (
         <div className="glass p-12 text-center rounded-3xl border-dashed border-2 border-border/50">
@@ -152,7 +152,7 @@ export default function BooksPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {books.map((book) => (
+          {(Array.isArray(books) ? books : []).map((book) => (
             <motion.div 
               key={book.id}
               initial={{ opacity: 0, y: 10 }}
@@ -172,7 +172,7 @@ export default function BooksPage() {
                     href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}${book.pdfUrl}`} 
                     target="_blank" 
                     rel="noreferrer"
-                    className="flex items-center gap-2 bg-primary-600 hover:bg-primary-500 text-white px-6 py-3 rounded-full font-medium transition-all shadow-xl shadow-primary-500/30 translate-y-4 group-hover:translate-y-0"
+                    className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white px-6 py-3 rounded-full font-medium transition-all shadow-xl shadow-violet-500/30 translate-y-4 group-hover:translate-y-0"
                   >
                     <Eye className="w-5 h-5" />
                     O'qish
@@ -229,7 +229,7 @@ export default function BooksPage() {
               </button>
               
               <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                <BookMarked className="w-6 h-6 text-primary-500" />
+                <BookMarked className="w-6 h-6 text-violet-500" />
                 Yangi kitob qo'shish
               </h2>
               
@@ -265,7 +265,7 @@ export default function BooksPage() {
                       accept=".pdf"
                       required
                       onChange={(e) => setPdfFile(e.target.files?.[0] || null)}
-                      className="w-full text-sm text-foreground/70 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-medium file:bg-primary-500/10 file:text-primary-500 hover:file:bg-primary-500/20"
+                      className="w-full text-sm text-foreground/70 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-medium file:bg-violet-500/10 file:text-violet-500 hover:file:bg-violet-500/20"
                     />
                   </div>
                 </div>
@@ -286,7 +286,7 @@ export default function BooksPage() {
                   <button 
                     type="submit"
                     disabled={isUploading}
-                    className="w-full flex justify-center items-center gap-2 bg-primary-600 hover:bg-primary-500 text-white font-medium py-3.5 rounded-xl transition-all shadow-lg shadow-primary-500/20 disabled:opacity-50"
+                    className="w-full flex justify-center items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white font-medium py-3.5 rounded-xl transition-all shadow-lg shadow-violet-500/20 disabled:opacity-50"
                   >
                     {isUploading ? (
                       <>Yuklanmoqda... (Kuting)</>
@@ -306,3 +306,4 @@ export default function BooksPage() {
     </div>
   );
 }
+

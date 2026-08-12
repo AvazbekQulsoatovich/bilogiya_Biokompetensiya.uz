@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { BookOpen, Plus, File, UploadCloud, X, FileText, Image as ImageIcon, Video, PlaySquare, Edit, Trash } from "lucide-react";
+import Link from "next/link";
 
 export default function TopicsPage() {
   const [topics, setTopics] = useState<any[]>([]);
@@ -43,7 +44,11 @@ export default function TopicsPage() {
       // API manzili localhostga o'zgartirildi
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/topics`);
       const data = await res.json();
-      setTopics(data);
+      if (Array.isArray(data)) {
+        setTopics(data);
+      } else {
+        setTopics(data?.topics || []);
+      }
     } catch (error) {
       console.error("Failed to fetch topics", error);
     } finally {
@@ -208,19 +213,21 @@ export default function TopicsPage() {
 
   return (
     <div className="p-8 max-w-7xl mx-auto w-full">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-3">
-            <BookOpen className="text-primary-500" />
-            Mavzular va O'quv Materiallari
-          </h1>
-          <p className="text-foreground/60 mt-2">Darslarni o'qing, video va materiallar bilan tanishing</p>
+      <div className="bg-indigo-500 rounded-[2rem] p-6 md:p-8 mb-8 text-white shadow-lg shadow-indigo-500/20 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-white/20 backdrop-blur-sm rounded-2xl">
+            <BookOpen className="w-8 h-8 text-white" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold">Mavzular va O'quv Materiallari</h1>
+            <p className="text-white/80 mt-1">Darslarni o'qing, video va materiallar bilan tanishing</p>
+          </div>
         </div>
         
         {userRole === "SUPER_ADMIN" && (
           <button 
             onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 bg-primary-600 hover:bg-primary-500 text-white px-5 py-3 rounded-xl transition-all shadow-lg shadow-primary-500/20 font-medium"
+            className="flex items-center gap-2 bg-white text-indigo-600 hover:bg-indigo-50 px-5 py-3 rounded-xl transition-all shadow-md font-medium"
           >
             <Plus className="w-5 h-5" />
             Mavzu qo'shish
@@ -231,13 +238,13 @@ export default function TopicsPage() {
       <div className="flex gap-4 mb-6">
         <button 
           onClick={() => setActiveTab(5)}
-          className={`px-6 py-2 rounded-xl font-medium transition-all ${activeTab === 5 ? 'bg-primary-500 text-white shadow-lg' : 'bg-card border border-border/50 text-foreground/70 hover:bg-primary-500/10'}`}
+          className={`px-6 py-2 rounded-xl font-medium transition-all ${activeTab === 5 ? 'bg-indigo-500 text-white shadow-lg' : 'bg-card border border-border/50 text-foreground/70 hover:bg-indigo-500/10'}`}
         >
           5-sinf Botanika
         </button>
         <button 
           onClick={() => setActiveTab(6)}
-          className={`px-6 py-2 rounded-xl font-medium transition-all ${activeTab === 6 ? 'bg-primary-500 text-white shadow-lg' : 'bg-card border border-border/50 text-foreground/70 hover:bg-primary-500/10'}`}
+          className={`px-6 py-2 rounded-xl font-medium transition-all ${activeTab === 6 ? 'bg-indigo-500 text-white shadow-lg' : 'bg-card border border-border/50 text-foreground/70 hover:bg-indigo-500/10'}`}
         >
           6-sinf Biologiya
         </button>
@@ -245,9 +252,9 @@ export default function TopicsPage() {
 
       {loading ? (
         <div className="flex justify-center p-12">
-          <div className="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
-      ) : topics.filter(t => (t.course?.gradeLevel || 5) === activeTab).length === 0 ? (
+      ) : !Array.isArray(topics) || topics.filter(t => (t.course?.gradeLevel || 5) === activeTab).length === 0 ? (
         <div className="glass p-12 text-center rounded-3xl border-dashed border-2 border-border/50">
           <BookOpen className="w-12 h-12 text-foreground/30 mx-auto mb-4" />
           <h3 className="text-xl font-medium mb-2">Hali mavzular yo'q</h3>
@@ -255,17 +262,19 @@ export default function TopicsPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-6">
-          {topics.filter(t => (t.course?.gradeLevel || 5) === activeTab).map((topic) => (
+          {(Array.isArray(topics) ? topics : []).filter(t => (t.course?.gradeLevel || 5) === activeTab).map((topic) => (
             <motion.div 
               key={topic.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               className="glass p-6 rounded-2xl border border-border/50 relative overflow-hidden group"
             >
-              <div className="absolute top-0 left-0 w-2 h-full bg-gradient-primary" />
+              <div className="absolute top-0 left-0 w-2 h-full bg-indigo-500" />
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center pl-4 gap-4">
-                <div>
-                  <h3 className="text-xl font-bold">{topic.title}</h3>
+                <div className="flex-1">
+                  <Link href={`/topics/${topic.id}`} className="hover:text-indigo-600 transition-colors">
+                    <h3 className="text-xl font-bold">{topic.title}</h3>
+                  </Link>
                   <p className="text-foreground/60 text-sm mt-1">
                     Yaratilgan vaqt: {new Date(topic.createdAt).toLocaleDateString()}
                   </p>
@@ -280,7 +289,7 @@ export default function TopicsPage() {
                         setEditTopicGrade(topic.course?.gradeLevel || 5);
                         setIsEditModalOpen(true);
                       }}
-                      className="p-2 text-blue-500 bg-blue-500/10 rounded-lg hover:bg-blue-500/20 transition-all"
+                      className="p-2 text-indigo-500 bg-indigo-500/10 rounded-lg hover:bg-indigo-500/20 transition-all"
                       title="Tahrirlash"
                     >
                       <Edit className="w-4 h-4" />
@@ -294,14 +303,14 @@ export default function TopicsPage() {
                     </button>
                     <button 
                       onClick={() => { setVideoTopicId(topic.id); setIsVideoModalOpen(true); }}
-                      className="flex items-center gap-2 text-purple-500 bg-purple-500/10 px-4 py-2 rounded-lg hover:bg-purple-500/20 transition-all text-sm font-medium"
+                      className="flex items-center gap-2 text-indigo-500 bg-indigo-500/10 px-4 py-2 rounded-lg hover:bg-indigo-500/20 transition-all text-sm font-medium"
                     >
                       <PlaySquare className="w-4 h-4" />
                       Video biriktirish
                     </button>
                     <button 
                       onClick={() => setSelectedTopic(topic.id)}
-                      className="flex items-center gap-2 text-primary-500 bg-primary-500/10 px-4 py-2 rounded-lg hover:bg-primary-500/20 transition-all text-sm font-medium"
+                      className="flex items-center gap-2 text-indigo-500 bg-indigo-500/10 px-4 py-2 rounded-lg hover:bg-indigo-500/20 transition-all text-sm font-medium"
                     >
                       <UploadCloud className="w-4 h-4" />
                       Fayl biriktirish
@@ -340,12 +349,12 @@ export default function TopicsPage() {
                     <input 
                       type="file" 
                       onChange={(e) => setFile(e.target.files?.[0] || null)}
-                      className="text-sm text-foreground/70 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
+                      className="text-sm text-foreground/70 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
                     />
                     <button 
                       onClick={() => handleUpload(topic.id)}
                       disabled={!file || uploading}
-                      className="bg-primary-600 text-white px-4 py-2 rounded-lg disabled:opacity-50"
+                      className="bg-indigo-600 text-white px-4 py-2 rounded-lg disabled:opacity-50"
                     >
                       {uploading ? "Yuklanmoqda..." : "Yuklash"}
                     </button>
@@ -372,7 +381,7 @@ export default function TopicsPage() {
                         href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}${file.fileUrl}`} 
                         target="_blank" 
                         rel="noreferrer"
-                        className="flex items-center gap-3 bg-background/50 border border-border/50 px-4 py-2 rounded-xl hover:border-primary-500/50 hover:bg-primary-500/5 transition-all"
+                        className="flex items-center gap-3 bg-background/50 border border-border/50 px-4 py-2 rounded-xl hover:border-indigo-500/50 hover:bg-indigo-500/5 transition-all"
                       >
                         {getFileIcon(file.fileType)}
                         <span className="text-sm font-medium">{file.fileName}</span>
@@ -467,7 +476,7 @@ export default function TopicsPage() {
               </div>
               <button 
                 type="submit"
-                className="w-full bg-primary-600 hover:bg-primary-500 text-white font-medium py-3 rounded-xl transition-all shadow-lg shadow-primary-500/20"
+                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-3 rounded-xl transition-all shadow-lg shadow-indigo-500/20"
               >
                 Yaratish
               </button>
@@ -498,7 +507,7 @@ export default function TopicsPage() {
                   required
                   value={editTopicTitle}
                   onChange={(e) => setEditTopicTitle(e.target.value)}
-                  className="w-full bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+                  className="w-full bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all"
                 />
               </div>
               <div className="mb-6">
@@ -506,7 +515,7 @@ export default function TopicsPage() {
                 <select 
                   value={editTopicGrade}
                   onChange={(e) => setEditTopicGrade(Number(e.target.value))}
-                  className="w-full bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+                  className="w-full bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all"
                 >
                   <option value={5}>5-sinf</option>
                   <option value={6}>6-sinf</option>
@@ -514,7 +523,7 @@ export default function TopicsPage() {
               </div>
               <button 
                 type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-3 rounded-xl transition-all shadow-lg shadow-blue-500/20"
+                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-3 rounded-xl transition-all shadow-lg shadow-indigo-500/20"
               >
                 Saqlash
               </button>
@@ -525,3 +534,4 @@ export default function TopicsPage() {
     </div>
   );
 }
+

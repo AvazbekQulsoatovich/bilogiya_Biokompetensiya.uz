@@ -15,6 +15,8 @@ export default function CrosswordSolverPage() {
   const [grid, setGrid] = useState<any[][]>([]);
   const [userInputs, setUserInputs] = useState<Record<string, string>>({});
   const [isCompleted, setIsCompleted] = useState(false);
+  const [isRevealed, setIsRevealed] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
     fetchCrossword();
@@ -85,11 +87,27 @@ export default function CrosswordSolverPage() {
       }
     }
     
-    if (allCorrect && !isCompleted) {
+    if (allCorrect && !isCompleted && !isRevealed) {
+      setErrorMsg("");
       submitCompletion();
     } else if (!allCorrect) {
-      alert("Ba'zi harflar noto'g'ri yoki to'ldirilmagan.");
+      setErrorMsg("Ba'zi harflar noto'g'ri yoki to'ldirilmagan.");
     }
+  };
+
+  const revealAnswers = () => {
+    const newInputs = { ...userInputs };
+    for (let r = 0; r < grid.length; r++) {
+      for (let c = 0; c < grid[r].length; c++) {
+        const cell = grid[r][c];
+        if (cell) {
+          newInputs[`${r}-${c}`] = cell.letter.toUpperCase();
+        }
+      }
+    }
+    setUserInputs(newInputs);
+    setIsRevealed(true);
+    setErrorMsg("Javoblar ochildi. (XP berilmaydi)");
   };
 
   const submitCompletion = async () => {
@@ -155,7 +173,10 @@ export default function CrosswordSolverPage() {
                             maxLength={1}
                             value={userInputs[`${rIdx}-${cIdx}`] || ""}
                             onChange={(e) => handleInputChange(rIdx, cIdx, e.target.value)}
-                            className="w-full h-full text-center text-xl font-bold uppercase bg-background border-2 border-border focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500/50 rounded-lg transition-colors"
+                            disabled={isRevealed || isCompleted}
+                            className={`w-full h-full text-center text-xl font-bold uppercase bg-background border-2 focus:outline-none rounded-lg transition-colors ${
+                              isRevealed ? "text-red-500 border-red-200 bg-red-50" : "text-foreground border-border focus:border-primary-500 focus:ring-1 focus:ring-primary-500/50"
+                            }`}
                           />
                         </div>
                       ) : (
@@ -180,12 +201,29 @@ export default function CrosswordSolverPage() {
               ))}
             </div>
             
-            <button
-              onClick={checkCompletion}
-              className="mt-8 w-full bg-primary-600 hover:bg-primary-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-primary-500/20 transition-all"
-            >
-              Tekshirish
-            </button>
+            {errorMsg && (
+              <div className={`mt-4 p-3 rounded-xl text-sm font-bold ${isRevealed ? 'bg-orange-100 text-orange-600' : 'bg-red-100 text-red-600'}`}>
+                {errorMsg}
+              </div>
+            )}
+            
+            <div className="mt-6 flex flex-col gap-3">
+              <button
+                onClick={checkCompletion}
+                disabled={isRevealed}
+                className="w-full bg-primary-600 hover:bg-primary-500 disabled:opacity-50 text-white font-bold py-3 rounded-xl shadow-lg shadow-primary-500/20 transition-all"
+              >
+                Tekshirish
+              </button>
+              
+              <button
+                onClick={revealAnswers}
+                disabled={isRevealed}
+                className="w-full bg-gray-200 hover:bg-gray-300 disabled:opacity-50 text-gray-700 font-bold py-3 rounded-xl transition-all"
+              >
+                Taslim bo'lish
+              </button>
+            </div>
           </div>
         </div>
       ) : (

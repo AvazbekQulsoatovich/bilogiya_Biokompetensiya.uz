@@ -2,9 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, CheckCircle2, FlaskConical, Beaker, Pipette, Microscope, Info, Award, Star, TrendingUp } from "lucide-react";
+import { motion } from "framer-motion";
+import { ArrowLeft, CheckCircle2, FlaskConical, Award, Star, TrendingUp } from "lucide-react";
 import confetti from "canvas-confetti";
+
+import MicroscopeLab from "@/components/labs/MicroscopeLab";
+import ChemistryLab from "@/components/labs/ChemistryLab";
+import SimulationLab from "@/components/labs/SimulationLab";
+import AssemblyLab from "@/components/labs/AssemblyLab";
 
 export default function LabExperimentPage() {
   const params = useParams();
@@ -12,10 +17,8 @@ export default function LabExperimentPage() {
   
   const [lab, setLab] = useState<any>(null);
   const [steps, setSteps] = useState<any[]>([]);
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isCompleted, setIsCompleted] = useState(false);
-  const [errorItem, setErrorItem] = useState<string | null>(null);
   const [progress, setProgress] = useState<any>(null);
 
   useEffect(() => {
@@ -41,7 +44,8 @@ export default function LabExperimentPage() {
       const data = await res.json();
       if (data) {
         setLab(data);
-        setSteps(JSON.parse(data.stepsJson || "[]"));
+        const parsed = JSON.parse(data.stepsJson || "{}");
+        setSteps(parsed.instructions || []);
       }
     } catch (error) {
       console.error("Failed to fetch lab", error);
@@ -51,6 +55,8 @@ export default function LabExperimentPage() {
   };
 
   const completeLab = async () => {
+    if (isCompleted) return;
+    setIsCompleted(true);
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/labs/${params.id}/complete`, {
@@ -63,14 +69,13 @@ export default function LabExperimentPage() {
       });
       if (res.ok) {
         confetti({
-          particleCount: 150,
-          spread: 70,
+          particleCount: 200,
+          spread: 90,
           origin: { y: 0.6 },
-          colors: ['#3b82f6', '#10b981', '#f59e0b']
+          colors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444']
         });
-        // Update local progress stat visually
         if (progress) {
-          setProgress({ ...progress, totalXp: progress.totalXp + lab.rewardXp });
+          setProgress({ ...progress, totalXp: progress.totalXp + (lab.rewardXp || 0) });
         }
       }
     } catch (error) {
@@ -78,215 +83,94 @@ export default function LabExperimentPage() {
     }
   };
 
-  const handleItemClick = (itemName: string) => {
-    if (isCompleted) return;
-    
-    const currentStep = steps[currentStepIndex];
-    
-    // Check if clicked item is the required one for this step
-    if (currentStep.item === itemName || currentStep.target === itemName) {
-      // Success! Move to next step
-      setErrorItem(null);
-      if (currentStepIndex < steps.length - 1) {
-        setCurrentStepIndex(prev => prev + 1);
-      } else {
-        setIsCompleted(true);
-        completeLab();
-      }
-    } else {
-      // Wrong item
-      setErrorItem(itemName);
-      setTimeout(() => setErrorItem(null), 1000);
-    }
-  };
-
-  // Lab Items Icons Map
-  const itemIcons: any = {
-    "piyoz": <div className="w-16 h-16 rounded-full bg-purple-500/20 border-2 border-purple-500 flex items-center justify-center text-2xl" title="Piyoz">🧅</div>,
-    "oyna": <div className="w-24 h-12 bg-blue-100 border-2 border-blue-300 rounded shadow-inner flex items-center justify-center text-sm font-bold text-blue-800" title="Predmet oynasi">Oyna</div>,
-    "tomizgich": <Pipette className="w-12 h-12 text-blue-600" title="Tomizgich (Yod)" />,
-    "qoplagich": <div className="w-10 h-10 bg-white/50 border border-gray-300 shadow-sm" title="Qoplagich oyna" />,
-    "mikroskop": <Microscope className="w-20 h-20 text-gray-700" title="Mikroskop" />
-  };
-
   if (loading) {
     return (
-      <div className="flex justify-center p-20">
-        <div className="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+      <div className="flex justify-center items-center min-h-[60vh]">
+        <div className="w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
-  if (!lab) return <div className="p-8">Laboratoriya topilmadi.</div>;
+  if (!lab) return <div className="p-8 text-center text-xl text-gray-500">Laboratoriya topilmadi.</div>;
+
+  const renderLabContent = () => {
+    const labType = lab.type || "MICROSCOPE"; // Fallback to microscope if not defined
+
+    switch (labType) {
+      case "CHEMISTRY":
+        return <ChemistryLab lab={lab} steps={steps} completeLab={completeLab} isCompleted={isCompleted} />;
+      case "SIMULATION":
+        return <SimulationLab lab={lab} steps={steps} completeLab={completeLab} isCompleted={isCompleted} />;
+      case "ASSEMBLY":
+        return <AssemblyLab lab={lab} steps={steps} completeLab={completeLab} isCompleted={isCompleted} />;
+      case "MICROSCOPE":
+      default:
+        return <MicroscopeLab lab={lab} steps={steps} completeLab={completeLab} isCompleted={isCompleted} />;
+    }
+  };
 
   return (
-    <div className="p-8 max-w-7xl mx-auto w-full">
+    <div className="p-4 md:p-8 max-w-7xl mx-auto w-full">
       <button 
         onClick={() => router.push('/labs')}
-        className="flex items-center gap-2 text-foreground/60 hover:text-foreground mb-6 transition-colors"
+        className="flex items-center gap-2 text-gray-500 hover:text-gray-900 mb-8 transition-colors font-medium bg-white px-4 py-2 rounded-full border border-gray-200 shadow-sm w-max"
       >
-        <ArrowLeft className="w-4 h-4" /> Ortga qaytish
+        <ArrowLeft className="w-4 h-4" /> Laboratoriyalar ro'yxatiga qaytish
       </button>
 
-      <div className="flex justify-between items-start mb-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-6">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-3 mb-2">
+          <h1 className="text-3xl md:text-4xl font-black text-gray-900 mb-3 tracking-tight">
             {lab.title}
           </h1>
-          <p className="text-foreground/70 max-w-2xl">{lab.description}</p>
+          <p className="text-gray-600 max-w-2xl text-lg">{lab.description}</p>
         </div>
         <div className="flex gap-4 items-center">
           {progress && (
-            <div className="glass px-6 py-3 rounded-2xl border border-border/50 text-right hidden md:block">
-              <div className="flex items-center justify-end gap-4">
+            <div className="bg-white px-6 py-3 rounded-2xl border border-gray-100 shadow-sm text-right hidden md:block">
+              <div className="flex items-center justify-end gap-6">
                 <div>
-                  <p className="text-xs text-foreground/50 uppercase font-bold tracking-wider mb-1">Mening XP</p>
-                  <p className="text-xl font-bold flex items-center justify-end gap-1"><Star className="w-4 h-4 text-yellow-500 fill-yellow-500" /> {progress.totalXp}</p>
+                  <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-1">Mening XP</p>
+                  <p className="text-xl font-bold flex items-center justify-end gap-1.5"><Star className="w-5 h-5 text-yellow-400 fill-yellow-400 drop-shadow-sm" /> {progress.totalXp}</p>
                 </div>
-                <div className="w-px h-8 bg-border/50 mx-2"></div>
+                <div className="w-px h-8 bg-gray-200"></div>
                 <div>
-                  <p className="text-xs text-foreground/50 uppercase font-bold tracking-wider mb-1">Daraja</p>
-                  <p className="text-xl font-bold flex items-center justify-end gap-1"><TrendingUp className="w-4 h-4 text-blue-500" /> {progress.level}</p>
+                  <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-1">Daraja</p>
+                  <p className="text-xl font-bold flex items-center justify-end gap-1.5"><TrendingUp className="w-5 h-5 text-blue-500" /> {progress.level}</p>
                 </div>
               </div>
             </div>
           )}
-          <div className="glass px-6 py-3 rounded-2xl border border-primary-500/30 bg-primary-500/5 text-center">
-            <p className="text-xs uppercase font-bold text-primary-500 tracking-wider mb-1">Mukofot</p>
-            <p className="text-2xl font-black text-foreground">+{lab.rewardXp} XP</p>
+          <div className="bg-green-50 px-6 py-4 rounded-2xl border border-green-200 text-center shadow-sm">
+            <p className="text-[10px] uppercase font-bold text-green-600 tracking-widest mb-1">Mukofot</p>
+            <p className="text-2xl font-black text-green-700">+{lab.rewardXp || 0} XP</p>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column: Instructions */}
-        <div className="lg:col-span-1">
-          <div className="glass p-6 rounded-3xl border border-border/50 sticky top-24">
-            <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-              <Info className="w-5 h-5 text-blue-500" />
-              Jarayon
-            </h3>
-            
-            <div className="space-y-4">
-              {steps.map((step, index) => (
-                <div 
-                  key={step.id} 
-                  className={`flex gap-4 p-4 rounded-2xl border transition-all ${
-                    index === currentStepIndex && !isCompleted
-                      ? 'bg-primary-500/10 border-primary-500/50 shadow-md' 
-                      : index < currentStepIndex || isCompleted
-                        ? 'bg-green-500/10 border-green-500/30 opacity-70'
-                        : 'glass border-border/30 opacity-50'
-                  }`}
-                >
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${
-                    index < currentStepIndex || isCompleted ? 'bg-green-500 text-white' : index === currentStepIndex ? 'bg-primary-500 text-white' : 'bg-foreground/10 text-foreground/50'
-                  }`}>
-                    {index < currentStepIndex || isCompleted ? <CheckCircle2 className="w-5 h-5" /> : index + 1}
-                  </div>
-                  <div>
-                    <p className={`font-medium ${index === currentStepIndex && !isCompleted ? 'text-primary-700 dark:text-primary-300' : ''}`}>
-                      {step.instruction}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            {isCompleted && (
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="mt-8 bg-green-500 text-white p-6 rounded-2xl text-center shadow-xl shadow-green-500/20"
-              >
-                <Award className="w-12 h-12 mx-auto mb-3" />
-                <h3 className="text-xl font-bold mb-1">Tajriba Yakunlandi!</h3>
-                <p className="text-green-100">Siz {lab.rewardXp} XP ishlab topdingiz.</p>
-                <button 
-                  onClick={() => router.push('/labs')}
-                  className="mt-4 bg-white text-green-600 font-bold px-6 py-2 rounded-xl hover:bg-green-50 transition-colors w-full"
-                >
-                  Davom etish
-                </button>
-              </motion.div>
-            )}
-          </div>
-        </div>
-
-        {/* Right Column: Interactive Lab Zone */}
-        <div className="lg:col-span-2">
-          <div className="glass p-8 rounded-3xl border border-border/50 min-h-[600px] relative overflow-hidden flex flex-col">
-            <div className="absolute inset-0 opacity-5 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary-500 via-background to-background pointer-events-none" />
-            
-            <h3 className="text-lg font-semibold mb-8 text-center text-foreground/50 uppercase tracking-widest">
-              Tajriba Stoli
-            </h3>
-
-            {/* Interactive Area */}
-              {isCompleted ? (
-                <motion.div 
-                  initial={{ opacity: 0, scale: 0.5 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ type: "spring", bounce: 0.5 }}
-                  className="flex flex-col items-center justify-center gap-6 z-20"
-                >
-                  <div className="relative w-80 h-80 rounded-full border-8 border-black shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden bg-black flex items-center justify-center">
-                    <img 
-                      src="/onion_cells.png" 
-                      alt="Mikroskop ostida piyoz hujayrasi" 
-                      className="w-[120%] h-[120%] object-cover opacity-90 mix-blend-screen"
-                    />
-                    <div className="absolute inset-0 rounded-full shadow-[inset_0_0_80px_rgba(0,0,0,0.8)] pointer-events-none"></div>
-                    <div className="absolute w-full h-[1px] bg-black/30 pointer-events-none"></div>
-                    <div className="absolute h-full w-[1px] bg-black/30 pointer-events-none"></div>
-                  </div>
-                  <div className="text-center bg-background/80 backdrop-blur p-4 rounded-2xl border border-border">
-                    <h4 className="font-bold text-xl mb-1 text-primary-500">Piyoz po'sti hujayrasi (Yod bilan bo'yalgan)</h4>
-                    <p className="text-sm text-foreground/70">Kattalashtirish: 400x. Hujayra qobig'i va yadrosi aniq ko'rinmoqda.</p>
-                  </div>
-                </motion.div>
-              ) : (
-                <>
-                  {/* Target Zone (e.g. Microscope) */}
-                  <div className="flex gap-12 items-end">
-                    {['oyna', 'mikroskop'].map(item => (
-                      <motion.div 
-                        key={item}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => handleItemClick(item)}
-                        className={`cursor-pointer flex flex-col items-center gap-3 ${errorItem === item ? 'animate-shake' : ''}`}
-                      >
-                        <div className={`p-4 rounded-2xl ${errorItem === item ? 'bg-red-500/20 border-red-500' : 'hover:bg-foreground/5'} transition-colors border border-transparent`}>
-                          {itemIcons[item]}
-                        </div>
-                        <span className="text-sm font-medium capitalize text-foreground/70">{item}</span>
-                      </motion.div>
-                    ))}
-                  </div>
-
-                  {/* Tools Zone */}
-                  <div className="w-full glass p-6 rounded-2xl border border-border/30 flex justify-center gap-8 items-center bg-background/50 backdrop-blur-md mt-auto">
-                    {['piyoz', 'tomizgich', 'qoplagich'].map(item => (
-                      <motion.div 
-                        key={item}
-                        whileHover={{ y: -5 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={() => handleItemClick(item)}
-                        className={`cursor-pointer flex flex-col items-center gap-2 ${errorItem === item ? 'animate-shake' : ''}`}
-                      >
-                        <div className={`p-3 rounded-xl bg-background shadow-sm border ${errorItem === item ? 'border-red-500' : 'border-border'} hover:border-primary-500 transition-colors`}>
-                          {itemIcons[item]}
-                        </div>
-                        <span className="text-xs font-medium capitalize text-foreground/60">{item}</span>
-                      </motion.div>
-                    ))}
-                  </div>
-                </>
-              )}
-          </div>
-        </div>
+      <div className="w-full">
+        {renderLabContent()}
       </div>
+      
+      {isCompleted && (
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          className="mt-8 max-w-2xl mx-auto bg-gradient-to-br from-green-400 to-green-600 text-white p-8 rounded-3xl text-center shadow-2xl shadow-green-500/30"
+        >
+          <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
+            <Award className="w-8 h-8 text-white" />
+          </div>
+          <h3 className="text-2xl font-black mb-2">Ajoyib Natija!</h3>
+          <p className="text-green-50 font-medium mb-6">Siz tajribani muvaffaqiyatli yakunladingiz va {lab.rewardXp} XP ishlab topdingiz.</p>
+          <button 
+            onClick={() => router.push('/labs')}
+            className="bg-white text-green-700 font-bold px-8 py-3.5 rounded-full hover:bg-green-50 hover:scale-105 hover:shadow-lg transition-all w-full"
+          >
+            Boshqa tajribalar
+          </button>
+        </motion.div>
+      )}
     </div>
   );
 }

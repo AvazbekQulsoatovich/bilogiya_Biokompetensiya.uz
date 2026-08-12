@@ -10,7 +10,7 @@ router.get('/', async (req, res) => {
   try {
     const quizzes = await prisma.quiz.findMany({
       include: {
-        lesson: true,
+        lesson: { include: { course: true } },
         _count: {
           select: { questions: true }
         }

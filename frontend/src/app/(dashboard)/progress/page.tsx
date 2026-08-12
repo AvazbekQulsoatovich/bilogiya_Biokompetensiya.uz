@@ -32,7 +32,7 @@ export default function ProgressPage() {
   if (loading) {
     return (
       <div className="flex justify-center p-20">
-        <div className="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-8 h-8 border-4 border-red-500 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -85,7 +85,7 @@ export default function ProgressPage() {
             <h3 className="text-xl font-bold">Keyingi darajaga</h3>
             <p className="text-foreground/60 text-sm">Siz {progress?.level + 1}-darajaga chiqish uchun yana {500 - currentLevelProgress} XP yig'ishingiz kerak.</p>
           </div>
-          <div className="text-2xl font-black text-primary-500">{percent}%</div>
+          <div className="text-2xl font-black text-red-500">{percent}%</div>
         </div>
         
         <div className="w-full h-6 bg-background rounded-full overflow-hidden border border-border">
@@ -93,7 +93,7 @@ export default function ProgressPage() {
             initial={{ width: 0 }}
             animate={{ width: `${percent}%` }}
             transition={{ duration: 1, ease: "easeOut" }}
-            className="h-full bg-gradient-to-r from-primary-600 to-primary-400 relative"
+            className="h-full bg-gradient-to-r from-red-600 to-red-400 relative"
           >
             <div className="absolute top-0 right-0 bottom-0 w-full bg-[linear-gradient(45deg,rgba(255,255,255,0.2)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.2)_50%,rgba(255,255,255,0.2)_75%,transparent_75%,transparent)] bg-[length:20px_20px] animate-stripe"></div>
           </motion.div>
@@ -101,7 +101,7 @@ export default function ProgressPage() {
         
         <div className="mt-8 pt-8 border-t border-border/30 grid grid-cols-1 md:grid-cols-2 gap-8">
           <div>
-            <h4 className="font-bold mb-4 flex items-center gap-2"><Clock className="w-5 h-5 text-primary-500"/> Oxirgi faollik</h4>
+            <h4 className="font-bold mb-4 flex items-center gap-2"><Clock className="w-5 h-5 text-red-500"/> Oxirgi faollik</h4>
             <div className="text-foreground/60 text-sm italic">
               {progress?.updatedAt ? new Date(progress.updatedAt).toLocaleString() : "Ma'lumot yo'q"}
             </div>
@@ -111,3 +111,4 @@ export default function ProgressPage() {
     </div>
   );
 }
+

@@ -1,167 +1,304 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
-import { BookOpen, Microscope, ArrowRight, BrainCircuit, Activity, Globe } from "lucide-react";
+import { motion, useScroll, useMotionValueEvent } from "framer-motion";
+import { useState } from "react";
+import { ArrowRight, Globe, Gamepad2, FlaskConical, BookMarked, Microscope } from "lucide-react";
 import { Logo } from "@/components/Logo";
 
 export default function LandingPage() {
+  const { scrollY } = useScroll();
+  // Navbar har doim ko'rinadi
+  // Tepada — shaffof (video orqali ko'rinadi)
+  // Pastga tushganda — oq fon, qaytarilgan burchaklar
+  const [scrolled, setScrolled] = useState(false);
+
+  useMotionValueEvent(scrollY, "change", (latest) => {
+    setScrolled(latest > 80);
+  });
+
   const features = [
-    {
-      title: "Zamonaviy 3D Modellar",
-      description: "Biologik obyektlarni barcha tomondan o'rganish uchun interaktiv 3D vizualizatsiya.",
-      icon: <Globe className="w-6 h-6 text-blue-500" />
-    },
-    {
-      title: "Virtual Laboratoriyalar",
-      description: "Xavfsiz va qiziqarli muhitda amaliy tajribalar o'tkazish imkoniyati.",
-      icon: <Microscope className="w-6 h-6 text-green-500" />
-    },
-    {
-      title: "Sun'iy Idrok Yordamchisi",
-      description: "Tushunmagan joylaringizni tushuntirib beruvchi aqlli AI repetitor.",
-      icon: <BrainCircuit className="w-6 h-6 text-purple-500" />
-    },
-    {
-      title: "Gamifikatsiya tizimi",
-      description: "Testlar ishlash va faollik uchun XP va tangalar yig'ib, darajangizni oshiring.",
-      icon: <Activity className="w-6 h-6 text-orange-500" />
-    }
+    { title: "3D Modellar", description: "Hujayra, DNK, amyoba va boshqa biologik ob'yektlarning uch o'lchamli ko'rinishlari.", icon: <Globe className="w-8 h-8" />, gradient: "from-blue-500 to-indigo-600", bg: "bg-blue-50", iconColor: "text-blue-600", href: "/models" },
+    { title: "Virtual Laboratoriya", description: "Xavfsiz muhitda mikroskop, kimyo va simulyatsiya tajribalari.", icon: <Microscope className="w-8 h-8" />, gradient: "from-emerald-500 to-teal-600", bg: "bg-emerald-50", iconColor: "text-emerald-600", href: "/labs" },
+    { title: "Test Topshiriqlari", description: "5–6-sinf biologiyasi bo'yicha 100+ savol bilan bilimingizni tekshiring.", icon: <BookMarked className="w-8 h-8" />, gradient: "from-orange-500 to-amber-600", bg: "bg-orange-50", iconColor: "text-orange-600", href: "/quizzes" },
+    { title: "Interaktiv O'yinlar", description: "Biologiya atamalarini o'ynash orqali qiziqarli tarzda o'rganing.", icon: <Gamepad2 className="w-8 h-8" />, gradient: "from-pink-500 to-rose-600", bg: "bg-pink-50", iconColor: "text-pink-600", href: "/games" },
+  ];
+
+  const previewCards = [
+    { label: "3D Hujayra modeli", image: "/images/plant_cell_3d_1786544055211.jpg" },
+    { label: "Infuzoriya-tufelka", image: "/images/paramecium_3d_1786544182313.jpg" },
+    { label: "Bargning ichki tuzilishi", image: "/images/leaf_structure_3d_1786544229321.jpg" },
   ];
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Navbar */}
-      <nav className="fixed top-0 w-full z-50 glass border-b border-border/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
-            <div className="flex items-center gap-2">
-              <Logo isDark={true} />
+    <div className="min-h-screen bg-white">
+
+      {/* ═══ NAVBAR ═══
+          - Dastlab yo'q (opacity 0, y: -100%)
+          - 80px pastga tushganda paydo bo'ladi va qaytmaydi
+          - Pastki burchaklar qaytarilgan, chiroyli soya
+      */}
+      <motion.nav
+        style={{
+          position: "fixed",
+          top: 0, left: 0, right: 0,
+          zIndex: 100,
+          background: scrolled ? "rgba(255,255,255,0.98)" : "rgba(255,255,255,0)",
+          backdropFilter: scrolled ? "blur(20px)" : "none",
+          borderBottomLeftRadius: scrolled ? "40px" : "0px",
+          borderBottomRightRadius: scrolled ? "40px" : "0px",
+          boxShadow: scrolled ? "0 8px 40px rgba(0,0,0,0.12)" : "none",
+          transition: "background 0.4s, border-radius 0.4s, box-shadow 0.4s, backdrop-filter 0.4s",
+        }}
+      >
+        <div className="max-w-7xl mx-auto px-8 lg:px-14">
+          <div className="flex items-center justify-between" style={{ height: "80px" }}>
+
+            {/* Logo — shaffof holatda oq, oq navbarda normal */}
+            <div style={{
+              transform: "scale(2.2)",
+              transformOrigin: "left center",
+              filter: scrolled ? "none" : "brightness(0) invert(1)",
+              transition: "filter 0.4s"
+            }}>
+              <Logo />
             </div>
 
-            <div className="hidden lg:flex items-center gap-8">
-              <Link href="/dashboard" className="text-white/80 hover:text-secondary-400 font-medium transition-colors">Asosiy</Link>
-              <Link href="/topics" className="text-white/80 hover:text-secondary-400 font-medium transition-colors">Mavzular</Link>
-              <Link href="/labs" className="text-white/80 hover:text-secondary-400 font-medium transition-colors">Laboratoriyalar</Link>
-              <Link href="/models" className="text-white/80 hover:text-secondary-400 font-medium transition-colors">3D Modellar</Link>
-              <Link href="/quizzes" className="text-white/80 hover:text-secondary-400 font-medium transition-colors">Testlar</Link>
+            {/* Havolalar — qora, katta */}
+            <div className="hidden lg:flex items-center gap-9">
+              {[
+                { label: "Asosiy", href: "/dashboard" },
+                { label: "Mavzular", href: "/topics" },
+                { label: "Laboratoriyalar", href: "/labs" },
+                { label: "3D Modellar", href: "/models" },
+              ].map(item => (
+                <Link key={item.label} href={item.href}
+                  className={`relative text-xl font-black tracking-tight transition-colors group py-1 ${
+                    scrolled ? "text-gray-900 hover:text-emerald-600" : "text-white hover:text-emerald-300"
+                  }`}>
+                  {item.label}
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-emerald-500 rounded-full transition-all duration-300 group-hover:w-full" />
+                </Link>
+              ))}
             </div>
 
+            {/* Tugmalar */}
             <div className="flex items-center gap-4">
-              <Link href="/login" className="text-white/80 hover:text-white font-medium px-4 py-2 transition-colors">
-                Tizimga kirish
+              <Link href="/admin" className={`text-sm font-semibold transition-colors ${
+                scrolled ? "text-gray-400 hover:text-gray-700" : "text-white/80 hover:text-white"
+              }`}>
+                Admin
               </Link>
-              <Link href="/register" className="bg-gradient-to-r from-secondary-500 to-secondary-400 hover:from-secondary-400 hover:to-secondary-300 text-primary-950 font-bold px-5 py-2.5 rounded-xl transition-all shadow-lg shadow-secondary-500/20">
-                Boshlash
+              <Link href="/dashboard"
+                className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold px-6 py-3 rounded-full transition-all hover:scale-105 shadow-lg shadow-emerald-500/25 text-sm">
+                Boshlash <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
           </div>
         </div>
-      </nav>
+      </motion.nav>
 
-      {/* Hero Section */}
-      <main className="pt-24 pb-16 relative overflow-hidden bg-gradient-to-br from-primary-600 via-primary-800 to-primary-900 border-b-4 border-secondary-500 text-white shadow-2xl">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-secondary-500/20 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3"></div>
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-primary-400/20 rounded-full blur-[80px] translate-y-1/3 -translate-x-1/4"></div>
-        
-        {/* Floating Biology Elements */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40">
-          <motion.div
-            animate={{ y: [0, -20, 0], rotate: [0, 10, 0] }}
-            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-20 left-20 text-primary-200/50"
-          >
-            <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20"/><path d="M5 4.5l14 15"/><path d="M5 19.5l14-15"/><path d="M3.5 12h17"/></svg>
-          </motion.div>
-          <motion.div
-            animate={{ y: [0, 30, 0], rotate: [0, -15, 0] }}
-            transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-            className="absolute bottom-40 right-20 text-secondary-500/30"
-          >
-            <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
-          </motion.div>
-          <motion.div
-            animate={{ x: [0, 20, 0], y: [0, 15, 0] }}
-            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-            className="absolute top-40 right-40 text-primary-300/40"
-          >
-            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1"><path d="M4.5 12.5l3-3a5 5 0 0 1 7.07 0l3 3M4.5 16.5l3-3a5 5 0 0 1 7.07 0l3 3M4.5 8.5l3-3a5 5 0 0 1 7.07 0l3 3"/></svg>
-          </motion.div>
+      {/* ═══ HERO — to'liq ekran, navbar yo'q tepada ═══ */}
+      <section className="relative overflow-hidden" style={{ minHeight: "100vh" }}>
+        <div className="absolute inset-0 z-0 bg-gray-950">
+          <video autoPlay loop muted playsInline
+            className="w-full h-full object-cover" style={{ opacity: 0.82 }}>
+            <source src="/bg-video.mp4" type="video/mp4" />
+          </video>
+          <div className="absolute inset-0" style={{
+            background: "linear-gradient(135deg, rgba(2,8,18,0.80) 0%, rgba(2,8,18,0.35) 55%, rgba(2,8,18,0.18) 100%)"
+          }} />
         </div>
 
-        <div className="text-center py-24 px-4 max-w-7xl mx-auto relative z-10">
-          <p className="inline-flex items-center gap-2 text-secondary-400 font-bold tracking-[0.2em] text-sm uppercase mb-6 px-4 py-1.5 bg-background/10 border border-white/20 rounded-full backdrop-blur-md">
-            <Globe className="w-4 h-4" /> Ilmiy Ta'lim Platformasi
-          </p>
-          <motion.h1 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-6xl md:text-8xl font-bold font-serif tracking-tight mb-4 drop-shadow-[0_10px_20px_rgba(0,0,0,0.3)] text-transparent bg-clip-text bg-gradient-to-r from-white to-primary-100"
-          >
-            BIOLOGIYA
-          </motion.h1>
-          <div className="w-16 h-1 bg-secondary-500 mx-auto mb-6 rounded-full"></div>
-          <motion.p 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-lg md:text-xl text-white/80 max-w-3xl mx-auto mb-10 italic font-serif"
-          >
-            Maktab o'quvchilari uchun maxsus ishlab chiqilgan, interaktiv 3D modellar, virtual laboratoriyalar va sun'iy idrokka asoslangan o'quv platformasi.
-          </motion.p>
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2 }}
-            className="flex flex-wrap justify-center gap-4"
-          >
-            <Link href="/register" className="flex items-center gap-2 bg-gradient-to-r from-secondary-500 to-secondary-400 text-primary-950 hover:shadow-[0_4px_20px_rgba(200,168,75,0.4)] hover:-translate-y-1 font-bold px-8 py-4 rounded-xl transition-all text-lg">
-              Bepul boshlash <ArrowRight className="w-5 h-5" />
-            </Link>
-            <Link href="#features" className="flex items-center gap-2 bg-white/10 border border-white/20 hover:bg-white/20 text-white font-medium px-8 py-4 rounded-xl transition-all text-lg backdrop-blur-md">
-              Ko'proq ma'lumot
-            </Link>
-          </motion.div>
-        </div>
-      </main>
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-6 lg:px-12 flex items-center" style={{ minHeight: "100vh" }}>
+          <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-16 items-center py-20">
 
-        {/* Features Section */}
-        <div id="features" className="py-24 max-w-7xl mx-auto px-4">
-          <div className="text-center mb-16 relative">
-            <h2 className="text-3xl md:text-4xl font-bold font-serif text-primary-700 dark:text-white inline-block pb-3 border-b-4 border-secondary-500">Platforma Imkoniyatlari</h2>
+            {/* CHAP — matn */}
+            <div>
+              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+                className="inline-flex items-center gap-2 bg-emerald-500/15 border border-emerald-400/25 text-emerald-300 px-4 py-2 rounded-full text-sm font-bold tracking-wider uppercase mb-8">
+                <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+                Biologiya o'quv platformasi
+              </motion.div>
+
+              <motion.h1 initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.08 }}
+                className="font-black text-white leading-[1.05] mb-6"
+                style={{ fontSize: "clamp(3.5rem, 6vw, 6rem)" }}>
+                Zamonaviy<br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400">
+                  Biologiya
+                </span>
+              </motion.h1>
+
+              <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.16 }}
+                className="text-gray-200 leading-relaxed mb-10 max-w-md font-medium"
+                style={{ fontSize: "1.2rem" }}>
+                Maktab o'quvchilari uchun maxsus ishlab chiqilgan —
+                3D modellar, virtual laboratoriyalar va qiziqarli
+                o'yinlar bilan to'liq o'quv platformasi.
+              </motion.p>
+
+              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.24 }}
+                className="flex flex-wrap gap-4 mb-12">
+                <Link href="/dashboard"
+                  className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold px-9 py-4 rounded-2xl transition-all hover:scale-105 shadow-2xl shadow-emerald-500/30 text-lg">
+                  Platformaga kirish <ArrowRight className="w-5 h-5" />
+                </Link>
+                <Link href="#features"
+                  className="flex items-center bg-white/12 hover:bg-white/20 border border-white/25 text-white font-bold px-9 py-4 rounded-2xl transition-all backdrop-blur-sm text-lg">
+                  Ko'proq ma'lumot
+                </Link>
+              </motion.div>
+
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
+                className="flex gap-10">
+                {[{ num: "100+", label: "Test savoli" }, { num: "50+", label: "Qiziqarli fakt" }, { num: "10+", label: "Krossvord" }].map(s => (
+                  <div key={s.label}>
+                    <div className="text-4xl font-black text-white">{s.num}</div>
+                    <div className="text-sm text-gray-300 mt-1 font-semibold">{s.label}</div>
+                  </div>
+                ))}
+              </motion.div>
+            </div>
+
+            {/* O'NG — preview kartalar */}
+            <div className="hidden lg:flex flex-col gap-4">
+              {previewCards.map((card, i) => (
+                <motion.div key={i}
+                  initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 + i * 0.13, type: "spring", stiffness: 85 }}
+                  className="flex items-center gap-4 bg-white/10 hover:bg-white/18 border border-white/15 rounded-2xl p-4 group transition-all cursor-pointer backdrop-blur-md shadow-xl">
+                  <div className="w-24 h-18 rounded-xl overflow-hidden flex-shrink-0 ring-1 ring-white/15" style={{ height: "72px" }}>
+                    <img src={card.image} alt={card.label}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-white font-bold text-base">{card.label}</p>
+                    <p className="text-white/50 text-sm mt-1">Interaktiv 3D ko'rinish</p>
+                  </div>
+                  <div className="w-9 h-9 rounded-full bg-white/10 border border-white/20 flex items-center justify-center group-hover:bg-emerald-500 transition-all">
+                    <ArrowRight className="w-4 h-4 text-white" />
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {features.map((feature, idx) => (
-              <motion.div 
-                key={idx}
-                initial={{ opacity: 0, y: 20 }}
+        </div>
+      </section>
+
+      {/* ═══ FEATURES ═══ */}
+      <section id="features" className="py-28 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+          <div className="text-center mb-16">
+            <span className="inline-block bg-emerald-50 text-emerald-600 font-bold uppercase tracking-widest text-sm px-5 py-2 rounded-full mb-5">
+              Platforma haqida
+            </span>
+            <h2 className="text-5xl font-black text-gray-900 mb-5">Platforma imkoniyatlari</h2>
+            <p className="text-gray-600 text-xl max-w-xl mx-auto">
+              Biologiyani yangi usulda o'rganing — ko'rgazmali, interaktiv va qiziqarli.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {features.map((f, i) => (
+              <motion.div key={i}
+                initial={{ opacity: 0, y: 28 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: idx * 0.1 }}
-                className="bg-card border border-border rounded-xl shadow-lg hover:-translate-y-2 hover:shadow-2xl transition-all duration-300 overflow-hidden group flex flex-col"
-              >
-                <div className="h-1.5 w-full bg-gradient-to-r from-primary-600 to-primary-400"></div>
-                <div className="p-8 text-center flex flex-col items-center flex-1">
-                  <div className="w-16 h-16 bg-background rounded-full border border-border flex items-center justify-center mb-6 text-secondary-500 shadow-sm group-hover:scale-110 transition-transform">
-                    {feature.icon}
+                transition={{ delay: i * 0.09 }}>
+                <Link href={f.href}
+                  className="group relative flex flex-col h-full bg-white rounded-3xl overflow-hidden shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+                  <div className={`h-1.5 w-full bg-gradient-to-r ${f.gradient}`} />
+                  <div className="p-8 flex flex-col flex-1">
+                    <div className={`w-16 h-16 ${f.bg} ${f.iconColor} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
+                      {f.icon}
+                    </div>
+                    <h3 className="font-black text-gray-900 text-xl mb-3">{f.title}</h3>
+                    <p className="text-gray-500 leading-relaxed flex-1 text-base">{f.description}</p>
+                    <div className="mt-6 flex items-center gap-2 text-base font-bold text-emerald-600">
+                      Ko'rish <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </div>
                   </div>
-                  <h3 className="text-xl font-bold font-serif text-primary-700 dark:text-white mb-3 group-hover:text-primary-500 transition-colors">{feature.title}</h3>
-                  <p className="text-foreground/70 text-sm leading-relaxed">{feature.description}</p>
-                </div>
-                <div className="bg-background/50 border-t border-border px-6 py-4 mt-auto text-center">
-                  <span className="text-sm font-semibold text-secondary-600 dark:text-secondary-400 hover:underline cursor-pointer">Batafsil o'qish &rarr;</span>
-                </div>
+                </Link>
               </motion.div>
             ))}
           </div>
         </div>
+      </section>
 
-      {/* Footer */}
-      <footer className="glass border-t border-border/50 py-10 mt-20">
-        <div className="max-w-7xl mx-auto px-4 text-center text-foreground/50">
-          <p>&copy; {new Date().getFullYear()} Biokompetensiya. Barcha huquqlar himoyalangan.</p>
+      {/* ═══ FOOTER ═══ */}
+      <footer className="relative overflow-hidden" style={{
+        background: "linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #064e3b 100%)"
+      }}>
+        <div className="absolute top-0 right-0 w-96 h-96 rounded-full opacity-10 pointer-events-none"
+          style={{ background: "radial-gradient(circle, #34d399, transparent 70%)", transform: "translate(30%, -30%)" }} />
+
+        <div className="relative z-10 max-w-7xl mx-auto px-8 lg:px-14 py-20">
+          <div className="flex flex-col md:flex-row items-start justify-between gap-14 mb-14">
+
+            {/* Logo + tavsif */}
+            <div className="flex flex-col gap-6 max-w-sm">
+              {/* Logo oq fonda katta ko'rinadi */}
+              <div className="bg-white rounded-3xl p-6 inline-flex w-fit shadow-xl" style={{ minWidth: "240px", minHeight: "140px", alignItems: "center", justifyContent: "center" }}>
+                <div style={{ transform: "scale(3.2)", transformOrigin: "center center", display: "flex", alignItems: "center", justifyContent: "center", width: "100%", height: "80px" }}>
+                  <Logo />
+                </div>
+              </div>
+              <p className="text-gray-300 text-base leading-relaxed">
+                Maktab o'quvchilari uchun biologiya fanini interaktiv va
+                qiziqarli tarzda o'rgatuvchi zamonaviy platforma.
+              </p>
+            </div>
+
+            {/* Havolalar */}
+            <div className="flex flex-col gap-4">
+              <h4 className="text-white font-bold text-base mb-2 uppercase tracking-wider">Bo'limlar</h4>
+              {[
+                { label: "Asosiy sahifa", href: "/dashboard" },
+                { label: "Mavzular", href: "/topics" },
+                { label: "Laboratoriyalar", href: "/labs" },
+                { label: "3D Modellar", href: "/models" },
+                { label: "Testlar", href: "/quizzes" },
+                { label: "O'yinlar", href: "/games" },
+              ].map(item => (
+                <Link key={item.label} href={item.href}
+                  className="text-gray-400 hover:text-white text-base font-medium transition-colors">
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+
+            {/* Platforma haqida */}
+            <div className="flex flex-col gap-4">
+              <h4 className="text-white font-bold text-base mb-2 uppercase tracking-wider">Platforma</h4>
+              {[
+                { label: "Lug'at", href: "/glossary" },
+                { label: "Krossvordlar", href: "/crosswords" },
+                { label: "Qiziqarli faktlar", href: "/facts" },
+                { label: "Darsliklar", href: "/books" },
+              ].map(item => (
+                <Link key={item.label} href={item.href}
+                  className="text-gray-400 hover:text-white text-base font-medium transition-colors">
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          <div className="h-px bg-white/10 mb-8" />
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <p className="text-gray-400 text-base">© {new Date().getFullYear()} Biokompetensiya. Barcha huquqlar himoyalangan.</p>
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 bg-emerald-400 rounded-full animate-pulse" />
+              <span className="text-gray-400 text-base font-medium">Platforma faol ishlayapti</span>
+            </div>
+          </div>
         </div>
       </footer>
+
     </div>
   );
 }

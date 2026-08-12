@@ -1,249 +1,159 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { User, Mail, Camera, Save, Lock, CheckCircle2 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { User, Camera, Edit2, Shield, Activity, Star, Save } from "lucide-react";
 
 export default function ProfilePage() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState("");
-  const [isError, setIsError] = useState(false);
-  
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    password: "",
-    avatarUrl: ""
-  });
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [xp, setXp] = useState(0);
+  const [level, setLevel] = useState(1);
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
-    fetchProfile();
+    // Load local profile
+    const localUser = localStorage.getItem("userProfile");
+    if (localUser) {
+      const u = JSON.parse(localUser);
+      setFirstName(u.firstName || "");
+      setLastName(u.lastName || "");
+    }
+    setXp(parseInt(localStorage.getItem("userXP") || "0"));
+    setLevel(parseInt(localStorage.getItem("userLevel") || "1"));
   }, []);
 
-  const fetchProfile = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        router.push("/login");
-        return;
-      }
-
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/auth/me`, {
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-      
-      if (res.ok) {
-        const data = await res.json();
-        setFormData({
-          firstName: data.firstName || "",
-          lastName: data.lastName || "",
-          email: data.email || "",
-          password: "",
-          avatarUrl: data.avatarUrl || ""
-        });
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+  const handleSave = () => {
+    const profile = { firstName, lastName, xp, level };
+    localStorage.setItem("userProfile", JSON.stringify(profile));
+    setIsEditing(false);
+    
+    // Trigger event for sidebar to update
+    window.dispatchEvent(new Event('profileUpdated'));
   };
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({ ...prev, avatarUrl: reader.result as string }));
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    setMessage("");
-
-    try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/auth/profile`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify(formData)
-      });
-
-      if (res.ok) {
-        setIsError(false);
-        setMessage("Ma'lumotlar muvaffaqiyatli saqlandi!");
-        // Update local storage user info
-        const updatedUser = await res.json();
-        localStorage.setItem("user", JSON.stringify(updatedUser));
-        
-        // Dispatch custom event to notify Sidebar to update avatar
-        window.dispatchEvent(new Event('profileUpdated'));
-        
-        // Clear password field
-        setFormData(prev => ({ ...prev, password: "" }));
-      } else {
-        setIsError(true);
-        if (res.status === 413) {
-          setMessage("Rasm hajmi juda katta!");
-        } else {
-          setMessage("Xatolik yuz berdi. Iltimos qayta urinib ko'ring.");
-        }
-      }
-    } catch (err) {
-      setIsError(true);
-      setMessage("Tarmoq xatosi!");
-    } finally {
-      setSaving(false);
-      setTimeout(() => setMessage(""), 3000);
-    }
-  };
-
-  if (loading) {
-    return <div className="p-8 max-w-4xl mx-auto w-full animate-pulse flex flex-col gap-6">
-      <div className="w-full h-32 glass rounded-3xl"></div>
-      <div className="w-full h-96 glass rounded-3xl"></div>
-    </div>;
-  }
 
   return (
-    <div className="p-8 max-w-3xl mx-auto w-full">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="glass rounded-3xl p-8 border border-border/50 relative overflow-hidden"
-      >
-        <div className="absolute top-0 right-0 w-64 h-64 bg-primary-500/10 blur-[80px] rounded-full pointer-events-none" />
-        
-        <h1 className="text-3xl font-extrabold mb-8 flex items-center gap-3 relative z-10">
-          <User className="w-8 h-8 text-primary-500" />
-          Mening Profilim
-        </h1>
+    <div className="p-8 max-w-4xl mx-auto w-full">
+      <div className="flex items-center gap-4 mb-8">
+        <div className="p-3 bg-slate-500/10 rounded-2xl">
+          <User className="w-8 h-8 text-slate-600" />
+        </div>
+        <div>
+          <h1 className="text-3xl font-bold">Mening Profilim</h1>
+          <p className="text-foreground/60 mt-1">Shaxsiy ma'lumotlar va yutuqlar</p>
+        </div>
+      </div>
 
-        <form onSubmit={handleSubmit} className="relative z-10 space-y-6">
-          {/* Avatar Upload */}
-          <div className="flex flex-col items-center mb-8">
-            <div className="relative group cursor-pointer">
-              <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-background shadow-xl bg-background flex items-center justify-center">
-                {formData.avatarUrl ? (
-                  <img src={formData.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-                ) : (
-                  <User className="w-16 h-16 text-foreground/20" />
-                )}
-              </div>
-              <label className="absolute inset-0 flex items-center justify-center bg-black/50 text-white opacity-0 group-hover:opacity-100 rounded-full transition-opacity cursor-pointer">
-                <Camera className="w-8 h-8" />
-                <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-              </label>
-            </div>
-            <p className="text-sm text-foreground/50 mt-3">Rasmni almashtirish uchun ustiga bosing</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground/70">Ism</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User className="h-5 w-5 text-foreground/40" />
-                </div>
-                <input
-                  type="text"
-                  required
-                  value={formData.firstName}
-                  onChange={(e) => setFormData({...formData, firstName: e.target.value})}
-                  className="w-full pl-10 pr-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary-500 outline-none transition-all text-foreground"
-                  placeholder="Ismingiz"
-                />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="md:col-span-1 space-y-6">
+          {/* Avatar Card */}
+          <div className="glass rounded-3xl border border-border/50 p-6 text-center shadow-sm">
+            <div className="relative w-32 h-32 mx-auto mb-4">
+              <div className="w-full h-full rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-5xl text-white font-bold shadow-lg">
+                {firstName?.[0] || 'U'}
               </div>
             </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground/70">Familiya</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User className="h-5 w-5 text-foreground/40" />
-                </div>
-                <input
-                  type="text"
-                  required
-                  value={formData.lastName}
-                  onChange={(e) => setFormData({...formData, lastName: e.target.value})}
-                  className="w-full pl-10 pr-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary-500 outline-none transition-all text-foreground"
-                  placeholder="Familiyangiz"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2 md:col-span-2">
-              <label className="text-sm font-semibold text-foreground/70">Elektron pochta (Email)</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-foreground/40" />
-                </div>
-                <input
-                  type="email"
-                  required
-                  value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: e.target.value})}
-                  className="w-full pl-10 pr-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary-500 outline-none transition-all text-foreground"
-                  placeholder="email@misol.com"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2 md:col-span-2">
-              <label className="text-sm font-semibold text-foreground/70">Yangi Parol (ixtiyoriy)</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-foreground/40" />
-                </div>
-                <input
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => setFormData({...formData, password: e.target.value})}
-                  className="w-full pl-10 pr-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary-500 outline-none transition-all text-foreground"
-                  placeholder="Yangi parolni kiriting (o'zgartirish uchun)"
-                />
-              </div>
-              <p className="text-xs text-foreground/50">Agar parolni o'zgartirishni xohlamasangiz, bu joyni bo'sh qoldiring.</p>
+            <h2 className="text-2xl font-bold">{firstName || 'Foydalanuvchi'} {lastName}</h2>
+            <div className="inline-flex items-center gap-1.5 mt-2 px-3 py-1 bg-yellow-500/10 text-yellow-600 rounded-full text-sm font-bold">
+              <Star className="w-4 h-4 fill-current" />
+              <span>{level}-daraja</span>
             </div>
           </div>
 
-          <div className="pt-6 flex items-center justify-between">
-            <div className="flex-1">
-              {message && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={`flex items-center gap-2 font-medium ${isError ? 'text-red-500' : 'text-green-500'}`}>
-                  {isError ? <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" /> : <CheckCircle2 className="w-5 h-5" />}
-                  {message}
-                </motion.div>
-              )}
-            </div>
+          {/* Stats Card */}
+          <div className="glass rounded-3xl border border-border/50 p-6 shadow-sm space-y-4">
+            <h3 className="font-bold text-lg mb-4">Statistika</h3>
             
-            <button
-              type="submit"
-              disabled={saving}
-              className="px-8 py-3 bg-gradient-primary text-white rounded-xl font-bold flex items-center gap-2 hover:shadow-lg hover:shadow-primary-500/25 transition-all disabled:opacity-50"
-            >
-              {saving ? (
-                <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
-                <Save className="w-5 h-5" />
-              )}
-              Saqlash
-            </button>
+            <div className="flex items-center justify-between p-3 bg-background/50 rounded-xl">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-orange-500/10 rounded-lg">
+                  <Star className="w-5 h-5 text-orange-500" />
+                </div>
+                <span className="font-medium">XP Ballar</span>
+              </div>
+              <span className="font-bold text-lg">{xp}</span>
+            </div>
+
+            <div className="flex items-center justify-between p-3 bg-background/50 rounded-xl">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-500/10 rounded-lg">
+                  <Activity className="w-5 h-5 text-blue-500" />
+                </div>
+                <span className="font-medium">Topshiriqlar</span>
+              </div>
+              <span className="font-bold text-lg">0</span>
+            </div>
           </div>
-        </form>
-      </motion.div>
+        </div>
+
+        <div className="md:col-span-2">
+          {/* Details Card */}
+          <div className="glass rounded-3xl border border-border/50 p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="font-bold text-xl">Shaxsiy Ma'lumotlar</h3>
+              {!isEditing ? (
+                <button 
+                  onClick={() => setIsEditing(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-primary-50 text-primary-600 rounded-xl font-medium hover:bg-primary-100 transition-colors"
+                >
+                  <Edit2 className="w-4 h-4" /> Tahrirlash
+                </button>
+              ) : (
+                <button 
+                  onClick={handleSave}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-xl font-medium hover:bg-green-600 transition-colors shadow-sm"
+                >
+                  <Save className="w-4 h-4" /> Saqlash
+                </button>
+              )}
+            </div>
+
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground/60">Ism (Taxallus)</label>
+                  {isEditing ? (
+                    <input 
+                      type="text" 
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      placeholder="Ismingizni kiriting"
+                      className="w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                    />
+                  ) : (
+                    <div className="px-4 py-2.5 bg-background/50 rounded-xl border border-transparent font-medium">
+                      {firstName || "Ko'rsatilmagan"}
+                    </div>
+                  )}
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground/60">Familiya</label>
+                  {isEditing ? (
+                    <input 
+                      type="text" 
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      placeholder="Familiyangiz (ixtiyoriy)"
+                      className="w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                    />
+                  ) : (
+                    <div className="px-4 py-2.5 bg-background/50 rounded-xl border border-transparent font-medium">
+                      {lastName || "Ko'rsatilmagan"}
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl flex gap-3 text-blue-700 items-start">
+                <Shield className="w-5 h-5 shrink-0 mt-0.5" />
+                <p className="text-sm">
+                  <strong>Maxfiylik:</strong> Ushbu ma'lumotlar faqat sizning qurilmangizda saqlanadi va serverga yuborilmaydi. Reytingda shu ism orqali ko'rinasiz.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

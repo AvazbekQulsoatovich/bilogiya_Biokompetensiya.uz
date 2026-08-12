@@ -20,6 +20,25 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Get a single topic by ID
+router.get('/:id', async (req, res) => {
+  try {
+    const lesson = await prisma.lesson.findUnique({
+      where: { id: req.params.id },
+      include: {
+        attachments: true,
+        course: true
+      }
+    });
+    if (!lesson) {
+      return res.status(404).json({ error: 'Topic not found' });
+    }
+    res.json(lesson);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch topic' });
+  }
+});
+
 // Create a topic (lesson)
 router.post('/', authenticate, authorize(['SUPER_ADMIN']), async (req, res) => {
   try {
