@@ -57,6 +57,16 @@ router.post('/:id/submit', authenticate, async (req: AuthRequest, res) => {
     const task = await prisma.extracurricularTask.findUnique({ where: { id } });
     if (!task) return res.status(404).json({ error: 'Task not found' });
 
+    // Basic validation
+    const answer = (content || '').trim();
+    if (answer.length < 15) {
+      return res.status(400).json({ error: "Javobingiz juda qisqa yoki noto'g'ri. Iltimos to'liqroq yozing." });
+    }
+    const words = answer.split(/\s+/);
+    if (words.length < 3) {
+      return res.status(400).json({ error: "Iltimos, haqiqiy ma'noli javob yozing (kamida 3-4 ta so'zdan iborat bo'lsin)." });
+    }
+
     // Update progress
     await prisma.user.update({
       where: { id: userId },

@@ -19,6 +19,7 @@ export default function ExtracurricularPage() {
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [reportContent, setReportContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState<{type: 'error' | 'success', text: string} | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -75,6 +76,7 @@ export default function ExtracurricularPage() {
     e.preventDefault();
     if (!selectedTaskId) return;
     setSubmitting(true);
+    setSubmitMessage(null);
     try {
       const res = await fetch(`/api/extracurricular/${selectedTaskId}/submit`, {
         method: "POST",
@@ -85,18 +87,21 @@ export default function ExtracurricularPage() {
         body: JSON.stringify({ content: reportContent })
       });
       if (res.ok) {
-        setIsSubmitModalOpen(false);
-        setReportContent("");
-        setSelectedTaskId(null);
-        alert("Topshiriq muvaffaqiyatli yuborildi! XP qo'shildi.");
-        window.dispatchEvent(new Event('profileUpdated'));
+        setSubmitMessage({ type: 'success', text: "Topshiriq muvaffaqiyatli yuborildi! Sizga XP qo'shildi! Barakalla!" });
+        setTimeout(() => {
+          setIsSubmitModalOpen(false);
+          setReportContent("");
+          setSelectedTaskId(null);
+          setSubmitMessage(null);
+          window.dispatchEvent(new Event('profileUpdated'));
+        }, 2000);
       } else {
         const errorData = await res.json().catch(() => ({}));
-        alert("Xatolik yuz berdi: " + (errorData.error || "Noma'lum xato"));
+        setSubmitMessage({ type: 'error', text: errorData.error || "Noma'lum xato yuz berdi" });
       }
     } catch (error) {
       console.error(error);
-      alert("Xatolik yuz berdi. Tarmoq bilan muammo bo'lishi mumkin.");
+      setSubmitMessage({ type: 'error', text: "Tarmoq bilan muammo bo'lishi mumkin." });
     } finally {
       setSubmitting(false);
     }
@@ -246,6 +251,11 @@ export default function ExtracurricularPage() {
             <h2 className="text-2xl font-bold mb-2">Hisobot topshirish</h2>
             <p className="text-foreground/60 text-sm mb-6">Topshiriqni bajarganingiz haqida qisqacha ma'lumot yozing.</p>
             <form onSubmit={handleSubmitReport}>
+              {submitMessage && (
+                <div className={`p-3 rounded-xl mb-4 text-sm font-medium ${submitMessage.type === 'error' ? 'bg-red-500/10 text-red-500' : 'bg-green-500/10 text-green-500'}`}>
+                  {submitMessage.text}
+                </div>
+              )}
               <div className="mb-6">
                 <textarea 
                   required
