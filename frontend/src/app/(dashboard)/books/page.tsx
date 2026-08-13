@@ -32,7 +32,7 @@ export default function BooksPage() {
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-3">
             <BookMarked className="text-violet-500 w-8 h-8" />
-            Darsliklar va Kitoblar
+            Darsliklar va kitoblar
           </h1>
           <p className="text-foreground/60 mt-2">Kitoblarni shu yerda o'qing va yuklab oling</p>
         </div>

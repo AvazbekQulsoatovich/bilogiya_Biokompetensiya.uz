@@ -72,7 +72,7 @@ export default function TopicsPage() {
             <BookOpen className="w-8 h-8 text-white" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold">Mavzular va O'quv Materiallari</h1>
+            <h1 className="text-3xl font-bold">Mavzular va o'quv materiallari</h1>
             <p className="text-white/80 mt-1">Darslarni o'qing va videolarni ko'ring</p>
           </div>
         </div>
