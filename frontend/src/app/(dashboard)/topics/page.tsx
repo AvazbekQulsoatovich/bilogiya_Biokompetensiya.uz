@@ -24,8 +24,6 @@ export default function TopicsPage() {
       sessionStorage.setItem("topicsActiveTab", String(tab));
     }
   };
-    fetchTopics();
-  }, []);
 
   const fetchTopics = async () => {
     try {
