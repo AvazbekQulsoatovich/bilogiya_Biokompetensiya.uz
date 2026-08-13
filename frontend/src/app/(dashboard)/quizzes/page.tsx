@@ -150,55 +150,73 @@ export default function QuizzesPage() {
           <p className="text-gray-500 text-lg">Tez orada {activeGrade}-sinf uchun testlar yuklanadi.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <AnimatePresence>
-            {filteredQuizzes.map((quiz, index) => (
-              <motion.div 
-                key={quiz.id}
-                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.3, delay: (index % 10) * 0.05 }}
-                className="group relative bg-white/80 backdrop-blur-xl p-7 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-2xl hover:shadow-orange-500/10 hover:-translate-y-1 transition-all flex flex-col h-full overflow-hidden"
-              >
-                {/* Decorative Top Accent */}
-                <div className={`absolute top-0 left-0 w-full h-1.5 transition-all group-hover:h-2 bg-orange-400`} />
-                
-                <div className="flex items-start justify-between mb-4">
-                  <div className={`p-3 rounded-2xl bg-orange-50 text-orange-600`}>
-                    <ClipboardList className="w-6 h-6" />
-                  </div>
-                  <div className="bg-gray-100 px-3 py-1.5 rounded-lg text-xs font-bold text-gray-600 flex items-center gap-1.5">
-                    <Layers className="w-3 h-3" />
-                    {quiz._count?.questions || 0} savol
-                  </div>
+        <div className="flex flex-col gap-10">
+          {Object.entries(
+            filteredQuizzes.reduce((acc: any, quiz: any) => {
+              const lessonTitle = quiz.lesson?.title || "Umumiy Testlar";
+              if (!acc[lessonTitle]) acc[lessonTitle] = [];
+              acc[lessonTitle].push(quiz);
+              return acc;
+            }, {})
+          ).map(([lessonTitle, lessonQuizzes]: [string, any]) => (
+            <div key={lessonTitle} className="mb-4">
+              <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-3">
+                <div className="p-2 bg-orange-100 rounded-xl">
+                  <BookOpen className="w-6 h-6 text-orange-600" />
                 </div>
-
-                <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2 min-h-[3.5rem] leading-tight">
-                  {quiz.title}
-                </h3>
-                
-                <p className="text-gray-500 text-sm mb-6 flex-grow">
-                  O'tilgan mavzu bo'yicha test ishlang va bilimingizni tekshiring.
-                </p>
-                
-                <div className="flex items-center justify-between mt-auto pt-5 border-t border-gray-100">
-                  <div className="flex items-center gap-1.5 text-sm font-bold text-yellow-500 bg-yellow-50 px-3 py-1.5 rounded-xl border border-yellow-100">
-                    <Award className="w-4 h-4 fill-yellow-500" />
-                    +200 XP
-                  </div>
-                  
-                  <Link 
-                    href={`/quizzes/${quiz.id}`}
-                    className={`flex items-center gap-2 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-lg transition-all bg-orange-600 hover:bg-orange-500 shadow-orange-500/30 hover:shadow-orange-500/50`}
-                  >
-                    <Play className="w-4 h-4 fill-current" />
-                    Boshlash
-                  </Link>
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
+                {lessonTitle}
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <AnimatePresence>
+                  {lessonQuizzes.map((quiz: any, index: number) => (
+                    <motion.div 
+                      key={quiz.id}
+                      initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      transition={{ duration: 0.3, delay: (index % 10) * 0.05 }}
+                      className="group relative bg-white/80 backdrop-blur-xl p-7 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-2xl hover:shadow-orange-500/10 hover:-translate-y-1 transition-all flex flex-col h-full overflow-hidden"
+                    >
+                      <div className={`absolute top-0 left-0 w-full h-1.5 transition-all group-hover:h-2 bg-orange-400`} />
+                      
+                      <div className="flex items-start justify-between mb-4">
+                        <div className={`p-3 rounded-2xl bg-orange-50 text-orange-600`}>
+                          <ClipboardList className="w-6 h-6" />
+                        </div>
+                        <div className="bg-gray-100 px-3 py-1.5 rounded-lg text-xs font-bold text-gray-600 flex items-center gap-1.5">
+                          <Layers className="w-3 h-3" />
+                          {quiz._count?.questions || 0} savol
+                        </div>
+                      </div>
+                      
+                      <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2 min-h-[3.5rem] leading-tight">
+                        {quiz.title}
+                      </h3>
+                      
+                      <p className="text-gray-500 text-sm mb-6 flex-grow">
+                        Ushbu mavzu bo'yicha test ishlab, o'zlashtirgan bilimlaringizni tekshiring.
+                      </p>
+                      
+                      <div className="flex items-center justify-between mt-auto pt-5 border-t border-gray-100">
+                        <div className="flex items-center gap-1.5 text-sm font-bold text-yellow-500 bg-yellow-50 px-3 py-1.5 rounded-xl border border-yellow-100">
+                          <Award className="w-4 h-4 fill-yellow-500" />
+                          +200 XP
+                        </div>
+                        
+                        <Link 
+                          href={`/quizzes/${quiz.id}`}
+                          className={`flex items-center gap-2 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-lg transition-all bg-orange-600 hover:bg-orange-500 shadow-orange-500/30 hover:shadow-orange-500/50`}
+                        >
+                          <Play className="w-4 h-4 fill-current" />
+                          Boshlash
+                        </Link>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
