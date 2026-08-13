@@ -79,11 +79,11 @@ export default function TopicDetailPage() {
 
         <div className="p-8">
           {topic.videoUrl && (
-            <div className="mb-10 rounded-2xl overflow-hidden shadow-lg border border-border">
+            <div className={`mb-10 rounded-2xl overflow-hidden shadow-lg border border-border ${topic.videoUrl.includes('.pdf') ? 'h-[80vh]' : 'aspect-video'}`}>
               <iframe 
                 src={topic.videoUrl.includes('youtube') || topic.videoUrl.includes('youtu.be') ? topic.videoUrl.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/') : `${topic.videoUrl}`}
                 title={topic.title}
-                className="w-full aspect-video"
+                className="w-full h-full"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
               ></iframe>
