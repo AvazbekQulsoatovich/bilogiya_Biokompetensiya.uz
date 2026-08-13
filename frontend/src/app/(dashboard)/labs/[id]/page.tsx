@@ -8,8 +8,14 @@ import confetti from "canvas-confetti";
 
 import MicroscopeLab from "@/components/labs/MicroscopeLab";
 import ChemistryLab from "@/components/labs/ChemistryLab";
-import SimulationLab from "@/components/labs/SimulationLab";
-import AssemblyLab from "@/components/labs/AssemblyLab";
+import PhotosynthesisLab from "@/components/labs/PhotosynthesisLab";
+import OsmosisLab from "@/components/labs/OsmosisLab";
+import FoodWebLab from "@/components/labs/FoodWebLab";
+import DissectionLab from "@/components/labs/DissectionLab";
+import DNAExtractionLab from "@/components/labs/DNAExtractionLab";
+import GeneticsLab from "@/components/labs/GeneticsLab";
+import HeartRateLab from "@/components/labs/HeartRateLab";
+import CellBuilderLab from "@/components/labs/CellBuilderLab";
 
 export default function LabExperimentPage() {
   const params = useParams();
@@ -94,15 +100,27 @@ export default function LabExperimentPage() {
   if (!lab) return <div className="p-8 text-center text-xl text-gray-500">Laboratoriya topilmadi.</div>;
 
   const renderLabContent = () => {
-    const labType = lab.type || "MICROSCOPE"; // Fallback to microscope if not defined
+    const labType = lab.type || "MICROSCOPE"; 
 
     switch (labType) {
       case "CHEMISTRY":
         return <ChemistryLab lab={lab} steps={steps} completeLab={completeLab} isCompleted={isCompleted} />;
-      case "SIMULATION":
-        return <SimulationLab lab={lab} steps={steps} completeLab={completeLab} isCompleted={isCompleted} />;
-      case "ASSEMBLY":
-        return <AssemblyLab lab={lab} steps={steps} completeLab={completeLab} isCompleted={isCompleted} />;
+      case "PHOTOSYNTHESIS":
+        return <PhotosynthesisLab lab={lab} steps={steps} completeLab={completeLab} isCompleted={isCompleted} />;
+      case "OSMOSIS":
+        return <OsmosisLab lab={lab} steps={steps} completeLab={completeLab} isCompleted={isCompleted} />;
+      case "FOODWEB":
+        return <FoodWebLab lab={lab} steps={steps} completeLab={completeLab} isCompleted={isCompleted} />;
+      case "DISSECTION":
+        return <DissectionLab lab={lab} steps={steps} completeLab={completeLab} isCompleted={isCompleted} />;
+      case "DNA_EXTRACTION":
+        return <DNAExtractionLab lab={lab} steps={steps} completeLab={completeLab} isCompleted={isCompleted} />;
+      case "GENETICS":
+        return <GeneticsLab lab={lab} steps={steps} completeLab={completeLab} isCompleted={isCompleted} />;
+      case "HEARTRATE":
+        return <HeartRateLab lab={lab} steps={steps} completeLab={completeLab} isCompleted={isCompleted} />;
+      case "CELLBUILDER":
+        return <CellBuilderLab lab={lab} steps={steps} completeLab={completeLab} isCompleted={isCompleted} />;
       case "MICROSCOPE":
       default:
         return <MicroscopeLab lab={lab} steps={steps} completeLab={completeLab} isCompleted={isCompleted} />;
