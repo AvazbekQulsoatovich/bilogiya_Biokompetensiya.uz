@@ -1,4 +1,5 @@
-import { Router } from 'express';
+import { Router, Request } from 'express';
+import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
 import { authenticate, authorize, AuthRequest } from '../middleware/auth';
 
@@ -46,13 +47,24 @@ router.post('/', authenticate, authorize(['SUPER_ADMIN']), async (req, res) => {
   }
 });
 
-// Submit a task and get XP
-router.post('/:id/submit', authenticate, async (req: AuthRequest, res) => {
+// Submit a task and check answer
+router.post('/:id/submit', async (req: Request, res) => {
   try {
     const id = req.params.id as string;
     const { content } = req.body;
-    const userId = req.user?.id;
-    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+    
+    // Optional auth extraction since it's not strictly using authenticate middleware
+    let userId: string | undefined;
+    const authHeader = req.headers.authorization;
+    if (authHeader) {
+      const token = authHeader.split(' ')[1];
+      if (token) {
+        try {
+          const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret') as any;
+          userId = decoded.id;
+        } catch(e) {}
+      }
+    }
 
     const task = await prisma.extracurricularTask.findUnique({ where: { id } });
     if (!task) return res.status(404).json({ error: 'Task not found' });
@@ -67,22 +79,24 @@ router.post('/:id/submit', authenticate, async (req: AuthRequest, res) => {
       return res.status(400).json({ error: "Iltimos, haqiqiy ma'noli javob yozing (kamida 3-4 ta so'zdan iborat bo'lsin)." });
     }
 
-    // Update progress
-    await prisma.user.update({
-      where: { id: userId },
-      data: { xp: { increment: task.xpReward } }
-    });
+    if (userId) {
+      // Update progress for logged in users
+      await prisma.user.update({
+        where: { id: userId },
+        data: { xp: { increment: task.xpReward } }
+      });
 
-    const submission = await prisma.extracurricularTaskSubmission.create({
-      data: {
-        userId,
-        taskId: id,
-        content: content || 'Bajarildi',
-        status: 'COMPLETED'
-      }
-    });
+      await prisma.extracurricularTaskSubmission.create({
+        data: {
+          userId,
+          taskId: id,
+          content: content || 'Bajarildi',
+          status: 'COMPLETED'
+        }
+      });
+    }
 
-    res.json({ success: true, submission, rewardXp: task.xpReward });
+    res.json({ success: true, rewardXp: task.xpReward });
   } catch (error: any) {
     console.error('Submit Extracurricular Error:', error);
     res.status(500).json({ error: 'Failed to submit task: ' + error.message });

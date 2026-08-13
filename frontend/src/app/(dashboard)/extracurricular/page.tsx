@@ -87,7 +87,7 @@ export default function ExtracurricularPage() {
         body: JSON.stringify({ content: reportContent })
       });
       if (res.ok) {
-        setSubmitMessage({ type: 'success', text: "Topshiriq muvaffaqiyatli yuborildi! Sizga XP qo'shildi! Barakalla!" });
+        setSubmitMessage({ type: 'success', text: "Javobingiz to'g'ri! Barakalla!" });
         setTimeout(() => {
           setIsSubmitModalOpen(false);
           setReportContent("");
@@ -271,7 +271,7 @@ export default function ExtracurricularPage() {
                 disabled={submitting}
                 className="w-full flex justify-center items-center gap-2 bg-teal-600 hover:bg-teal-500 disabled:opacity-50 text-white font-medium py-3 rounded-xl shadow-lg"
               >
-                {submitting ? "Yuborilmoqda..." : <><CheckCircle className="w-5 h-5" /> Yuborish va XP olish</>}
+                {submitting ? "Tekshirilmoqda..." : <><CheckCircle className="w-5 h-5" /> Javobni tekshirish</>}
               </button>
             </form>
           </motion.div>
