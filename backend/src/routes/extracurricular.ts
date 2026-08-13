@@ -73,8 +73,9 @@ router.post('/:id/submit', authenticate, async (req: AuthRequest, res) => {
     });
 
     res.json({ success: true, submission, rewardXp: task.xpReward });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to submit task' });
+  } catch (error: any) {
+    console.error('Submit Extracurricular Error:', error);
+    res.status(500).json({ error: 'Failed to submit task: ' + error.message });
   }
 });
 

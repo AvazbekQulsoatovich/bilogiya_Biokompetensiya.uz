@@ -90,10 +90,13 @@ export default function ExtracurricularPage() {
         setSelectedTaskId(null);
         alert("Topshiriq muvaffaqiyatli yuborildi! XP qo'shildi.");
         window.dispatchEvent(new Event('profileUpdated'));
+      } else {
+        const errorData = await res.json().catch(() => ({}));
+        alert("Xatolik yuz berdi: " + (errorData.error || "Noma'lum xato"));
       }
     } catch (error) {
       console.error(error);
-      alert("Xatolik yuz berdi. Balki tizimga kirmagandirsiz.");
+      alert("Xatolik yuz berdi. Tarmoq bilan muammo bo'lishi mumkin.");
     } finally {
       setSubmitting(false);
     }
