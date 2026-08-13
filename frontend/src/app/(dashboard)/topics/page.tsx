@@ -94,7 +94,16 @@ export default function TopicsPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-6">
-          {(Array.isArray(topics) ? topics : []).filter(t => (t.course?.gradeLevel || 5) === activeTab).map((topic) => (
+          {(Array.isArray(topics) ? topics : [])
+            .filter(t => (t.course?.gradeLevel || 5) === activeTab)
+            .sort((a, b) => {
+              // Extract number from titles like "12-sahifa darsligi"
+              const numA = parseInt(a.title.replace(/\D/g, '')) || 0;
+              const numB = parseInt(b.title.replace(/\D/g, '')) || 0;
+              if (numA !== numB) return numA - numB;
+              return a.title.localeCompare(b.title);
+            })
+            .map((topic) => (
             <motion.div 
               key={topic.id}
               initial={{ opacity: 0, y: 10 }}

@@ -71,7 +71,7 @@ export default function DashboardHome() {
             </div>
 
             <h1 className="text-4xl md:text-5xl font-black text-[#1e293b] leading-tight mb-4">
-              Xush kelibsiz, O'quvchi!
+              Xush kelibsiz, o'quvchi!
             </h1>
             <p className="text-gray-500 text-base max-w-md leading-relaxed mb-8">
               Biologiya fanini qiziqarli usulda o'rganing. 3D modellar, virtual

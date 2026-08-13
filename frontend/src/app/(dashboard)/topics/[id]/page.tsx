@@ -91,7 +91,15 @@ export default function TopicDetailPage() {
           )}
 
           <div className="prose prose-indigo dark:prose-invert max-w-none text-lg leading-relaxed">
-            <ReactMarkdown>{topic.contentMd || "*Ma'lumot kiritilmagan*"}</ReactMarkdown>
+            <ReactMarkdown
+              components={{
+                img: ({ node, ...props }) => (
+                  <img {...props} className="w-full h-auto rounded-2xl shadow-lg border border-border/50 my-6" />
+                )
+              }}
+            >
+              {topic.contentMd || "*Ma'lumot kiritilmagan*"}
+            </ReactMarkdown>
           </div>
 
           {topic.attachments && topic.attachments.length > 0 && (
