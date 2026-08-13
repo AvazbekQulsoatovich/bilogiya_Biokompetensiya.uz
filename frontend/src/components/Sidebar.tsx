@@ -24,7 +24,7 @@ const menuItems = [
   { name: "Krossvordlar", href: "/crosswords", icon: LayoutGrid, color: "#06b6d4", bg: "#ecfeff" },
   { name: "Interaktiv mashqlar", href: "/games", icon: Gamepad2, color: "#ec4899", bg: "#fdf2f8" },
   { name: "Lug'at", href: "/glossary", icon: Library, color: "#f43f5e", bg: "#fff1f2" },
-  { name: "Qiziqarli faktlar", href: "/facts", icon: Lightbulb, color: "#f59e0b", bg: "#fffbeb" },
+  { name: "Faktlar", href: "/facts", icon: Lightbulb, color: "#f59e0b", bg: "#fffbeb" },
   { name: "Sozlamalar", href: "/settings", icon: Settings, color: "#374151", bg: "#f9fafb", adminOnly: true },
 ];
 
@@ -167,7 +167,7 @@ export function Sidebar() {
                 <Settings className="w-[18px] h-[18px]" />
               </div>
               <span className="relative z-10 text-[13.5px] font-semibold" style={{ color: pathname === "/admin" ? "#fff" : "#ef4444" }}>
-                Boshqaruv Paneli
+                Admin Panel
               </span>
             </Link>
           </>

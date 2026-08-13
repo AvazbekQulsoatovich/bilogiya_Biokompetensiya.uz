@@ -20,13 +20,22 @@ export default function QuizzesPage() {
     if (typeof window !== "undefined") {
       setUserRole(localStorage.getItem("userRole"));
       setToken(localStorage.getItem("token"));
+      const savedGrade = sessionStorage.getItem("quizzesActiveGrade");
+      if (savedGrade) setActiveGrade(Number(savedGrade));
     }
     fetchQuizzes();
   }, []);
 
+  const handleGradeChange = (grade: number) => {
+    setActiveGrade(grade);
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("quizzesActiveGrade", String(grade));
+    }
+  };
+
   const fetchQuizzes = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/quizzes`);
+      const res = await fetch(`/api/quizzes`);
       const data = await res.json();
       if (Array.isArray(data)) {
         setQuizzes(data);
@@ -43,7 +52,7 @@ export default function QuizzesPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/quizzes`, {
+      const res = await fetch(`/api/quizzes`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -84,7 +93,7 @@ export default function QuizzesPage() {
           <div>
             <h1 className="text-3xl md:text-5xl font-black mb-2 tracking-tight">Test Topshiriqlari</h1>
             <p className="text-white/90 text-lg md:text-xl font-medium max-w-xl">
-              Bilimingizni sinab ko'ring va eng yuqori XP larni qo'lga kiriting!
+              Bilimingizni sinab ko'ring va ko'proq ball (XP) yig'ing!
             </p>
           </div>
         </div>
@@ -104,7 +113,7 @@ export default function QuizzesPage() {
       <div className="flex justify-center mb-10">
         <div className="bg-white/50 backdrop-blur-lg p-1.5 rounded-full border border-gray-200/50 shadow-sm inline-flex">
           <button
-            onClick={() => setActiveGrade(5)}
+            onClick={() => handleGradeChange(5)}
             className={`flex items-center gap-2 px-8 py-3 rounded-full font-bold text-sm md:text-base transition-all ${
               activeGrade === 5 
                 ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md shadow-orange-500/25 scale-100' 
@@ -115,7 +124,7 @@ export default function QuizzesPage() {
             5-SINF TESTLARI
           </button>
           <button
-            onClick={() => setActiveGrade(6)}
+            onClick={() => handleGradeChange(6)}
             className={`flex items-center gap-2 px-8 py-3 rounded-full font-bold text-sm md:text-base transition-all ${
               activeGrade === 6 
                 ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md shadow-orange-500/25 scale-100' 
@@ -138,7 +147,7 @@ export default function QuizzesPage() {
             <ClipboardList className="w-10 h-10 text-gray-400" />
           </div>
           <h3 className="text-2xl font-black text-gray-800 mb-3">Hali testlar qo'shilmagan</h3>
-          <p className="text-gray-500 text-lg">{activeGrade}-sinf uchun testlar tez orada yuklanadi.</p>
+          <p className="text-gray-500 text-lg">Tez orada {activeGrade}-sinf uchun testlar yuklanadi.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -170,7 +179,7 @@ export default function QuizzesPage() {
                 </h3>
                 
                 <p className="text-gray-500 text-sm mb-6 flex-grow">
-                  Biologiya fani bo'yicha bilimlaringizni sinovdan o'tkazing va o'zlashtirishingizni tekshiring.
+                  O'tilgan mavzu bo'yicha test ishlang va bilimingizni tekshiring.
                 </p>
                 
                 <div className="flex items-center justify-between mt-auto pt-5 border-t border-gray-100">

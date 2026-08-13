@@ -22,7 +22,7 @@ export default function TopicDetailPage() {
 
   const fetchTopic = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/topics/${id}`);
+      const res = await fetch(`/api/topics/${id}`);
       if (res.ok) {
         const data = await res.json();
         setTopic(data);
@@ -81,7 +81,7 @@ export default function TopicDetailPage() {
           {topic.videoUrl && (
             <div className="mb-10 rounded-2xl overflow-hidden shadow-lg border border-border">
               <iframe 
-                src={topic.videoUrl.includes('youtube') || topic.videoUrl.includes('youtu.be') ? topic.videoUrl.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/') : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}${topic.videoUrl}`}
+                src={topic.videoUrl.includes('youtube') || topic.videoUrl.includes('youtu.be') ? topic.videoUrl.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/') : `${topic.videoUrl}`}
                 title={topic.title}
                 className="w-full aspect-video"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -111,7 +111,7 @@ export default function TopicDetailPage() {
                 {topic.attachments.map((file: any) => (
                   <a 
                     key={file.id} 
-                    href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}${file.fileUrl}`} 
+                    href={`${file.fileUrl}`} 
                     target="_blank" 
                     rel="noreferrer"
                     className="flex items-center gap-3 bg-background border border-border p-4 rounded-xl hover:border-indigo-500 hover:shadow-md transition-all group"

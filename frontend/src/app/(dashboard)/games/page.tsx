@@ -36,7 +36,7 @@ export default function GamesPage() {
 
   const fetchGames = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/games`);
+      const res = await fetch(`/api/games`);
       if (res.ok) {
         const data = await res.json();
         setGames(Array.isArray(data) ? data : []);

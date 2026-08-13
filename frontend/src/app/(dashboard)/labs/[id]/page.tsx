@@ -29,7 +29,7 @@ export default function LabExperimentPage() {
   const fetchProgress = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/progress`, {
+      const res = await fetch(`/api/progress`, {
         headers: { ...(token ? { "Authorization": `Bearer ${token}` } : {}) }
       });
       if (res.ok) setProgress(await res.json());
@@ -40,7 +40,7 @@ export default function LabExperimentPage() {
 
   const fetchLab = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/labs/${params.id}`);
+      const res = await fetch(`/api/labs/${params.id}`);
       const data = await res.json();
       if (data) {
         setLab(data);
@@ -59,7 +59,7 @@ export default function LabExperimentPage() {
     setIsCompleted(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/labs/${params.id}/complete`, {
+      const res = await fetch(`/api/labs/${params.id}/complete`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",

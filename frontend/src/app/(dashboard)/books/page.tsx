@@ -14,7 +14,7 @@ export default function BooksPage() {
 
   const fetchBooks = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/books`);
+      const res = await fetch(`/api/books`);
       if (res.ok) {
         const data = await res.json();
         setBooks(data);
@@ -34,7 +34,7 @@ export default function BooksPage() {
             <BookMarked className="text-violet-500 w-8 h-8" />
             Darsliklar va Kitoblar
           </h1>
-          <p className="text-foreground/60 mt-2">Elektron kitoblarni to'g'ridan-to'g'ri tizimning o'zida o'qing</p>
+          <p className="text-foreground/60 mt-2">Kitoblarni shu yerda o'qing va yuklab oling</p>
         </div>
       </div>
 
@@ -46,7 +46,7 @@ export default function BooksPage() {
         <div className="glass p-12 text-center rounded-3xl border-dashed border-2 border-border/50">
           <FileText className="w-12 h-12 text-foreground/30 mx-auto mb-4" />
           <h3 className="text-xl font-medium mb-2">Hali kitoblar yo'q</h3>
-          <p className="text-foreground/60">Yaqin orada elektron darsliklar qo'shiladi.</p>
+          <p className="text-foreground/60">Tez orada kitoblar qo'shiladi.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -59,7 +59,7 @@ export default function BooksPage() {
             >
               <div className="aspect-[3/4] w-full bg-foreground/5 relative overflow-hidden flex items-center justify-center">
                 {book.coverUrl ? (
-                  <img src={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}${book.coverUrl}`} alt={book.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <img src={`${book.coverUrl}`} alt={book.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 ) : (
                   <BookMarked className="w-16 h-16 text-foreground/20" />
                 )}
@@ -67,7 +67,7 @@ export default function BooksPage() {
                 {/* Overlay with read button */}
                 <div className="absolute inset-0 bg-background/60 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <a 
-                    href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}${book.pdfUrl}`} 
+                    href={`${book.pdfUrl}`} 
                     target="_blank" 
                     rel="noreferrer"
                     className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white px-6 py-3 rounded-full font-medium transition-all shadow-xl shadow-violet-500/30 translate-y-4 group-hover:translate-y-0"
@@ -86,7 +86,7 @@ export default function BooksPage() {
                 
                 <div className="mt-4 pt-4 border-t border-border/50 flex justify-end">
                   <a 
-                    href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}${book.pdfUrl}`} 
+                    href={`${book.pdfUrl}`} 
                     download
                     className="text-foreground/50 hover:text-foreground hover:bg-foreground/5 p-2 rounded-lg transition-colors"
                     title="Yuklab olish"
