@@ -11,6 +11,7 @@ import ChemistryLab from "@/components/labs/ChemistryLab";
 import PhotosynthesisLab from "@/components/labs/PhotosynthesisLab";
 import OsmosisLab from "@/components/labs/OsmosisLab";
 import FoodWebLab from "@/components/labs/FoodWebLab";
+import GeneralLab from "@/components/labs/GeneralLab";
 import DissectionLab from "@/components/labs/DissectionLab";
 import DNAExtractionLab from "@/components/labs/DNAExtractionLab";
 import GeneticsLab from "@/components/labs/GeneticsLab";
@@ -50,8 +51,12 @@ export default function LabExperimentPage() {
       const data = await res.json();
       if (data) {
         setLab(data);
-        const parsed = JSON.parse(data.stepsJson || "{}");
-        setSteps(parsed.instructions || []);
+        const parsed = JSON.parse(data.stepsJson || "[]");
+        if (Array.isArray(parsed)) {
+          setSteps(parsed);
+        } else {
+          setSteps(parsed.instructions || []);
+        }
       }
     } catch (error) {
       console.error("Failed to fetch lab", error);
@@ -121,6 +126,8 @@ export default function LabExperimentPage() {
         return <HeartRateLab lab={lab} steps={steps} completeLab={completeLab} isCompleted={isCompleted} />;
       case "CELLBUILDER":
         return <CellBuilderLab lab={lab} steps={steps} completeLab={completeLab} isCompleted={isCompleted} />;
+      case "GENERAL":
+        return <GeneralLab lab={lab} steps={steps} completeLab={completeLab} isCompleted={isCompleted} />;
       case "MICROSCOPE":
       default:
         return <MicroscopeLab lab={lab} steps={steps} completeLab={completeLab} isCompleted={isCompleted} />;

@@ -8,6 +8,7 @@ import { Microscope, Play, Award, Beaker } from "lucide-react";
 export default function LabsPage() {
   const [labs, setLabs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<5 | 6>(5);
 
   useEffect(() => {
     fetchLabs();
@@ -20,15 +21,7 @@ export default function LabsPage() {
       if (Array.isArray(data) && data.length > 0) {
         setLabs(data);
       } else {
-        setLabs([
-          {
-            id: 'dummy-lab-1',
-            title: "Piyoz po'sti hujayrasi",
-            description: "Mikroskop yordamida piyoz po'sti hujayrasini o'rganish.",
-            rewardXp: 150,
-            stepsJson: "[]"
-          }
-        ]);
+        setLabs([]);
       }
     } catch (error) {
       console.error("Failed to fetch labs", error);
@@ -36,6 +29,8 @@ export default function LabsPage() {
       setLoading(false);
     }
   };
+
+  const filteredLabs = Array.isArray(labs) ? labs.filter(lab => lab.gradeLevel === activeTab) : [];
 
   return (
     <div className="p-8 max-w-7xl mx-auto w-full">
@@ -51,18 +46,41 @@ export default function LabsPage() {
         </div>
       </div>
 
+      <div className="flex gap-4 mb-8 border-b border-border/50 pb-4">
+        <button
+          onClick={() => setActiveTab(5)}
+          className={`px-6 py-2.5 rounded-xl font-medium transition-all ${
+            activeTab === 5
+              ? "bg-green-500 text-white shadow-lg shadow-green-500/30"
+              : "bg-background border border-border/50 text-foreground/70 hover:bg-green-500/10 hover:text-green-500"
+          }`}
+        >
+          5-sinf (Tabiiy fanlar)
+        </button>
+        <button
+          onClick={() => setActiveTab(6)}
+          className={`px-6 py-2.5 rounded-xl font-medium transition-all ${
+            activeTab === 6
+              ? "bg-green-500 text-white shadow-lg shadow-green-500/30"
+              : "bg-background border border-border/50 text-foreground/70 hover:bg-green-500/10 hover:text-green-500"
+          }`}
+        >
+          6-sinf (Biologiya)
+        </button>
+      </div>
+
       {loading ? (
         <div className="flex justify-center p-12">
           <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
-      ) : !Array.isArray(labs) || labs.length === 0 ? (
+      ) : filteredLabs.length === 0 ? (
         <div className="glass p-12 text-center rounded-3xl border-dashed border-2 border-border/50">
           <Microscope className="w-12 h-12 text-foreground/30 mx-auto mb-4" />
-          <h3 className="text-xl font-medium mb-2">Hali tajribalar yo'q</h3>
+          <h3 className="text-xl font-medium mb-2">{activeTab}-sinf uchun hali tajribalar yo'q</h3>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {(Array.isArray(labs) ? labs : []).map((lab, index) => (
+          {filteredLabs.map((lab, index) => (
             <motion.div 
               key={lab.id}
               initial={{ opacity: 0, y: 20 }}
@@ -72,11 +90,16 @@ export default function LabsPage() {
             >
               <div className="absolute top-0 left-0 w-full h-1 bg-green-500" />
               
-              <div className="w-12 h-12 glass rounded-2xl flex items-center justify-center mb-4 bg-green-500/10 text-green-500">
-                <Microscope className="w-6 h-6" />
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 glass rounded-2xl flex items-center justify-center bg-green-500/10 text-green-500">
+                  <Microscope className="w-6 h-6" />
+                </div>
+                <div className="px-3 py-1 rounded-lg bg-border/50 text-xs font-semibold text-foreground/60">
+                  {index + 1}-Mashg'ulot
+                </div>
               </div>
               
-              <h3 className="text-xl font-bold mb-2">{lab.title}</h3>
+              <h3 className="text-xl font-bold mb-2">{lab.title.split(': ')[1] || lab.title}</h3>
               <p className="text-foreground/60 text-sm mb-6 flex-grow">{lab.description}</p>
               
               <div className="flex items-center justify-between mt-auto">

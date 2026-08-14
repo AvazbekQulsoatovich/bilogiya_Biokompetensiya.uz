@@ -8,7 +8,9 @@ const prisma = new PrismaClient();
 // Get all labs
 router.get('/', async (req, res) => {
   try {
-    const labs = await prisma.lab.findMany();
+    const labs = await prisma.lab.findMany({
+      orderBy: { title: 'asc' }
+    });
     // Default mock lab if empty
     if (labs.length === 0) {
       const mockLab = await prisma.lab.create({

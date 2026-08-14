@@ -177,6 +177,7 @@ model Lab {
   type        String   @default("MICROSCOPE")
   stepsJson   String // JSON string of interactive steps
   rewardXp    Int      @default(50)
+  gradeLevel  Int      @default(5)
   createdAt   DateTime @default(now())
 
   results LabResult[]
