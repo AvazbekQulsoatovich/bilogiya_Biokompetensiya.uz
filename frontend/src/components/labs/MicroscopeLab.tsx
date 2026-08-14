@@ -14,8 +14,12 @@ export default function MicroscopeLab({ lab, steps, completeLab, isCompleted }: 
   const [stainAdded, setStainAdded] = useState(false);
   const [readyToView, setReadyToView] = useState(false);
 
-  const labConfig = JSON.parse(lab?.stepsJson || "{}");
-  const requiredTools = labConfig.tools || ["piyoz", "oyna", "tomizgich", "qoplagich", "mikroskop"];
+  // Parse steps Json safely
+  let requiredTools = ["piyoz", "oyna", "tomizgich", "qoplagich", "mikroskop"];
+  try {
+    const labConfig = JSON.parse(lab?.stepsJson || "{}");
+    if (labConfig.tools) requiredTools = labConfig.tools;
+  } catch(e) {}
 
   const handleItemClick = (itemName: string) => {
     if (readyToView) return;
@@ -37,18 +41,24 @@ export default function MicroscopeLab({ lab, steps, completeLab, isCompleted }: 
   const handleZoomChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = parseFloat(e.target.value);
     setZoomLevel(val);
-    if (val >= 3 && lightOn && stainAdded && readyToView) {
+    if (val >= 3 && lightOn && (stainAdded || !requiredTools.includes("tomizgich")) && readyToView) {
       completeLab();
     }
   };
 
   const itemIcons: any = {
     "piyoz": <div className="w-16 h-16 rounded-full bg-purple-100 border-2 border-purple-400 flex items-center justify-center text-3xl shadow-sm hover:scale-110 transition-transform" title="Piyoz">🧅</div>,
+    "elodeya": <div className="w-16 h-16 rounded-full bg-green-100 border-2 border-green-500 flex items-center justify-center text-3xl shadow-sm hover:scale-110 transition-transform" title="Elodeya">🌿</div>,
+    "ildiz": <div className="w-16 h-16 rounded-full bg-amber-100 border-2 border-amber-600 flex items-center justify-center text-3xl shadow-sm hover:scale-110 transition-transform" title="Ildiz">🌱</div>,
+    "lupa": <div className="w-16 h-16 rounded-full bg-gray-100 border-4 border-gray-400 flex items-center justify-center text-3xl shadow-sm hover:scale-110 transition-transform" title="Lupa">🔍</div>,
     "oyna": <div className="w-24 h-10 bg-blue-50/80 border border-blue-200 rounded-sm shadow-[inset_0_2px_10px_rgba(255,255,255,0.9)] flex items-center justify-center text-xs font-bold text-blue-700 hover:scale-105 transition-transform" title="Predmet oynasi">Oyna</div>,
-    "tomizgich": <Pipette className="w-14 h-14 text-orange-500 drop-shadow-md hover:scale-110 transition-transform" title="Tomizgich (Yod)" />,
+    "tomizgich": <Pipette className="w-14 h-14 text-orange-500 drop-shadow-md hover:scale-110 transition-transform" title="Tomizgich" />,
     "qoplagich": <div className="w-10 h-10 bg-white/40 border border-gray-400 shadow-sm rotate-12 hover:scale-110 transition-transform" title="Qoplagich oyna" />,
     "mikroskop": <Microscope className="w-24 h-24 text-gray-800 drop-shadow-xl hover:scale-105 transition-transform" title="Mikroskop" />
   };
+
+  const topTools = requiredTools.filter(t => ['oyna', 'mikroskop', 'lupa'].includes(t));
+  const bottomTools = requiredTools.filter(t => !topTools.includes(t));
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -79,7 +89,7 @@ export default function MicroscopeLab({ lab, steps, completeLab, isCompleted }: 
                 </div>
                 <div>
                   <p className={`font-semibold text-sm leading-relaxed ${index === currentStepIndex && !readyToView ? 'text-blue-900' : 'text-gray-700'}`}>
-                    {typeof step === 'string' ? step : (step.instruction || step)}
+                    {typeof step === 'string' ? step : (step.title || step.instruction)}
                   </p>
                 </div>
               </div>
@@ -90,7 +100,7 @@ export default function MicroscopeLab({ lab, steps, completeLab, isCompleted }: 
                   <Search className="w-4 h-4" />
                 </div>
                 <p className="font-semibold text-sm leading-relaxed text-blue-900">
-                  Mikroskopdan ko'ring, yod tomizing va 300x gacha kattalashtiring.
+                  Mikroskopdan ko'ring va 300x gacha kattalashtiring.
                 </p>
               </div>
             )}
@@ -130,16 +140,26 @@ export default function MicroscopeLab({ lab, steps, completeLab, isCompleted }: 
                   >
                     <div className={`absolute inset-0 transition-colors duration-1000 ${stainAdded ? 'bg-orange-200/40' : 'bg-transparent'}`}></div>
                     
-                    <svg viewBox="0 0 100 100" className="w-[150%] h-[150%] opacity-80" style={{ filter: 'drop-shadow(0px 0px 2px rgba(0,0,0,0.5))' }}>
-                      <path d="M 20 20 Q 40 10 60 30 T 40 70 T 10 50 Z" fill={stainAdded ? "rgba(168, 85, 247, 0.4)" : "rgba(200, 200, 200, 0.2)"} stroke={stainAdded ? "rgba(126, 34, 206, 0.8)" : "rgba(150, 150, 150, 0.8)"} strokeWidth="1.5" />
-                      <circle cx="35" cy="40" r={stainAdded ? "4" : "1"} fill={stainAdded ? "#581c87" : "transparent"} opacity={stainAdded ? "1" : "0"} className="transition-all duration-1000" />
-                      
-                      <path d="M 55 25 Q 75 15 90 40 T 70 80 T 45 60 Z" fill={stainAdded ? "rgba(168, 85, 247, 0.3)" : "rgba(200, 200, 200, 0.15)"} stroke={stainAdded ? "rgba(126, 34, 206, 0.7)" : "rgba(150, 150, 150, 0.7)"} strokeWidth="1.5" />
-                      <circle cx="70" cy="50" r={stainAdded ? "5" : "1"} fill={stainAdded ? "#581c87" : "transparent"} opacity={stainAdded ? "1" : "0"} className="transition-all duration-1000" />
-                      
-                      <path d="M 15 60 Q 30 50 45 75 T 25 95 T 5 80 Z" fill={stainAdded ? "rgba(168, 85, 247, 0.35)" : "rgba(200, 200, 200, 0.25)"} stroke={stainAdded ? "rgba(126, 34, 206, 0.9)" : "rgba(150, 150, 150, 0.9)"} strokeWidth="1.5" />
-                      <circle cx="25" cy="75" r={stainAdded ? "3.5" : "1"} fill={stainAdded ? "#581c87" : "transparent"} opacity={stainAdded ? "1" : "0"} className="transition-all duration-1000" />
-                    </svg>
+                    {/* Changed SVG based on plant type */}
+                    {requiredTools.includes("elodeya") ? (
+                      <svg viewBox="0 0 100 100" className="w-[150%] h-[150%] opacity-80">
+                         <rect x="20" y="20" width="60" height="40" fill="rgba(34, 197, 94, 0.4)" stroke="rgba(21, 128, 61, 0.8)" strokeWidth="2" />
+                         <circle cx="30" cy="30" r="3" fill="#166534" />
+                         <circle cx="50" cy="40" r="3" fill="#166534" />
+                         <circle cx="70" cy="30" r="3" fill="#166534" />
+                      </svg>
+                    ) : (
+                      <svg viewBox="0 0 100 100" className="w-[150%] h-[150%] opacity-80" style={{ filter: 'drop-shadow(0px 0px 2px rgba(0,0,0,0.5))' }}>
+                        <path d="M 20 20 Q 40 10 60 30 T 40 70 T 10 50 Z" fill={stainAdded ? "rgba(168, 85, 247, 0.4)" : "rgba(200, 200, 200, 0.2)"} stroke={stainAdded ? "rgba(126, 34, 206, 0.8)" : "rgba(150, 150, 150, 0.8)"} strokeWidth="1.5" />
+                        <circle cx="35" cy="40" r={stainAdded ? "4" : "1"} fill={stainAdded ? "#581c87" : "transparent"} opacity={stainAdded ? "1" : "0"} className="transition-all duration-1000" />
+                        
+                        <path d="M 55 25 Q 75 15 90 40 T 70 80 T 45 60 Z" fill={stainAdded ? "rgba(168, 85, 247, 0.3)" : "rgba(200, 200, 200, 0.15)"} stroke={stainAdded ? "rgba(126, 34, 206, 0.7)" : "rgba(150, 150, 150, 0.7)"} strokeWidth="1.5" />
+                        <circle cx="70" cy="50" r={stainAdded ? "5" : "1"} fill={stainAdded ? "#581c87" : "transparent"} opacity={stainAdded ? "1" : "0"} className="transition-all duration-1000" />
+                        
+                        <path d="M 15 60 Q 30 50 45 75 T 25 95 T 5 80 Z" fill={stainAdded ? "rgba(168, 85, 247, 0.35)" : "rgba(200, 200, 200, 0.25)"} stroke={stainAdded ? "rgba(126, 34, 206, 0.9)" : "rgba(150, 150, 150, 0.9)"} strokeWidth="1.5" />
+                        <circle cx="25" cy="75" r={stainAdded ? "3.5" : "1"} fill={stainAdded ? "#581c87" : "transparent"} opacity={stainAdded ? "1" : "0"} className="transition-all duration-1000" />
+                      </svg>
+                    )}
                   </motion.div>
                   <div className="absolute inset-0 rounded-full shadow-[inset_0_0_60px_rgba(0,0,0,0.9)] pointer-events-none"></div>
                   <div className="absolute w-full h-[1px] bg-black/40 pointer-events-none"></div>
@@ -147,7 +167,7 @@ export default function MicroscopeLab({ lab, steps, completeLab, isCompleted }: 
                 </div>
 
                 <div className="w-full bg-gray-50 border border-gray-200 p-6 rounded-3xl shadow-sm">
-                  <h4 className="font-bold text-gray-800 mb-6 text-center text-lg">Mikroskop Boshqaruvi</h4>
+                  <h4 className="font-bold text-gray-800 mb-6 text-center text-lg">Asbob Boshqaruvi</h4>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="flex flex-col gap-3">
@@ -170,24 +190,26 @@ export default function MicroscopeLab({ lab, steps, completeLab, isCompleted }: 
                       <button 
                         onClick={() => {
                           setLightOn(!lightOn);
-                          if (!lightOn && zoomLevel >= 3 && stainAdded) completeLab();
+                          if (!lightOn && zoomLevel >= 3 && (stainAdded || !requiredTools.includes("tomizgich"))) completeLab();
                         }}
                         className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-all ${lightOn ? 'bg-yellow-100 text-yellow-700 border border-yellow-300' : 'bg-gray-200 text-gray-600'}`}
                       >
                         <Lightbulb className={`w-5 h-5 ${lightOn ? 'text-yellow-500 fill-yellow-200' : ''}`} />
-                        Chiroq {lightOn ? 'Yonik' : 'O\'chiq'}
+                        Chiroq
                       </button>
                       
-                      <button 
-                        onClick={() => {
-                          setStainAdded(true);
-                          if (zoomLevel >= 3 && lightOn) completeLab();
-                        }}
-                        className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-all ${stainAdded ? 'bg-purple-100 text-purple-700 border border-purple-300' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'}`}
-                      >
-                        <Droplet className={`w-5 h-5 ${stainAdded ? 'text-purple-500 fill-purple-200' : 'text-gray-400'}`} />
-                        Yod {stainAdded ? 'Qo\'shilgan' : 'Qo\'shish'}
-                      </button>
+                      {requiredTools.includes("tomizgich") && (
+                        <button 
+                          onClick={() => {
+                            setStainAdded(true);
+                            if (zoomLevel >= 3 && lightOn) completeLab();
+                          }}
+                          className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-all ${stainAdded ? 'bg-purple-100 text-purple-700 border border-purple-300' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'}`}
+                        >
+                          <Droplet className={`w-5 h-5 ${stainAdded ? 'text-purple-500 fill-purple-200' : 'text-gray-400'}`} />
+                          Yod
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -195,8 +217,8 @@ export default function MicroscopeLab({ lab, steps, completeLab, isCompleted }: 
             ) : (
               <>
                 <div className="flex-1 w-full flex flex-col items-center justify-center mt-10">
-                  <div className="flex justify-center gap-16 mb-24 w-full">
-                    {['oyna', 'mikroskop'].map(item => (
+                  <div className="flex flex-wrap justify-center gap-10 mb-24 w-full">
+                    {topTools.map(item => (
                       <motion.div 
                         key={item}
                         whileHover={{ scale: 1.05, y: -5 }}
@@ -216,26 +238,28 @@ export default function MicroscopeLab({ lab, steps, completeLab, isCompleted }: 
                     ))}
                   </div>
 
-                  <div className="w-full max-w-xl mx-auto bg-gray-100 p-8 rounded-[2.5rem] border border-gray-200 flex justify-around items-end shadow-inner relative">
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gray-200 text-gray-500 text-xs font-bold uppercase px-4 py-1 rounded-full tracking-widest">
-                      Asboblar va Materiallar
+                  {bottomTools.length > 0 && (
+                    <div className="w-full max-w-xl mx-auto bg-gray-100 p-8 rounded-[2.5rem] border border-gray-200 flex justify-around items-end shadow-inner relative">
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gray-200 text-gray-500 text-xs font-bold uppercase px-4 py-1 rounded-full tracking-widest">
+                        Materiallar
+                      </div>
+                      
+                      {bottomTools.map(item => (
+                        <motion.div 
+                          key={item}
+                          whileHover={{ y: -15, scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => handleItemClick(item)}
+                          className={`cursor-pointer flex flex-col items-center gap-3 relative z-10 ${errorItem === item ? 'animate-shake' : ''}`}
+                        >
+                          <div className={`relative p-1 ${errorItem === item ? 'after:absolute after:inset-0 after:rounded-full after:border-4 after:border-red-500 after:animate-ping' : ''}`}>
+                            {itemIcons[item] || <div className="w-10 h-10 bg-gray-300 rounded-full"/>}
+                          </div>
+                          <span className="text-xs font-bold uppercase text-gray-500">{item}</span>
+                        </motion.div>
+                      ))}
                     </div>
-                    
-                    {['piyoz', 'tomizgich', 'qoplagich'].map(item => (
-                      <motion.div 
-                        key={item}
-                        whileHover={{ y: -15, scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={() => handleItemClick(item)}
-                        className={`cursor-pointer flex flex-col items-center gap-3 relative z-10 ${errorItem === item ? 'animate-shake' : ''}`}
-                      >
-                        <div className={`relative p-1 ${errorItem === item ? 'after:absolute after:inset-0 after:rounded-full after:border-4 after:border-red-500 after:animate-ping' : ''}`}>
-                          {itemIcons[item]}
-                        </div>
-                        <span className="text-xs font-bold uppercase text-gray-500">{item}</span>
-                      </motion.div>
-                    ))}
-                  </div>
+                  )}
                 </div>
               </>
             )}

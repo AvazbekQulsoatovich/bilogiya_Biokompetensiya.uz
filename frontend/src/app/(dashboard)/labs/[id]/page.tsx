@@ -13,6 +13,8 @@ import OsmosisLab from "@/components/labs/OsmosisLab";
 import FoodWebLab from "@/components/labs/FoodWebLab";
 import GeneralLab from "@/components/labs/GeneralLab";
 import DissectionLab from "@/components/labs/DissectionLab";
+import MeasurementLab from "@/components/labs/MeasurementLab";
+import GerminationLab from "@/components/labs/GerminationLab";
 import DNAExtractionLab from "@/components/labs/DNAExtractionLab";
 import GeneticsLab from "@/components/labs/GeneticsLab";
 import HeartRateLab from "@/components/labs/HeartRateLab";
@@ -126,6 +128,10 @@ export default function LabExperimentPage() {
         return <HeartRateLab lab={lab} steps={steps} completeLab={completeLab} isCompleted={isCompleted} />;
       case "CELLBUILDER":
         return <CellBuilderLab lab={lab} steps={steps} completeLab={completeLab} isCompleted={isCompleted} />;
+      case "MEASUREMENT":
+        return <MeasurementLab lab={lab} steps={steps} completeLab={completeLab} isCompleted={isCompleted} />;
+      case "GERMINATION":
+        return <GerminationLab lab={lab} steps={steps} completeLab={completeLab} isCompleted={isCompleted} />;
       case "GENERAL":
         return <GeneralLab lab={lab} steps={steps} completeLab={completeLab} isCompleted={isCompleted} />;
       case "MICROSCOPE":
