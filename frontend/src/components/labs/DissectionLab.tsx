@@ -1,72 +1,186 @@
 "use client";
-import { useState } from "react";
-import { CheckCircle2 } from "lucide-react";
 
-export default function DissectionLab({ completeLab, isCompleted }: any) {
-  const [layers, setLayers] = useState([true, true, true]); // Gulkosabarg, Gultojbarg
-  
-  const removeLayer = (index: number) => {
-    const newLayers = [...layers];
-    newLayers[index] = false;
-    setLayers(newLayers);
-    if (!newLayers[0] && !newLayers[1]) {
-       completeLab();
-    }
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Flower2, Scissors, Check } from "lucide-react";
+import { LabShell, LabProps, Note, StageTitle } from "./LabShell";
+
+const PARTS = [
+  { id: "sepal", name: "Gulkosabarg", text: "Gulning eng tashqi, odatda yashil barglari. Gul kurtagida uning ichki qismlarini himoya qiladi.", tool: "Skalpel" },
+  { id: "petal", name: "Gultojbarg", text: "Yorqin rangli barglar. Rangi va hidi bilan changlatuvchi hasharotlarni oʻziga jalb qiladi.", tool: "Pinset" },
+];
+
+const HOTSPOTS = [
+  { id: "anther", name: "Chang qopchasi", x: 120, y: 142, text: "Changchining yuqori qismi. Ichida chang donachalari yetiladi." },
+  { id: "filament", name: "Changchi ipchasi", x: 138, y: 200, text: "Chang qopchasini ushlab turadigan ingichka ip." },
+  { id: "stigma", name: "Urugʻchi tumshuqchasi", x: 160, y: 124, text: "Urugʻchining yopishqoq uchi: chang donachasi shu yerga tushadi (changlanish)." },
+  { id: "style", name: "Urugʻchi ustunchasi", x: 160, y: 176, text: "Tumshuqchani tugunchaga bogʻlovchi naycha." },
+  { id: "ovary", name: "Urugʻchi tugunchasi", x: 160, y: 238, text: "Pastki kengaygan qismi. Ichida urugʻkurtaklar bor; urugʻlanishdan soʻng tugunchadan meva rivojlanadi." },
+];
+
+export default function DissectionLab({ steps, completeLab, isCompleted }: LabProps) {
+  const [removed, setRemoved] = useState<string[]>([]);
+  const [seen, setSeen] = useState<string[]>([]);
+  const [active, setActive] = useState<string | null>(null);
+  const [answer, setAnswer] = useState<string | null>(null);
+
+  const phase = removed.length; // 0 gulkosabarg, 1 gultojbarg, 2 oʻrganish
+  const allSeen = seen.length === HOTSPOTS.length;
+  const activeSpot = HOTSPOTS.find((h) => h.id === active);
+
+  const visit = (id: string) => {
+    setActive(id);
+    setSeen((s) => (s.includes(id) ? s : [...s, id]));
+  };
+
+  const answerQ = (a: string) => {
+    setAnswer(a);
+    if (a === "fruit") completeLab();
   };
 
   return (
-    <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 text-center">
-      <h2 className="text-2xl font-bold mb-2">Gulning Tuzilishini O'rganish</h2>
-      <p className="text-gray-600 mb-8">Skalpel (pichoq) va pinset yordamida gulning qatlamlarini olib tashlab, uning ichki qismlarini (urug'chi va changchi) o'rganing.</p>
-      
-      <div className="relative w-64 h-80 mx-auto mb-8 bg-blue-50 rounded-[40px] border-4 border-blue-200 overflow-hidden shadow-inner flex flex-col justify-end items-center">
-        {/* Organs layer (bottom) - Changchi & Urug'chi */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center pt-8 gap-0">
-           {/* Urug'chi */}
-           <div className="w-8 h-24 bg-green-400 rounded-full relative z-10">
-              <div className="absolute -top-4 left-0 w-8 h-8 bg-green-500 rounded-full"></div>
-           </div>
-           {/* Tuguncha */}
-           <div className="w-16 h-16 bg-green-600 rounded-full -mt-4 z-10 shadow-md"></div>
-           
-           {/* Changchilar */}
-           <div className="absolute top-1/2 left-12 w-2 h-20 bg-yellow-400 -rotate-45 transform origin-bottom">
-             <div className="w-6 h-6 bg-yellow-600 rounded-full absolute -top-4 -left-2"></div>
-           </div>
-           <div className="absolute top-1/2 right-12 w-2 h-20 bg-yellow-400 rotate-45 transform origin-bottom">
-             <div className="w-6 h-6 bg-yellow-600 rounded-full absolute -top-4 -left-2"></div>
-           </div>
+    <LabShell heading="Gulning tuzilishi" icon={Flower2} steps={steps} current={phase} done={isCompleted}>
+      <StageTitle sub="Gulni tashqi qismlaridan boshlab ketma-ket ajrating, soʻng changchi va urugʻchi tuzilishini oʻrganing.">
+        Gulni qismlarga ajratish
+      </StageTitle>
+
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,22rem)_1fr] gap-8 items-start">
+        <div className="lab-bench p-4">
+          <svg viewBox="0 0 320 390" className="w-full" role="img" aria-label="Gulning boʻylama kesimi">
+            {/* poya */}
+            <path d="M160 390 V250" stroke="#3f9d4b" strokeWidth="12" strokeLinecap="round" />
+            <ellipse cx="160" cy="252" rx="22" ry="11" fill="#2b7a3b" />
+
+            {/* urugʻchi */}
+            <ellipse cx="160" cy="238" rx="15" ry="20" fill="#8fd18b" stroke="#3f9d4b" strokeWidth="2" />
+            <path d="M160 220 V130" stroke="#8fd18b" strokeWidth="7" strokeLinecap="round" />
+            <circle cx="160" cy="124" r="10" fill="#d9e86a" stroke="#a9b83a" strokeWidth="2" />
+
+            {/* changchilar */}
+            {[-1, 1].map((s) => (
+              <g key={s}>
+                <path d={`M${160 + s * 8} 246 Q${160 + s * 34} 200 ${160 + s * 40} 150`} stroke="#c7d86a" strokeWidth="3.4" fill="none" strokeLinecap="round" />
+                <ellipse cx={160 + s * 40} cy="144" rx="7" ry="12" fill="#f1c232" stroke="#b8860b" strokeWidth="2" transform={`rotate(${s * -8} ${160 + s * 40} 144)`} />
+              </g>
+            ))}
+
+            {/* gultojbarglar */}
+            <AnimatePresence>
+              {!removed.includes("petal") && (
+                <motion.g key="petals" exit={{ opacity: 0, y: -40, x: 30, rotate: 10 }} transition={{ duration: 0.7 }}>
+                  <path d="M156 248 C90 236 52 150 92 104 C132 124 152 190 156 248Z" fill="#f08cb0" stroke="#d4577f" strokeWidth="2.5" />
+                  <path d="M164 248 C230 236 268 150 228 104 C188 124 168 190 164 248Z" fill="#f08cb0" stroke="#d4577f" strokeWidth="2.5" />
+                  <path d="M140 232 C118 200 108 160 112 130" stroke="#d4577f" strokeWidth="1.2" fill="none" opacity="0.6" />
+                  <path d="M180 232 C202 200 212 160 208 130" stroke="#d4577f" strokeWidth="1.2" fill="none" opacity="0.6" />
+                </motion.g>
+              )}
+            </AnimatePresence>
+
+            {/* gulkosabarglar */}
+            <AnimatePresence>
+              {!removed.includes("sepal") && (
+                <motion.g key="sepals" exit={{ opacity: 0, y: 50, x: -30, rotate: -12 }} transition={{ duration: 0.7 }}>
+                  <path d="M158 256 C120 270 90 252 84 224 C112 232 140 234 158 244Z" fill="#3f9d4b" stroke="#2b7a3b" strokeWidth="2.5" />
+                  <path d="M162 256 C200 270 230 252 236 224 C208 232 180 234 162 244Z" fill="#3f9d4b" stroke="#2b7a3b" strokeWidth="2.5" />
+                </motion.g>
+              )}
+            </AnimatePresence>
+
+            {/* faol nuqtalar */}
+            {phase >= 2 &&
+              HOTSPOTS.map((h) => {
+                const on = seen.includes(h.id);
+                return (
+                  <g
+                    key={h.id}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={h.name}
+                    onClick={() => visit(h.id)}
+                    onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && visit(h.id)}
+                    className="cursor-pointer outline-none"
+                  >
+                    <circle cx={h.x + (h.id === "anther" ? -18 : h.id === "ovary" || h.id === "filament" ? 30 : 24)} cy={h.y} r="12" fill={active === h.id ? "#0e2119" : on ? "#1e8a4c" : "#0b7a5c"} stroke="#fff" strokeWidth="2.5" />
+                    <text x={h.x + (h.id === "anther" ? -18 : h.id === "ovary" || h.id === "filament" ? 30 : 24)} y={h.y + 4} textAnchor="middle" fontSize="11" fontWeight="700" fill="#fff">
+                      {HOTSPOTS.indexOf(h) + 1}
+                    </text>
+                  </g>
+                );
+              })}
+          </svg>
         </div>
 
-        {/* Petals layer (Gultojbarg) */}
-        {layers[1] && (
-           <div className="absolute inset-0 flex justify-center items-center">
-              <div className="w-48 h-48 bg-red-400/90 rounded-t-full shadow-lg -mt-10"></div>
-              <div className="absolute w-32 h-32 bg-pink-500 rounded-full left-4 shadow-lg"></div>
-              <div className="absolute w-32 h-32 bg-pink-500 rounded-full right-4 shadow-lg"></div>
-           </div>
-        )}
+        <div className="grid gap-5">
+          {phase < 2 && (
+            <div className="grid gap-3">
+              <Note tone="info">
+                {phase === 0
+                  ? "Gul eng tashqi qismi — gulkosabargdan boshlab ajratiladi. Skalpel yordamida gulkosabarglarni ehtiyotkorlik bilan ajrating."
+                  : "Endi yorqin gultojbarglarni pinset bilan ehtiyotkorlik bilan olib tashlang."}
+              </Note>
+              <button className="btn btn-primary w-fit" onClick={() => setRemoved((r) => [...r, PARTS[phase].id])}>
+                <Scissors className="w-4 h-4" /> {PARTS[phase].name}ni ajratish ({PARTS[phase].tool})
+              </button>
+            </div>
+          )}
 
-        {/* Sepals layer (Gulkosabarg) */}
-        {layers[0] && (
-           <div className="absolute inset-0 flex justify-center items-end pb-12">
-             <div className="w-40 h-24 bg-green-700 rounded-t-full relative z-20 flex justify-center">
-                <div className="absolute w-6 h-20 bg-green-800 -bottom-20"></div>
-             </div>
-           </div>
-        )}
-      </div>
+          {removed.length > 0 && (
+            <div>
+              <p className="eyebrow !text-muted mb-2">Ajratilgan qismlar</p>
+              <ul className="grid gap-2">
+                {removed.map((id) => {
+                  const p = PARTS.find((x) => x.id === id)!;
+                  return (
+                    <li key={id} className="card px-4 py-3 flex gap-3 items-start">
+                      <Check className="w-4 h-4 text-ok mt-1 shrink-0" strokeWidth={3} />
+                      <p className="text-sm">
+                        <b>{p.name}.</b> <span className="text-muted">{p.text}</span>
+                      </p>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
 
-      <div className="flex justify-center gap-4">
-         {layers[0] && <button onClick={() => removeLayer(0)} className="bg-green-800 text-white px-6 py-2 rounded-lg font-bold">Gulkosabargni qirqish (Skalpel)</button>}
-         {!layers[0] && layers[1] && <button onClick={() => removeLayer(1)} className="bg-red-500 text-white px-6 py-2 rounded-lg font-bold">Gultojbarglarni olish (Pinset)</button>}
-      </div>
-      
-      {isCompleted && (
-        <div className="text-green-600 font-bold text-xl flex items-center justify-center gap-2 mt-8">
-          <CheckCircle2 /> Ajoyib! Endi gulning changchisi va urug'chisini to'liq ko'rishingiz mumkin.
+          {phase >= 2 && (
+            <div className="grid gap-4">
+              <Note tone="info">Rasmdagi raqamlangan nuqtalarni bosib, changchi va urugʻchi qismlarini oʻrganing ({seen.length}/{HOTSPOTS.length}).</Note>
+
+              <div className="flex flex-wrap gap-2">
+                {HOTSPOTS.map((h, i) => (
+                  <button key={h.id} onClick={() => visit(h.id)} className={`chip cursor-pointer ${active === h.id ? "chip-brand" : ""}`}>
+                    {seen.includes(h.id) && <Check className="w-3 h-3" strokeWidth={3} />} {i + 1}. {h.name}
+                  </button>
+                ))}
+              </div>
+
+              {activeSpot && (
+                <div className="card p-4 border-brand">
+                  <p className="font-display font-semibold text-brand mb-1">{activeSpot.name}</p>
+                  <p className="text-sm text-ink-2">{activeSpot.text}</p>
+                </div>
+              )}
+
+              {allSeen && !isCompleted && (
+                <div className="grid gap-2.5">
+                  <p className="font-semibold">Urugʻlanishdan soʻng urugʻchining tugunchasidan nima rivojlanadi?</p>
+                  <div className="flex flex-wrap gap-2">
+                    {[["fruit", "Meva"], ["petal", "Gultojbarg"], ["root", "Ildiz"]].map(([k, l]) => (
+                      <button key={k} onClick={() => answerQ(k)} className={`btn btn-sm ${answer === k ? (k === "fruit" ? "btn-primary" : "!bg-danger-soft !text-danger") : "btn-ghost"}`}>
+                        {l}
+                      </button>
+                    ))}
+                  </div>
+                  {answer && answer !== "fruit" && <Note tone="err">Tugunchaning ichida urugʻkurtaklar bor. Urugʻlangach, tugunchaning oʻzi nimaga aylanadi?</Note>}
+                </div>
+              )}
+
+              {isCompleted && <Note tone="ok">Toʻgʻri! Tuguncha meva boʻlib, urugʻkurtaklar esa urugʻga aylanadi. Gul — yopiq urugʻli oʻsimliklarning koʻpayish organi.</Note>}
+            </div>
+          )}
         </div>
-      )}
-    </div>
+      </div>
+    </LabShell>
   );
 }

@@ -1,184 +1,182 @@
 "use client";
 
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle2, FlaskConical, Droplets, Flame, Thermometer } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
+import { FlaskConical, Flame, Droplets } from "lucide-react";
+import { LabShell, LabProps, Note, StageTitle, Readout } from "./LabShell";
 
-export default function ChemistryLab({ lab, steps, completeLab, isCompleted }: { lab: any, steps: any[], completeLab: () => void, isCompleted: boolean }) {
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  
-  const [reagentAdded, setReagentAdded] = useState(false);
-  const [isHeating, setIsHeating] = useState(false);
-  const [temperature, setTemperature] = useState(20);
+/** Suvning qaynash jarayoni: isitish egri chizigʻi va qaynash vaqtidagi plato. */
+export default function ChemistryLab({ steps, completeLab, isCompleted }: LabProps) {
+  const [filled, setFilled] = useState(false);
+  const [burning, setBurning] = useState(false);
+  const [temp, setTemp] = useState(22);
+  const [minutes, setMinutes] = useState(0);
+  const [history, setHistory] = useState<{ t: number; T: number }[]>([{ t: 0, T: 22 }]);
+  const [boilTicks, setBoilTicks] = useState(0);
+  const [answer, setAnswer] = useState<string | null>(null);
 
-  const handleAddReagent = () => {
-    if (reagentAdded) return;
-    setReagentAdded(true);
-    
-    // Auto advance step
-    if (currentStepIndex < steps.length - 1) {
-      setCurrentStepIndex(prev => prev + 1);
-    }
-    
-    checkCompletion(true, temperature);
-  };
+  const tempRef = useRef(22);
+  const minRef = useRef(0);
 
-  const handleHeat = () => {
-    if (isHeating) return;
-    setIsHeating(true);
-    let temp = temperature;
-    
-    const interval = setInterval(() => {
-      temp += 10;
-      setTemperature(temp);
-      if (temp >= 100) {
-        clearInterval(interval);
-        setIsHeating(false);
-        checkCompletion(reagentAdded, 100);
+  const boiling = temp >= 100;
+  const stage = !filled ? 0 : boilTicks < 8 ? 1 : 2; // qadamlar paneli uchun
+
+  useEffect(() => {
+    if (!burning) return;
+    const id = setInterval(() => {
+      minRef.current += 0.25;
+      if (tempRef.current < 100) {
+        // Nyuton isish qonuniga yaqin: kolba qizishi sekinlashib boradi
+        tempRef.current = Math.min(100, tempRef.current + (100 - tempRef.current) * 0.05 + 0.55);
+        if (tempRef.current > 99.6) tempRef.current = 100;
+      } else {
+        setBoilTicks((b) => b + 1);
       }
-    }, 500);
-    
-    // Auto advance step
-    if (currentStepIndex < steps.length - 1) {
-      setCurrentStepIndex(prev => prev + 1);
-    }
+      setTemp(Math.round(tempRef.current * 10) / 10);
+      setMinutes(Math.round(minRef.current * 100) / 100);
+      setHistory((h) => [...h, { t: minRef.current, T: tempRef.current }]);
+    }, 250);
+    return () => clearInterval(id);
+  }, [burning]);
+
+  const reset = () => {
+    setBurning(false);
+    tempRef.current = 22;
+    minRef.current = 0;
+    setTemp(22);
+    setMinutes(0);
+    setHistory([{ t: 0, T: 22 }]);
+    setBoilTicks(0);
+    setAnswer(null);
   };
 
-  const checkCompletion = (added: boolean, temp: number) => {
-    if (added && temp >= 100) {
-      completeLab();
-    }
+  const answerQ = (a: string) => {
+    setAnswer(a);
+    if (a === "const") completeLab();
   };
+
+  /* grafik */
+  const W = 360;
+  const Hh = 170;
+  const tMax = Math.max(8, minutes + 1);
+  const gx = (t: number) => 34 + (t / tMax) * (W - 46);
+  const gy = (T: number) => Hh - 22 - ((T - 20) / 90) * (Hh - 40);
+  const path = history.map((p, i) => `${i ? "L" : "M"}${gx(p.t).toFixed(1)} ${gy(p.T).toFixed(1)}`).join(" ");
+
+  const waterTop = filled ? 118 : 205;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      {/* Left Column: Instructions */}
-      <div className="lg:col-span-1">
-        <div className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-xl sticky top-24">
-          <h3 className="text-xl font-black mb-6 flex items-center gap-2 text-gray-900">
-            <FlaskConical className="w-6 h-6 text-red-500" />
-            Kimyoviy Tajriba
-          </h3>
-          
-          <div className="space-y-4">
-            {steps.length > 0 ? steps.map((step, index) => (
-              <div 
-                key={index} 
-                className={`flex gap-4 p-5 rounded-2xl border-2 transition-all duration-300 ${
-                  index === currentStepIndex && !isCompleted
-                    ? 'bg-red-50 border-red-400 shadow-md scale-[1.02]' 
-                    : index < currentStepIndex || isCompleted
-                      ? 'bg-green-50 border-green-200 opacity-80'
-                      : 'bg-gray-50 border-gray-100 opacity-50'
-                }`}
-              >
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shrink-0 transition-colors ${
-                  index < currentStepIndex || isCompleted ? 'bg-green-500 text-white shadow-md' : index === currentStepIndex ? 'bg-red-500 text-white shadow-md' : 'bg-gray-200 text-gray-500'
-                }`}>
-                  {index < currentStepIndex || isCompleted ? <CheckCircle2 className="w-5 h-5" /> : index + 1}
-                </div>
-                <div>
-                  <p className={`font-semibold text-sm leading-relaxed ${index === currentStepIndex && !isCompleted ? 'text-red-900' : 'text-gray-700'}`}>
-                    {typeof step === 'string' ? step : (step.instruction || step)}
-                  </p>
-                </div>
-              </div>
-            )) : (
-              <div className="p-4 bg-gray-50 rounded-xl text-gray-500 text-sm">
-                1. Reaktiv qo'shing.<br/>
-                2. Suyuqlikni qizdiring.
-              </div>
+    <LabShell heading="Suvning qaynashi" icon={FlaskConical} steps={steps} current={stage} done={isCompleted}>
+      <StageTitle sub="Kolbadagi suvni spirtovkada qizdiring, haroratni kuzating va qaynash vaqtida u qanday oʻzgarishini aniqlang.">
+        Suvning qaynash jarayonini kuzatish
+      </StageTitle>
+
+      <div className="grid grid-cols-1 2xl:grid-cols-[1fr_22rem] gap-6">
+        <div className="lab-bench p-4 flex justify-center">
+          <svg viewBox="0 0 300 300" className="w-full max-w-sm" role="img" aria-label="Kolba, spirtovka va termometr">
+            {/* shtativ */}
+            <rect x="40" y="40" width="8" height="240" fill="#4a5f86" />
+            <rect x="20" y="276" width="110" height="10" rx="3" fill="#2b3a55" />
+            <rect x="40" y="130" width="120" height="6" fill="#4a5f86" />
+            {/* kolba */}
+            <clipPath id="flask"><path d="M112 70 h34 v62 l40 74 q8 18 -10 18 h-94 q-18 0 -10 -18 l40 -74 z" /></clipPath>
+            <path d="M112 70 h34 v62 l40 74 q8 18 -10 18 h-94 q-18 0 -10 -18 l40 -74 z" fill="rgba(200,230,255,0.25)" stroke="#6a85b5" strokeWidth="3" />
+            <g clipPath="url(#flask)">
+              <motion.rect x="80" width="120" height="120" fill="rgba(80,150,230,0.55)" initial={false} animate={{ y: waterTop }} transition={{ duration: 1.2 }} />
+              {boiling &&
+                Array.from({ length: 14 }).map((_, i) => (
+                  <circle
+                    key={i}
+                    cx={104 + (i * 37) % 80}
+                    cy={220}
+                    r={2 + (i % 3)}
+                    fill="rgba(255,255,255,0.85)"
+                    style={{ animation: `rise ${1.2 + (i % 5) * 0.3}s ${i * 0.15}s infinite ease-in` }}
+                  />
+                ))}
+            </g>
+            {/* termometr */}
+            <rect x="126" y="56" width="6" height="140" rx="3" fill="#fff" stroke="#6a85b5" />
+            <rect x="127.5" y={190 - ((temp - 20) / 90) * 120} width="3" height={((temp - 20) / 90) * 120 + 6} fill="#d6453d" />
+            {/* spirtovka */}
+            <rect x="105" y="262" width="62" height="26" rx="8" fill="#9aa8c4" stroke="#6a85b5" strokeWidth="2" />
+            <rect x="130" y="250" width="12" height="14" fill="#4a5f86" />
+            {burning && (
+              <g style={{ transformOrigin: "136px 250px", animation: "flicker 0.5s infinite" }}>
+                <path d="M136 214 q-16 18 -6 32 q6 6 12 0 q10 -14 -6 -32z" fill="#ff9a1f" />
+                <path d="M136 228 q-8 10 -3 18 q3 3 6 0 q5 -8 -3 -18z" fill="#ffe27a" />
+              </g>
             )}
+          </svg>
+        </div>
+
+        <div className="grid gap-4 content-start">
+          <div className="flex flex-wrap gap-3">
+            <Readout label="Harorat" value={temp.toFixed(1)} unit="°C" tone={boiling ? "danger" : "accent"} />
+            <Readout label="Vaqt" value={minutes.toFixed(1)} unit="daq" tone="info" />
           </div>
+
+          <div className="card p-3">
+            <svg viewBox={`0 0 ${W} ${Hh}`} className="w-full" role="img" aria-label="Harorat — vaqt grafigi">
+              {[20, 40, 60, 80, 100].map((T) => (
+                <g key={T}>
+                  <line x1="34" x2={W - 12} y1={gy(T)} y2={gy(T)} stroke="var(--line)" />
+                  <text x="30" y={gy(T) + 3} fontSize="9" textAnchor="end" fill="var(--muted)">{T}</text>
+                </g>
+              ))}
+              <line x1="34" x2="34" y1={gy(20)} y2={gy(100) - 6} stroke="var(--line-strong)" />
+              <path d={path} fill="none" stroke="var(--danger)" strokeWidth="2.5" strokeLinejoin="round" />
+              <text x={W - 12} y={Hh - 4} fontSize="9" textAnchor="end" fill="var(--muted)">vaqt, daqiqa</text>
+              <text x="6" y="12" fontSize="9" fill="var(--muted)">T, °C</text>
+            </svg>
+          </div>
+
+          {!filled && (
+            <button className="btn btn-primary" onClick={() => setFilled(true)}>
+              <Droplets className="w-4 h-4" /> Kolbaga suv quyish
+            </button>
+          )}
+          {filled && !burning && !boiling && (
+            <button className="btn btn-primary" onClick={() => setBurning(true)}>
+              <Flame className="w-4 h-4" /> Spirtovkani yoqish
+            </button>
+          )}
+          {burning && (
+            <button className="btn btn-ghost" onClick={() => setBurning(false)}>
+              Spirtovkani oʻchirish
+            </button>
+          )}
+          {filled && (
+            <button className="btn btn-ghost btn-sm" onClick={reset}>Tajribani qaytadan boshlash</button>
+          )}
+
+          {filled && !burning && temp === 22 && <Note tone="warn">Ehtiyot boʻling: spirtovka yongan paytda kolbaga qoʻl tekkizmang.</Note>}
+          {burning && !boiling && <Note tone="info">Suv qizimoqda. Termometr koʻrsatkichi va grafik oʻzgarishini kuzating.</Note>}
+          {boiling && boilTicks < 8 && <Note tone="warn">Suv qaynay boshladi! Pufakchalar butun hajm boʻylab koʻtarilmoqda. Isitishni davom ettiring va haroratga qarang.</Note>}
+
+          {boiling && boilTicks >= 8 && !isCompleted && (
+            <div className="grid gap-2.5">
+              <Note tone="info">Savol: suv qaynab turgan paytda, spirtovka yonib turishiga qaramay, harorat qanday oʻzgaradi?</Note>
+              {[
+                ["up", "Yana koʻtarilaveradi"],
+                ["const", "Taxminan 100 °C da oʻzgarmay qoladi"],
+                ["down", "Pasayadi"],
+              ].map(([k, label]) => (
+                <button key={k} className={`btn btn-ghost justify-start ${answer === k ? (k === "const" ? "!border-ok" : "!border-danger") : ""}`} onClick={() => answerQ(k)}>
+                  {label}
+                </button>
+              ))}
+              {answer && answer !== "const" && <Note tone="err">Grafikka qarang: qaynash boshlangach chiziq gorizontal boʻlib qoldi. Qayta urinib koʻring.</Note>}
+            </div>
+          )}
+
+          {isCompleted && (
+            <Note tone="ok">
+              Toʻgʻri! Qaynash vaqtida berilayotgan issiqlik suv molekulalarini bugʻga aylantirishga sarflanadi, shuning uchun harorat (normal atmosfera bosimida 100 °C) oʻzgarmaydi.
+            </Note>
+          )}
         </div>
       </div>
-
-      {/* Right Column: Interactive Lab Zone */}
-      <div className="lg:col-span-2">
-        <div className="bg-white p-6 md:p-10 rounded-3xl border border-gray-100 shadow-xl min-h-[500px] relative overflow-hidden flex flex-col justify-center items-center">
-          <div className="absolute inset-0 bg-gradient-to-t from-gray-50 to-white pointer-events-none" />
-
-          {/* Liquid mixing & heating visualization */}
-          <div className="relative z-10 flex flex-col items-center">
-            
-            <div className="relative w-48 h-64 border-4 border-b-8 border-gray-300 rounded-b-3xl rounded-t-xl bg-white/20 backdrop-blur-sm overflow-hidden shadow-inner flex items-end">
-              
-              {/* Animated Liquid */}
-              <motion.div 
-                className="w-full relative"
-                initial={{ height: "40%", backgroundColor: "#3b82f6" }}
-                animate={{ 
-                  height: reagentAdded ? "70%" : "40%",
-                  backgroundColor: reagentAdded ? (temperature >= 100 ? "#ef4444" : "#a855f7") : "#3b82f6"
-                }}
-                transition={{ duration: 1.5 }}
-              >
-                {/* Bubbles if heating */}
-                <AnimatePresence>
-                  {isHeating && (
-                    <motion.div 
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="absolute inset-0"
-                    >
-                      {[...Array(10)].map((_, i) => (
-                        <motion.div
-                          key={i}
-                          className="absolute bottom-0 w-2 h-2 bg-white/50 rounded-full"
-                          initial={{ x: Math.random() * 100, y: 0, scale: 0.5 }}
-                          animate={{ y: -200, scale: 1.5, x: Math.random() * 100 }}
-                          transition={{ repeat: Infinity, duration: 1 + Math.random(), delay: Math.random() }}
-                        />
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-            </div>
-
-            {/* Burner */}
-            <div className="w-56 h-12 bg-gray-800 rounded-lg mt-2 relative flex justify-center">
-              <AnimatePresence>
-                {isHeating && (
-                  <motion.div 
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 40 }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="absolute -top-10 text-orange-500"
-                  >
-                    <Flame size={40} className="animate-pulse" />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Controls */}
-            <div className="mt-12 flex gap-6">
-              <button
-                onClick={handleAddReagent}
-                disabled={reagentAdded}
-                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold shadow-sm transition-all ${
-                  reagentAdded ? 'bg-gray-100 text-gray-400' : 'bg-purple-100 text-purple-700 hover:bg-purple-200 hover:scale-105'
-                }`}
-              >
-                <Droplets className="w-5 h-5" /> Reaktiv Qo'shish
-              </button>
-
-              <button
-                onClick={handleHeat}
-                disabled={isHeating || temperature >= 100}
-                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold shadow-sm transition-all ${
-                  (isHeating || temperature >= 100) ? 'bg-gray-100 text-gray-400' : 'bg-orange-100 text-orange-700 hover:bg-orange-200 hover:scale-105'
-                }`}
-              >
-                <Thermometer className="w-5 h-5" /> Qizdirish ({temperature}°C)
-              </button>
-            </div>
-
-          </div>
-        </div>
-      </div>
-    </div>
+    </LabShell>
   );
 }

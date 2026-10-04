@@ -1,88 +1,86 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Lightbulb, ChevronRight, ChevronLeft } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { motion } from "framer-motion";
+import { Lightbulb, Leaf, PawPrint } from "lucide-react";
+import { Page, PageHeader, Segmented, EmptyState, CardGridSkeleton } from "@/components/ui";
+
+const CATEGORY: Record<string, { label: string; icon: typeof Leaf }> = {
+  BOTANY: { label: "Botanika", icon: Leaf },
+  ZOOLOGY: { label: "Zoologiya", icon: PawPrint },
+};
 
 export default function FactsPage() {
   const [facts, setFacts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<string>("ALL");
 
   useEffect(() => {
-    fetchFacts();
+    (async () => {
+      try {
+        const res = await fetch(`/api/facts`);
+        const data = await res.json();
+        setFacts(Array.isArray(data) ? data : data?.facts || []);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
-  const fetchFacts = async () => {
-    try {
-      const res = await fetch(`/api/facts`);
-      const data = await res.json();
-      if (Array.isArray(data)) {
-        setFacts(data);
-      } else {
-        setFacts(data?.facts || []);
-      }
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const list = useMemo(() => facts.filter((f) => filter === "ALL" || f.category === filter), [facts, filter]);
 
   return (
-    <div className="p-8 max-w-7xl mx-auto w-full">
-      <div className="bg-amber-500 rounded-[2rem] p-6 md:p-8 mb-8 text-white shadow-lg shadow-amber-500/20 flex flex-col md:flex-row md:items-center justify-between gap-6 shrink-0">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-white/20 backdrop-blur-sm rounded-2xl">
-            <Lightbulb className="w-8 h-8 text-white" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold">Qiziqarli Faktlar</h1>
-            <p className="text-white/80 mt-1">Biologiya olamidagi ajoyib faktlar bilan tanishing</p>
-          </div>
-        </div>
-      </div>
+    <Page>
+      <PageHeader
+        icon={Lightbulb}
+        eyebrow="Oʻrganish"
+        title="Qiziqarli faktlar"
+        subtitle="Oʻsimliklar va hayvonlar olamidan ilmiy asoslangan qiziqarli maʼlumotlar."
+      >
+        <Segmented
+          label="Yoʻnalish"
+          value={filter}
+          onChange={setFilter}
+          options={[
+            { value: "ALL", label: "Hammasi" },
+            { value: "BOTANY", label: "Botanika" },
+            { value: "ZOOLOGY", label: "Zoologiya" },
+          ]}
+        />
+      </PageHeader>
 
       {loading ? (
-        <div className="flex-grow flex justify-center items-center">
-          <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
-        </div>
-      ) : facts.length === 0 ? (
-        <div className="flex-grow flex flex-col items-center justify-center text-foreground/50 text-center">
-          <Lightbulb className="w-16 h-16 mb-4 opacity-30" />
-          <p className="text-lg font-medium">Hozircha qiziqarli faktlar yo'q.</p>
-        </div>
+        <CardGridSkeleton />
+      ) : list.length === 0 ? (
+        <EmptyState icon={Lightbulb} title="Hozircha faktlar yoʻq" />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {facts.map((fact, index) => (
-            <motion.div 
-              key={fact.id || index}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: (index % 10) * 0.1 }}
-              className="glass p-6 rounded-3xl border border-border/50 relative overflow-hidden group flex flex-col h-full hover:shadow-xl hover:shadow-amber-500/10 transition-all"
-            >
-              <div className="absolute top-0 left-0 w-full h-1 bg-amber-500" />
-              
-              <div className="flex items-center gap-3 mb-4">
-                <div className="bg-amber-100 p-2 rounded-xl text-amber-600">
-                  <Lightbulb className="w-6 h-6" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {list.map((fact, i) => {
+            const cat = CATEGORY[fact.category] || { label: "Umumiy", icon: Lightbulb };
+            const Icon = cat.icon;
+            return (
+              <motion.article
+                key={fact.id || i}
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: Math.min(i % 9, 8) * 0.04 }}
+                className="card card-hover flex flex-col p-6"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <span className="chip chip-brand">
+                    <Icon className="w-3.5 h-3.5" /> {cat.label}
+                  </span>
+                  <span className="text-xs font-semibold text-muted tabular-nums">№ {i + 1}</span>
                 </div>
-                <h3 className="text-xl font-bold flex-1 leading-tight">{fact.title}</h3>
-              </div>
-              
-              <p className="text-foreground/70 text-sm flex-grow whitespace-pre-wrap leading-relaxed font-medium">
-                {fact.content}
-              </p>
-              
-              <div className="mt-4 pt-4 border-t border-border/30 flex justify-between items-center text-xs text-foreground/50 font-bold">
-                <span>{fact.category === "BOTANY" ? "Botanika" : fact.category === "ZOOLOGY" ? "Zoologiya" : "Umumiy"}</span>
-                <span className="bg-amber-50 text-amber-600 px-2 py-1 rounded-md">#{index + 1}</span>
-              </div>
-            </motion.div>
-          ))}
+                <h2 className="font-display text-xl font-semibold leading-snug mb-2.5">{fact.title}</h2>
+                <p className="text-ink-2 text-[0.95rem] leading-relaxed whitespace-pre-wrap">{fact.content}</p>
+              </motion.article>
+            );
+          })}
         </div>
       )}
-    </div>
+    </Page>
   );
 }
-

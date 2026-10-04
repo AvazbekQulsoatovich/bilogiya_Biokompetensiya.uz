@@ -3,8 +3,17 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ArrowLeft, BookOpen, Video, FileText, Image as ImageIcon, File } from "lucide-react";
+import { Video, FileText, Image as ImageIcon, File, Paperclip } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { Page, Loading, BackButton, EmptyState } from "@/components/ui";
+
+function FileIcon({ type }: { type: string }) {
+  const t = type || "";
+  if (t.includes("image")) return <ImageIcon className="w-5 h-5 text-info" />;
+  if (t.includes("video")) return <Video className="w-5 h-5 text-accent" />;
+  if (t.includes("pdf")) return <FileText className="w-5 h-5 text-danger" />;
+  return <File className="w-5 h-5 text-muted" />;
+}
 
 export default function TopicDetailPage() {
   const params = useParams();
@@ -13,120 +22,99 @@ export default function TopicDetailPage() {
 
   const [topic, setTopic] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    if (id) {
-      fetchTopic();
-    }
+    if (!id) return;
+    (async () => {
+      try {
+        const res = await fetch(`/api/topics/${id}`);
+        if (res.ok) setTopic(await res.json());
+        else setNotFound(true);
+      } catch (e) {
+        console.error("Mavzuni yuklab boʻlmadi", e);
+        setNotFound(true);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, [id]);
 
-  const fetchTopic = async () => {
-    try {
-      const res = await fetch(`/api/topics/${id}`);
-      if (res.ok) {
-        const data = await res.json();
-        setTopic(data);
-      } else {
-        alert("Mavzu topilmadi");
-        router.push("/topics");
-      }
-    } catch (error) {
-      console.error("Failed to fetch topic:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getFileIcon = (fileType: string) => {
-    if (fileType.includes("image")) return <ImageIcon className="w-5 h-5 text-blue-500" />;
-    if (fileType.includes("video")) return <Video className="w-5 h-5 text-purple-500" />;
-    if (fileType.includes("pdf")) return <FileText className="w-5 h-5 text-red-500" />;
-    return <File className="w-5 h-5 text-gray-500" />;
-  };
-
-  if (loading) {
+  if (loading) return <Page narrow><Loading /></Page>;
+  if (notFound || !topic)
     return (
-      <div className="p-8 max-w-5xl mx-auto flex justify-center mt-20">
-        <div className="w-10 h-10 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" />
-      </div>
+      <Page narrow>
+        <EmptyState icon={FileText} title="Mavzu topilmadi" text="Bu mavzu oʻchirilgan yoki havola notoʻgʻri boʻlishi mumkin." />
+        <div className="text-center mt-6">
+          <button onClick={() => router.push("/topics")} className="btn btn-primary">Mavzular roʻyxatiga qaytish</button>
+        </div>
+      </Page>
     );
-  }
 
-  if (!topic) return null;
+  const isEmbedUrl = (u: string) => u.includes("youtube") || u.includes("youtu.be");
+  const isPdf = topic.videoUrl?.includes(".pdf");
 
   return (
-    <div className="p-4 md:p-8 max-w-4xl mx-auto w-full">
-      <button 
-        onClick={() => router.back()}
-        className="flex items-center gap-2 text-foreground/60 hover:text-indigo-600 font-medium mb-6 transition-colors"
-      >
-        <ArrowLeft className="w-5 h-5" /> Orqaga qaytish
-      </button>
+    <Page narrow>
+      <BackButton onClick={() => router.back()}>Orqaga qaytish</BackButton>
 
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-card border border-border/50 rounded-[2rem] overflow-hidden shadow-xl"
-      >
-        <div className="bg-indigo-600 p-8 text-white">
-          <div className="flex items-center gap-3 mb-4">
-            <span className="bg-white/20 px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm">
-              {topic.course?.title || "Biologiya"}
-            </span>
-          </div>
-          <h1 className="text-3xl md:text-4xl font-bold mb-2 leading-tight">{topic.title}</h1>
-        </div>
+      <motion.article initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card overflow-hidden">
+        <header className="px-6 md:px-10 pt-8 pb-7 border-b border-line bg-gradient-to-b from-brand-soft/60 to-transparent">
+          <span className="chip chip-brand mb-4">{topic.course?.title || "Biologiya"}</span>
+          <h1 className="font-display text-3xl md:text-4xl font-semibold leading-tight">{topic.title}</h1>
+        </header>
 
-        <div className="p-8">
+        <div className="px-6 md:px-10 py-8">
           {topic.videoUrl && (
-            <div className={`mb-10 rounded-2xl overflow-hidden shadow-lg border border-border ${topic.videoUrl.includes('.pdf') ? 'h-[80vh]' : 'aspect-video'}`}>
-              <iframe 
-                src={topic.videoUrl.includes('youtube') || topic.videoUrl.includes('youtu.be') ? topic.videoUrl.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/') : `${topic.videoUrl}`}
+            <div
+              className={`mb-10 rounded-2xl overflow-hidden border border-line bg-black ${
+                isPdf ? "h-[80vh]" : "aspect-video"
+              }`}
+            >
+              <iframe
+                src={
+                  isEmbedUrl(topic.videoUrl)
+                    ? topic.videoUrl.replace("watch?v=", "embed/").replace("youtu.be/", "youtube.com/embed/")
+                    : topic.videoUrl
+                }
                 title={topic.title}
+                loading="lazy"
                 className="w-full h-full"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
-              ></iframe>
+              />
             </div>
           )}
 
-          <div className="prose prose-indigo dark:prose-invert max-w-none text-lg leading-relaxed">
-            <ReactMarkdown
-              components={{
-                img: ({ node, ...props }) => (
-                  <img {...props} className="w-full h-auto rounded-2xl shadow-lg border border-border/50 my-6" />
-                )
-              }}
-            >
-              {topic.contentMd || "*Ma'lumot kiritilmagan*"}
-            </ReactMarkdown>
+          <div className="md">
+            <ReactMarkdown>{topic.contentMd || "*Maʼlumot kiritilmagan*"}</ReactMarkdown>
           </div>
 
-          {topic.attachments && topic.attachments.length > 0 && (
-            <div className="mt-12 pt-8 border-t border-border">
-              <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                <FileText className="w-6 h-6 text-indigo-500" /> Biriktirilgan Fayllar
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {topic.attachments?.length > 0 && (
+            <section className="mt-12 pt-8 border-t border-line">
+              <h2 className="font-display text-xl font-semibold mb-4 flex items-center gap-2">
+                <Paperclip className="w-5 h-5 text-brand" /> Biriktirilgan fayllar
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {topic.attachments.map((file: any) => (
-                  <a 
-                    key={file.id} 
-                    href={`${file.fileUrl}`} 
-                    target="_blank" 
+                  <a
+                    key={file.id}
+                    href={file.fileUrl}
+                    target="_blank"
                     rel="noreferrer"
-                    className="flex items-center gap-3 bg-background border border-border p-4 rounded-xl hover:border-indigo-500 hover:shadow-md transition-all group"
+                    className="flex items-center gap-3 rounded-xl border border-line bg-surface-2 p-4 hover:border-brand transition-colors group"
                   >
-                    <div className="p-2 bg-indigo-50 rounded-lg group-hover:bg-indigo-100 transition-colors">
-                      {getFileIcon(file.fileType)}
+                    <div className="p-2 rounded-lg bg-surface">
+                      <FileIcon type={file.fileType} />
                     </div>
-                    <span className="font-medium truncate flex-1">{file.fileName}</span>
+                    <span className="font-medium truncate flex-1 group-hover:text-brand">{file.fileName}</span>
                   </a>
                 ))}
               </div>
-            </div>
+            </section>
           )}
         </div>
-      </motion.div>
-    </div>
+      </motion.article>
+    </Page>
   );
 }

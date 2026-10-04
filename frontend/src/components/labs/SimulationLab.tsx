@@ -30,18 +30,18 @@ export default function SimulationLab({ lab, steps, completeLab, isCompleted }: 
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
       {/* Left Column */}
       <div className="lg:col-span-1">
-        <div className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-xl sticky top-24">
-          <h3 className="text-xl font-black mb-6 flex items-center gap-2 text-gray-900">
+        <div className="bg-surface p-6 md:p-8 rounded-3xl border border-line shadow-[var(--shadow-sm)] sticky top-24">
+          <h3 className="text-xl font-black mb-6 flex items-center gap-2 text-ink">
             <Info className="w-6 h-6 text-green-500" />
             Simulyatsiya
           </h3>
-          <p className="text-gray-600 mb-6 text-sm">
-            O'simlikning optimal o'sishi uchun harorat va yorug'likni moslang.
+          <p className="text-muted mb-6 text-sm">
+            Oʻsimlikning optimal oʻsishi uchun harorat va yorugʻlikni moslang.
           </p>
           
           <div className="space-y-6">
             <div className="flex flex-col gap-3">
-              <label className="flex items-center justify-between text-sm font-bold text-gray-600">
+              <label className="flex items-center justify-between text-sm font-bold text-muted">
                 <span className="flex items-center gap-2"><Thermometer className="w-4 h-4 text-orange-500" /> Harorat</span>
                 <span className="bg-orange-100 text-orange-700 px-2 py-0.5 rounded text-xs">{temperature}°C</span>
               </label>
@@ -56,8 +56,8 @@ export default function SimulationLab({ lab, steps, completeLab, isCompleted }: 
             </div>
 
             <div className="flex flex-col gap-3">
-              <label className="flex items-center justify-between text-sm font-bold text-gray-600">
-                <span className="flex items-center gap-2"><Sun className="w-4 h-4 text-yellow-500" /> Yorug'lik</span>
+              <label className="flex items-center justify-between text-sm font-bold text-muted">
+                <span className="flex items-center gap-2"><Sun className="w-4 h-4 text-yellow-500" /> Yorugʻlik</span>
                 <span className="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded text-xs">{lightLevel}%</span>
               </label>
               <input 
@@ -75,7 +75,7 @@ export default function SimulationLab({ lab, steps, completeLab, isCompleted }: 
 
       {/* Right Column */}
       <div className="lg:col-span-2">
-        <div className="bg-white p-6 md:p-10 rounded-3xl border border-gray-100 shadow-xl min-h-[500px] relative overflow-hidden flex flex-col justify-center items-center">
+        <div className="bg-surface p-6 md:p-10 rounded-3xl border border-line shadow-[var(--shadow-sm)] min-h-[500px] relative overflow-hidden flex flex-col justify-center items-center">
           
           <motion.div 
             className="absolute top-0 right-0 p-8 text-yellow-400"
@@ -116,10 +116,10 @@ export default function SimulationLab({ lab, steps, completeLab, isCompleted }: 
             <div className="w-full h-8 bg-[#8B4513] rounded-t-sm absolute -bottom-8"></div>
           </div>
           
-          <div className="mt-16 text-center text-gray-500 font-medium">
-            {growth === 1 && "O'simlik sekin o'smoqda"}
-            {growth === 2 && "O'simlik normal o'smoqda"}
-            {growth === 3 && "O'simlik juda tez o'smoqda! Optimal sharoit!"}
+          <div className="mt-16 text-center text-muted font-medium">
+            {growth === 1 && "Oʻsimlik sekin oʻsmoqda"}
+            {growth === 2 && "Oʻsimlik normal oʻsmoqda"}
+            {growth === 3 && "Oʻsimlik juda tez oʻsmoqda! Optimal sharoit!"}
           </div>
 
         </div>

@@ -15,9 +15,9 @@ export default function CellBuilderLab({ completeLab, isCompleted }: any) {
   };
 
   return (
-    <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 text-center">
-      <h2 className="text-2xl font-bold mb-2">O'simlik Hujayrasini Qurish</h2>
-      <p className="text-gray-600 mb-8">Kerakli organoidlarni tanlab hujayra ichiga joylashtiring.</p>
+    <div className="bg-surface p-6 rounded-3xl shadow-[var(--shadow-sm)] border border-line text-center">
+      <h2 className="text-2xl font-bold mb-2">Oʻsimlik Hujayrasini Qurish</h2>
+      <p className="text-muted mb-8">Kerakli organoidlarni tanlab hujayra ichiga joylashtiring.</p>
       
       <div className="flex flex-col md:flex-row gap-8 items-center justify-center">
         <div className="w-64 h-64 bg-green-100 rounded-3xl border-8 border-green-500 relative shadow-inner">
@@ -33,7 +33,7 @@ export default function CellBuilderLab({ completeLab, isCompleted }: any) {
                key={org}
                onClick={() => addOrganelle(org)}
                disabled={placed.includes(org)}
-               className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-6 py-3 rounded-xl font-bold border-2 border-gray-200 disabled:opacity-30 disabled:bg-green-100 disabled:text-green-800 disabled:border-green-300 transition-all text-left w-48 flex justify-between items-center"
+               className="bg-surface-2 hover:bg-gray-200 text-ink px-6 py-3 rounded-xl font-bold border-2 border-line disabled:opacity-30 disabled:bg-green-100 disabled:text-green-800 disabled:border-green-300 transition-all text-left w-48 flex justify-between items-center"
              >
                {org} {placed.includes(org) && <CheckCircle2 className="w-5 h-5" />}
              </button>

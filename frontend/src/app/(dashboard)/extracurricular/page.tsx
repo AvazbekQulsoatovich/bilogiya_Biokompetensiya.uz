@@ -2,30 +2,31 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { FileText, Plus, X, ListTodo, CheckCircle } from "lucide-react";
+import { FileText, Plus, ListTodo, CheckCircle } from "lucide-react";
+import { Page, PageHeader, EmptyState, CardGridSkeleton, Modal, Field } from "@/components/ui";
 
 export default function ExtracurricularPage() {
   const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [token, setToken] = useState<string | null>(null);
-  
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
   const [newXp, setNewXp] = useState(50);
 
-  const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
-  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
-  const [reportContent, setReportContent] = useState("");
+  const [isSubmitOpen, setIsSubmitOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<any>(null);
+  const [report, setReport] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [submitMessage, setSubmitMessage] = useState<{type: 'error' | 'success', text: string} | null>(null);
+  const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    try {
       setUserRole(localStorage.getItem("userRole"));
       setToken(localStorage.getItem("token"));
-    }
+    } catch {}
     fetchTasks();
   }, []);
 
@@ -33,251 +34,167 @@ export default function ExtracurricularPage() {
     try {
       const res = await fetch(`/api/extracurricular`);
       const data = await res.json();
-      if (Array.isArray(data)) {
-        setTasks(data);
-      } else {
-        setTasks(data?.tasks || []);
-      }
-    } catch (error) {
-      console.error("Failed to fetch tasks", error);
+      setTasks(Array.isArray(data) ? data : data?.tasks || []);
+    } catch (e) {
+      console.error("Topshiriqlarni yuklab boʻlmadi", e);
     } finally {
       setLoading(false);
     }
   };
+
+  const authHeaders = { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const res = await fetch(`/api/extracurricular`, {
         method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          ...(token ? { "Authorization": `Bearer ${token}` } : {})
-        },
-        body: JSON.stringify({
-          title: newTitle,
-          description: newDesc,
-          xpReward: newXp
-        })
+        headers: authHeaders,
+        body: JSON.stringify({ title: newTitle, description: newDesc, xpReward: newXp }),
       });
       if (res.ok) {
-        setIsCreateModalOpen(false);
+        setIsCreateOpen(false);
         setNewTitle("");
         setNewDesc("");
         setNewXp(50);
         fetchTasks();
       }
-    } catch (error) {
-      console.error(error);
+    } catch (e) {
+      console.error(e);
     }
+  };
+
+  const closeSubmit = () => {
+    setIsSubmitOpen(false);
+    setReport("");
+    setSelectedTask(null);
+    setMessage(null);
   };
 
   const handleSubmitReport = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedTaskId) return;
+    if (!selectedTask) return;
     setSubmitting(true);
-    setSubmitMessage(null);
+    setMessage(null);
     try {
-      const res = await fetch(`/api/extracurricular/${selectedTaskId}/submit`, {
+      const res = await fetch(`/api/extracurricular/${selectedTask.id}/submit`, {
         method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          ...(token ? { "Authorization": `Bearer ${token}` } : {})
-        },
-        body: JSON.stringify({ content: reportContent })
+        headers: authHeaders,
+        body: JSON.stringify({ content: report }),
       });
       if (res.ok) {
-        setSubmitMessage({ type: 'success', text: "Javobingiz to'g'ri! Barakalla!" });
+        setMessage({ type: "success", text: "Javobingiz toʻgʻri! Barakalla!" });
         setTimeout(() => {
-          setIsSubmitModalOpen(false);
-          setReportContent("");
-          setSelectedTaskId(null);
-          setSubmitMessage(null);
-          window.dispatchEvent(new Event('profileUpdated'));
-        }, 2000);
+          closeSubmit();
+          window.dispatchEvent(new Event("profileUpdated"));
+        }, 1800);
       } else {
-        const errorData = await res.json().catch(() => ({}));
-        setSubmitMessage({ type: 'error', text: errorData.error || "Noma'lum xato yuz berdi" });
+        const err = await res.json().catch(() => ({}));
+        setMessage({ type: "error", text: err.error || "Nomaʼlum xato yuz berdi." });
       }
-    } catch (error) {
-      console.error(error);
-      setSubmitMessage({ type: 'error', text: "Tarmoq bilan muammo bo'lishi mumkin." });
+    } catch (e) {
+      console.error(e);
+      setMessage({ type: "error", text: "Tarmoq bilan muammo yuz berdi. Qayta urinib koʻring." });
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <div className="p-8 max-w-7xl mx-auto w-full">
-      <div className="bg-teal-500 rounded-[2rem] p-6 md:p-8 mb-8 text-white shadow-lg shadow-teal-500/20 flex flex-col md:flex-row md:items-center justify-between gap-6 shrink-0">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-white/20 backdrop-blur-sm rounded-2xl">
-            <FileText className="w-8 h-8 text-white" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold">Darsdan tashqari topshiriqlar</h1>
-            <p className="text-white/80 mt-1">Mustaqil izlanishlar va amaliy ishlar orqali qo'shimcha XP ishlang.</p>
-          </div>
-        </div>
-
-        {userRole === "SUPER_ADMIN" && (
-          <button 
-            onClick={() => setIsCreateModalOpen(true)}
-            className="flex items-center gap-2 bg-white text-teal-600 hover:bg-teal-50 px-5 py-3 rounded-xl transition-all shadow-md font-medium"
-          >
-            <Plus className="w-5 h-5" />
-            Yangi Topshiriq
-          </button>
-        )}
-      </div>
+    <Page>
+      <PageHeader
+        icon={FileText}
+        eyebrow="Amaliyot"
+        title="Darsdan tashqari topshiriqlar"
+        subtitle="Mustaqil izlanish va amaliy ishlar orqali qoʻshimcha XP toʻplang."
+        actions={
+          userRole === "SUPER_ADMIN" && (
+            <button onClick={() => setIsCreateOpen(true)} className="btn btn-primary">
+              <Plus className="w-4 h-4" /> Yangi topshiriq
+            </button>
+          )
+        }
+      />
 
       {loading ? (
-        <div className="flex justify-center p-12">
-          <div className="w-8 h-8 border-4 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
-        </div>
+        <CardGridSkeleton />
       ) : tasks.length === 0 ? (
-        <div className="glass p-12 text-center rounded-3xl border-dashed border-2 border-border/50">
-          <ListTodo className="w-12 h-12 text-foreground/30 mx-auto mb-4" />
-          <h3 className="text-xl font-medium mb-2">Hozircha topshiriqlar yo'q</h3>
-        </div>
+        <EmptyState icon={ListTodo} title="Hozircha topshiriqlar yoʻq" />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {tasks.map((task, index) => (
-            <motion.div 
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {tasks.map((task, i) => (
+            <motion.article
               key={task.id}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="glass p-6 rounded-3xl border border-border/50 relative overflow-hidden group flex flex-col h-full hover:shadow-xl hover:shadow-teal-500/10 transition-all"
+              transition={{ delay: Math.min(i, 9) * 0.04 }}
+              className="card card-hover flex flex-col p-6"
             >
-              <div className="absolute top-0 left-0 w-full h-1 bg-teal-500" />
-              
-              <h3 className="text-xl font-bold mb-2">{task.title}</h3>
-              <p className="text-foreground/60 text-sm mb-6 flex-grow whitespace-pre-wrap">
-                {task.description}
-              </p>
-              
-              <div className="flex items-center justify-between mt-auto">
-                <div className="flex items-center gap-1.5 text-sm font-semibold text-yellow-500 bg-yellow-500/10 px-3 py-1 rounded-full">
-                  <span>+{task.xpReward} XP</span>
-                </div>
-                
-                <button 
-                  onClick={() => { setSelectedTaskId(task.id); setIsSubmitModalOpen(true); }}
-                  className="flex items-center gap-2 bg-teal-600 hover:bg-teal-500 text-white px-4 py-2 rounded-xl transition-all shadow-lg shadow-teal-500/20 text-sm font-medium"
-                >
-                  Boshlash
-                </button>
+              <div className="flex items-center justify-between mb-4">
+                <span className="w-10 h-10 rounded-xl bg-brand-soft text-brand flex items-center justify-center">
+                  <ListTodo className="w-5 h-5" />
+                </span>
+                <span className="chip chip-accent">★ +{task.xpReward} XP</span>
               </div>
-            </motion.div>
+              <h2 className="font-display text-lg font-semibold leading-snug mb-2">{task.title}</h2>
+              <p className="text-muted text-sm flex-1 mb-5 whitespace-pre-wrap">{task.description}</p>
+              <button
+                onClick={() => {
+                  setSelectedTask(task);
+                  setIsSubmitOpen(true);
+                }}
+                className="btn btn-primary w-full"
+              >
+                Bajarishni boshlash
+              </button>
+            </motion.article>
           ))}
         </div>
       )}
 
-      {/* Admin Create Modal */}
-      {isCreateModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
-          <motion.div 
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="bg-card border border-border/50 p-6 rounded-3xl shadow-2xl max-w-md w-full relative"
-          >
-            <button 
-              onClick={() => setIsCreateModalOpen(false)}
-              className="absolute top-4 right-4 text-foreground/50 hover:text-foreground"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            <h2 className="text-2xl font-bold mb-6">Yangi Topshiriq</h2>
-            <form onSubmit={handleCreate}>
-              <div className="mb-4">
-                <label className="block text-sm font-medium mb-2">Sarlavha</label>
-                <input 
-                  type="text" 
-                  required
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  className="w-full bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary-500/50"
-                  placeholder="Masalan: Biologiya muzeyiga tashrif"
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium mb-2">Ta'rif</label>
-                <textarea 
-                  required
-                  value={newDesc}
-                  onChange={(e) => setNewDesc(e.target.value)}
-                  className="w-full bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary-500/50"
-                  placeholder="Batafsil ma'lumot..."
-                  rows={3}
-                />
-              </div>
-              <div className="mb-6">
-                <label className="block text-sm font-medium mb-2">Beriladigan XP</label>
-                <input 
-                  type="number" 
-                  required
-                  min={1}
-                  value={newXp}
-                  onChange={(e) => setNewXp(parseInt(e.target.value))}
-                  className="w-full bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary-500/50"
-                />
-              </div>
-              <button 
-                type="submit"
-                className="w-full bg-teal-600 hover:bg-teal-500 text-white font-medium py-3 rounded-xl shadow-lg"
-              >
-                Yaratish
-              </button>
-            </form>
-          </motion.div>
-        </div>
-      )}
+      <Modal open={isCreateOpen} onClose={() => setIsCreateOpen(false)} title="Yangi topshiriq">
+        <form onSubmit={handleCreate}>
+          <Field label="Sarlavha">
+            <input className="input" required value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="Masalan: Biologiya muzeyiga tashrif" />
+          </Field>
+          <Field label="Taʼrif">
+            <textarea className="input" required rows={3} value={newDesc} onChange={(e) => setNewDesc(e.target.value)} placeholder="Batafsil maʼlumot…" />
+          </Field>
+          <Field label="Beriladigan XP">
+            <input className="input" type="number" required min={1} value={newXp} onChange={(e) => setNewXp(parseInt(e.target.value) || 1)} />
+          </Field>
+          <button type="submit" className="btn btn-primary w-full">Yaratish</button>
+        </form>
+      </Modal>
 
-      {/* Student Submit Modal */}
-      {isSubmitModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
-          <motion.div 
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="bg-card border border-border/50 p-6 rounded-3xl shadow-2xl max-w-md w-full relative"
-          >
-            <button 
-              onClick={() => { setIsSubmitModalOpen(false); setReportContent(""); }}
-              className="absolute top-4 right-4 text-foreground/50 hover:text-foreground"
+      <Modal open={isSubmitOpen} onClose={closeSubmit} title="Hisobot topshirish">
+        {selectedTask && <p className="font-semibold text-ink mb-1">{selectedTask.title}</p>}
+        <p className="text-muted text-sm mb-5">Topshiriqni bajarganingiz haqida qisqacha maʼlumot yozing.</p>
+        <form onSubmit={handleSubmitReport}>
+          {message && (
+            <p
+              role="status"
+              className={`rounded-xl px-4 py-3 mb-4 text-sm font-medium ${
+                message.type === "error" ? "bg-danger-soft text-danger" : "bg-ok-soft text-ok"
+              }`}
             >
-              <X className="w-5 h-5" />
-            </button>
-            <h2 className="text-2xl font-bold mb-2">Hisobot topshirish</h2>
-            <p className="text-foreground/60 text-sm mb-6">Topshiriqni bajarganingiz haqida qisqacha ma'lumot yozing.</p>
-            <form onSubmit={handleSubmitReport}>
-              {submitMessage && (
-                <div className={`p-3 rounded-xl mb-4 text-sm font-medium ${submitMessage.type === 'error' ? 'bg-red-500/10 text-red-500' : 'bg-green-500/10 text-green-500'}`}>
-                  {submitMessage.text}
-                </div>
-              )}
-              <div className="mb-6">
-                <textarea 
-                  required
-                  value={reportContent}
-                  onChange={(e) => setReportContent(e.target.value)}
-                  className="w-full bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary-500/50"
-                  placeholder="Men bugun muzeyga bordim va..."
-                  rows={4}
-                />
-              </div>
-              <button 
-                type="submit"
-                disabled={submitting}
-                className="w-full flex justify-center items-center gap-2 bg-teal-600 hover:bg-teal-500 disabled:opacity-50 text-white font-medium py-3 rounded-xl shadow-lg"
-              >
-                {submitting ? "Tekshirilmoqda..." : <><CheckCircle className="w-5 h-5" /> Javobni tekshirish</>}
-              </button>
-            </form>
-          </motion.div>
-        </div>
-      )}
-    </div>
+              {message.text}
+            </p>
+          )}
+          <textarea
+            className="input mb-5"
+            required
+            rows={5}
+            value={report}
+            onChange={(e) => setReport(e.target.value)}
+            placeholder="Men bugun muzeyga bordim va…"
+            aria-label="Hisobot matni"
+          />
+          <button type="submit" disabled={submitting} className="btn btn-primary w-full">
+            {submitting ? "Tekshirilmoqda…" : (<><CheckCircle className="w-4 h-4" /> Javobni tekshirish</>)}
+          </button>
+        </form>
+      </Modal>
+    </Page>
   );
 }
-

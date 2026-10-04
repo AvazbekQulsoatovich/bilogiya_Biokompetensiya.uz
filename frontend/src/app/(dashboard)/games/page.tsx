@@ -1,425 +1,393 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Gamepad2, Trophy, RotateCcw, Play, CheckCircle2, XCircle } from "lucide-react";
+import { Gamepad2, Trophy, RotateCcw, Play, CheckCircle2, XCircle, ArrowLeft, Brain, Type, HelpCircle } from "lucide-react";
 import confetti from "canvas-confetti";
+import { Page, PageHeader, EmptyState, CardGridSkeleton } from "@/components/ui";
+import { shuffle, normalizeUz } from "@/lib/text";
+
+const TYPE_META: Record<string, { label: string; long: string; icon: typeof Brain }> = {
+  MEMORY: { label: "Xotira", long: "Xotira oʻyini", icon: Brain },
+  SCRAMBLE: { label: "Soʻz topish", long: "Soʻz topish oʻyini", icon: Type },
+  TRUE_FALSE: { label: "Faktlar", long: "Toʻgʻri / Notoʻgʻri", icon: HelpCircle },
+};
+
+/** Harflari aralashtirilgan soʻz (asl soʻzdan farq qilishi kafolatlanadi). */
+function scrambleWord(word: string) {
+  const letters = word.split("");
+  if (letters.length < 2 || new Set(letters).size < 2) return word.toUpperCase();
+  let out = word;
+  let guard = 0;
+  while (out === word && guard++ < 20) out = shuffle(letters).join("");
+  return out.toUpperCase();
+}
 
 export default function GamesPage() {
   const [games, setGames] = useState<any[]>([]);
   const [activeGame, setActiveGame] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  // General game states
-  const [parsedContent, setParsedContent] = useState<any[]>([]);
+  const [content, setContent] = useState<any[]>([]);
   const [isWon, setIsWon] = useState(false);
 
-  // Memory Game states
+  // Xotira
   const [cards, setCards] = useState<any[]>([]);
   const [flipped, setFlipped] = useState<number[]>([]);
   const [solved, setSolved] = useState<number[]>([]);
-  const [disabled, setDisabled] = useState(false);
+  const [locked, setLocked] = useState(false);
+  const [moves, setMoves] = useState(0);
 
-  // Scramble Game states
-  const [currentScrambleIdx, setCurrentScrambleIdx] = useState(0);
-  const [scrambleInput, setScrambleInput] = useState("");
-  const [scrambleError, setScrambleError] = useState("");
+  // Soʻz topish
+  const [scrIdx, setScrIdx] = useState(0);
+  const [scrLetters, setScrLetters] = useState("");
+  const [scrInput, setScrInput] = useState("");
+  const [scrError, setScrError] = useState("");
 
-  // True/False Game states
-  const [currentTFIdx, setCurrentTFIdx] = useState(0);
+  // Toʻgʻri / notoʻgʻri
+  const [tfIdx, setTfIdx] = useState(0);
   const [tfScore, setTfScore] = useState(0);
   const [tfFeedback, setTfFeedback] = useState<"correct" | "wrong" | null>(null);
+  const timers = useRef<number[]>([]);
 
   useEffect(() => {
-    fetchGames();
+    (async () => {
+      try {
+        const res = await fetch(`/api/games`);
+        if (res.ok) {
+          const data = await res.json();
+          setGames(Array.isArray(data) ? data : []);
+        }
+      } catch (e) {
+        console.error("Oʻyinlarni yuklab boʻlmadi", e);
+      } finally {
+        setLoading(false);
+      }
+    })();
+    return () => timers.current.forEach(clearTimeout);
   }, []);
 
-  const fetchGames = async () => {
-    try {
-      const res = await fetch(`/api/games`);
-      if (res.ok) {
-        const data = await res.json();
-        setGames(Array.isArray(data) ? data : []);
-      }
-    } catch (error) {
-      console.error("Failed to fetch games:", error);
-    } finally {
-      setLoading(false);
-    }
+  const later = (fn: () => void, ms: number) => {
+    timers.current.push(window.setTimeout(fn, ms));
   };
 
   const startGame = (game: any) => {
+    timers.current.forEach(clearTimeout);
+    timers.current = [];
     setActiveGame(game);
     setIsWon(false);
+    setLocked(false);
     try {
       const parsed = JSON.parse(game.contentJson);
-      setParsedContent(parsed);
-      
+      setContent(parsed);
       if (game.type === "MEMORY") {
-        initializeMemory(parsed);
+        setCards(shuffle([...parsed, ...parsed]).map((c: any) => ({ ...c, uid: Math.random() })));
+        setFlipped([]);
+        setSolved([]);
+        setMoves(0);
       } else if (game.type === "SCRAMBLE") {
-        setCurrentScrambleIdx(0);
-        setScrambleInput("");
-        setScrambleError("");
+        setScrIdx(0);
+        setScrLetters(scrambleWord(parsed[0]?.word || ""));
+        setScrInput("");
+        setScrError("");
       } else if (game.type === "TRUE_FALSE") {
-        setCurrentTFIdx(0);
+        setTfIdx(0);
         setTfScore(0);
         setTfFeedback(null);
       }
-    } catch (e) {
-      console.error("Invalid game data");
+    } catch {
+      console.error("Oʻyin maʼlumotlari yaroqsiz");
     }
   };
 
   const winGame = () => {
     setIsWon(true);
-    setTimeout(() => {
-      confetti({ particleCount: 200, spread: 90, origin: { y: 0.6 } });
-    }, 100);
+    later(() => confetti({ particleCount: 180, spread: 90, origin: { y: 0.6 } }), 100);
   };
 
-  const restartCurrentGame = () => {
-    if (activeGame) startGame(activeGame);
-  };
-
-  // --- MEMORY LOGIC ---
-  const initializeMemory = (cardsData: any[]) => {
-    const shuffledCards = [...cardsData, ...cardsData]
-      .sort(() => Math.random() - 0.5)
-      .map((card) => ({ ...card, uniqueId: Math.random() }));
-    setCards(shuffledCards);
-    setFlipped([]);
-    setSolved([]);
-    setDisabled(false);
-  };
-
-  const handleCardClick = (index: number) => {
-    if (disabled || flipped.includes(index) || solved.includes(index)) return;
-
-    const newFlipped = [...flipped, index];
-    setFlipped(newFlipped);
-
-    if (newFlipped.length === 2) {
-      setDisabled(true);
-      const firstIndex = newFlipped[0];
-      const secondIndex = newFlipped[1];
-
-      if (cards[firstIndex].id === cards[secondIndex].id) {
-        setSolved(prev => {
-          const newSolved = [...prev, firstIndex, secondIndex];
-          if (newSolved.length === cards.length) {
-            winGame();
-          }
-          return newSolved;
-        });
+  /* ───── Xotira ───── */
+  const onCard = (index: number) => {
+    if (locked || flipped.includes(index) || solved.includes(index)) return;
+    const nf = [...flipped, index];
+    setFlipped(nf);
+    if (nf.length === 2) {
+      setMoves((m) => m + 1);
+      setLocked(true);
+      const [a, b] = nf;
+      if (cards[a].id === cards[b].id) {
+        const ns = [...solved, a, b];
+        setSolved(ns);
         setFlipped([]);
-        setDisabled(false);
+        setLocked(false);
+        if (ns.length === cards.length) winGame();
       } else {
-        setTimeout(() => {
+        later(() => {
           setFlipped([]);
-          setDisabled(false);
-        }, 1000);
+          setLocked(false);
+        }, 900);
       }
     }
   };
 
-  // --- SCRAMBLE LOGIC ---
-  const handleScrambleSubmit = (e: React.FormEvent) => {
+  /* ───── Soʻz topish ───── */
+  const onScramble = (e: React.FormEvent) => {
     e.preventDefault();
-    const currentWordObj = parsedContent[currentScrambleIdx];
-    if (scrambleInput.trim().toUpperCase() === currentWordObj.word.toUpperCase()) {
-      setScrambleError("");
-      if (currentScrambleIdx + 1 >= parsedContent.length) {
-        winGame();
-      } else {
-        setCurrentScrambleIdx(prev => prev + 1);
-        setScrambleInput("");
+    const target = content[scrIdx]?.word || "";
+    if (normalizeUz(scrInput.trim()) === normalizeUz(target)) {
+      setScrError("");
+      if (scrIdx + 1 >= content.length) winGame();
+      else {
+        const next = scrIdx + 1;
+        setScrIdx(next);
+        setScrLetters(scrambleWord(content[next].word));
+        setScrInput("");
       }
     } else {
-      setScrambleError("Noto'g'ri, qayta urinib ko'ring!");
-      setTimeout(() => setScrambleError(""), 2000);
+      setScrError("Notoʻgʻri, qayta urinib koʻring!");
+      later(() => setScrError(""), 1800);
     }
   };
 
-  const scrambleWord = (word: string) => {
-    let scrambled = word.split('').sort(() => 0.5 - Math.random()).join('');
-    // Ensure it's actually scrambled
-    while (scrambled === word && word.length > 1) {
-      scrambled = word.split('').sort(() => 0.5 - Math.random()).join('');
-    }
-    return scrambled.toUpperCase();
-  };
-
-  // --- TRUE/FALSE LOGIC ---
-  const handleTFAnswer = (answer: boolean) => {
-    if (disabled) return;
-    setDisabled(true);
-    const currentQ = parsedContent[currentTFIdx];
-    const isCorrect = currentQ.answer === answer;
-    
-    setTfFeedback(isCorrect ? "correct" : "wrong");
-    if (isCorrect) setTfScore(prev => prev + 1);
-    
-    setTimeout(() => {
+  /* ───── Toʻgʻri / notoʻgʻri ───── */
+  const onTF = (answer: boolean) => {
+    if (locked) return;
+    setLocked(true);
+    const ok = content[tfIdx].answer === answer;
+    setTfFeedback(ok ? "correct" : "wrong");
+    if (ok) setTfScore((s) => s + 1);
+    later(() => {
       setTfFeedback(null);
-      setDisabled(false);
-      if (currentTFIdx + 1 >= parsedContent.length) {
-        winGame();
-      } else {
-        setCurrentTFIdx(prev => prev + 1);
-      }
-    }, 1500);
+      setLocked(false);
+      if (tfIdx + 1 >= content.length) winGame();
+      else setTfIdx((i) => i + 1);
+    }, 1300);
   };
 
-
-  if (loading) {
-    return (
-      <div className="p-8 max-w-5xl mx-auto flex justify-center mt-20">
-        <div className="w-10 h-10 border-4 border-pink-500/30 border-t-pink-500 rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  // --- GAME LIST VIEW ---
+  /* ───────── Roʻyxat ───────── */
   if (!activeGame) {
     return (
-      <div className="p-8 max-w-7xl mx-auto w-full">
-        <div className="bg-pink-500 rounded-[2.5rem] p-8 md:p-10 mb-10 text-white shadow-xl shadow-pink-500/20 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="flex items-center gap-6">
-            <div className="p-4 bg-white/20 backdrop-blur-sm rounded-3xl">
-              <Gamepad2 className="w-10 h-10 text-white" />
-            </div>
-            <div>
-              <h1 className="text-4xl font-black mb-2">O'yinlar</h1>
-              <p className="text-white/80 text-lg">O'ynash orqali bilimlaringizni mustahkamlang.</p>
-            </div>
-          </div>
-        </div>
-
-        {!Array.isArray(games) || games.length === 0 ? (
-          <div className="glass p-12 text-center rounded-3xl border border-border/50">
-            <Gamepad2 className="w-16 h-16 mx-auto mb-4 text-foreground/30" />
-            <h2 className="text-2xl font-bold mb-2">Hozircha o'yinlar yo'q</h2>
-          </div>
+      <Page>
+        <PageHeader
+          icon={Gamepad2}
+          eyebrow="Sinov va mashq"
+          title="Interaktiv oʻyinlar"
+          subtitle="Oʻynab turib atamalar va faktlarni mustahkamlang."
+        />
+        {loading ? (
+          <CardGridSkeleton count={3} />
+        ) : games.length === 0 ? (
+          <EmptyState icon={Gamepad2} title="Hozircha oʻyinlar yoʻq" />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-            {games.map(game => (
-              <div key={game.id} className="glass p-8 rounded-[2rem] border border-border/50 flex flex-col hover:border-pink-500 hover:shadow-2xl hover:shadow-pink-500/10 transition-all group overflow-hidden relative">
-                <div className="absolute top-0 left-0 w-full h-1.5 bg-pink-400 opacity-0 group-hover:opacity-100 transition-all" />
-                <div className="flex justify-between items-start mb-6">
-                  <div className="bg-pink-100 p-3 rounded-2xl">
-                    <Gamepad2 className="w-6 h-6 text-pink-600" />
-                  </div>
-                  <span className="text-xs font-bold px-3 py-1 bg-gray-100 text-gray-600 rounded-lg">
-                    {game.type === 'MEMORY' ? 'Xotira' : game.type === 'SCRAMBLE' ? 'So\'z topish' : 'Faktlar'}
-                  </span>
-                </div>
-                <h3 className="text-2xl font-black mb-3">{game.title}</h3>
-                <p className="text-foreground/60 mb-8 flex-1 leading-relaxed">{game.description}</p>
-                <button
-                  onClick={() => startGame(game)}
-                  className="w-full bg-gray-900 hover:bg-pink-600 text-white py-4 rounded-xl font-black text-lg flex items-center justify-center gap-2 transition-all shadow-xl"
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+            {games.map((game, i) => {
+              const meta = TYPE_META[game.type] || TYPE_META.TRUE_FALSE;
+              const Icon = meta.icon;
+              return (
+                <motion.div
+                  key={game.id}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  className="card card-hover flex flex-col p-7"
                 >
-                  <Play className="w-5 h-5 fill-current" />
-                  Boshlash
-                </button>
-              </div>
-            ))}
+                  <div className="flex items-center justify-between mb-5">
+                    <span className="w-12 h-12 rounded-2xl bg-brand-soft text-brand flex items-center justify-center">
+                      <Icon className="w-6 h-6" strokeWidth={1.8} />
+                    </span>
+                    <span className="chip">{meta.label}</span>
+                  </div>
+                  <h2 className="font-display text-xl font-semibold leading-snug mb-2">{game.title}</h2>
+                  <p className="text-muted flex-1 mb-6">{game.description}</p>
+                  <button onClick={() => startGame(game)} className="btn btn-primary w-full">
+                    <Play className="w-4 h-4 fill-current" /> Oʻynash
+                  </button>
+                </motion.div>
+              );
+            })}
           </div>
         )}
-      </div>
+      </Page>
     );
   }
 
-  // --- GAME PLAY VIEW ---
+  /* ───────── Oʻyin maydoni ───────── */
+  const meta = TYPE_META[activeGame.type] || TYPE_META.TRUE_FALSE;
+  const progress =
+    activeGame.type === "SCRAMBLE" ? (scrIdx / Math.max(1, content.length)) * 100
+    : activeGame.type === "TRUE_FALSE" ? (tfIdx / Math.max(1, content.length)) * 100
+    : (solved.length / Math.max(1, cards.length)) * 100;
+
   return (
-    <div className="p-8 max-w-5xl mx-auto w-full">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => setActiveGame(null)}
-            className="px-5 py-2.5 bg-white shadow-sm rounded-xl border border-border hover:bg-gray-50 transition-all font-bold text-gray-600"
-          >
-            ← Orqaga
+    <Page narrow>
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <div className="flex items-center gap-3 min-w-0">
+          <button onClick={() => setActiveGame(null)} className="btn btn-ghost btn-sm" aria-label="Orqaga">
+            <ArrowLeft className="w-4 h-4" /> Orqaga
           </button>
-          <div>
-            <h1 className="text-3xl font-black">{activeGame.title}</h1>
-            <span className="text-sm font-bold text-pink-600 bg-pink-50 px-3 py-1 rounded-lg mt-1 inline-block">
-              {activeGame.type === 'MEMORY' ? 'Xotira O\'yini' : activeGame.type === 'SCRAMBLE' ? 'So\'z Topish O\'yini' : 'To\'g\'ri / Noto\'g\'ri'}
-            </span>
+          <div className="min-w-0">
+            <h1 className="font-display text-2xl font-semibold truncate">{activeGame.title}</h1>
+            <span className="chip chip-brand mt-1">{meta.long}</span>
           </div>
         </div>
-
-        <button 
-          onClick={restartCurrentGame}
-          className="flex items-center gap-2 bg-white shadow-sm border border-border hover:border-pink-500 hover:text-pink-600 px-5 py-2.5 rounded-xl transition-all font-bold"
-        >
-          <RotateCcw className="w-5 h-5" /> Qaytadan
+        <button onClick={() => startGame(activeGame)} className="btn btn-ghost btn-sm">
+          <RotateCcw className="w-4 h-4" /> Qaytadan
         </button>
       </div>
 
-      <div className="glass p-8 md:p-12 rounded-[3rem] border border-border/50 shadow-2xl relative min-h-[500px] flex flex-col justify-center overflow-hidden">
-        
-        {/* VICTORY OVERLAY */}
+      <div className="h-1.5 rounded-full bg-surface-2 overflow-hidden mb-6">
+        <div className="h-full bg-brand transition-all duration-500" style={{ width: `${progress}%` }} />
+      </div>
+
+      <div className="card relative p-6 md:p-10 min-h-[460px] flex flex-col justify-center overflow-hidden">
         <AnimatePresence>
           {isWon && (
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="absolute inset-0 flex flex-col items-center justify-center bg-white/95 backdrop-blur-xl z-50 rounded-[3rem]"
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center bg-surface/95 backdrop-blur p-6"
             >
-              <Trophy className="w-32 h-32 text-yellow-400 mb-6 drop-shadow-2xl" />
-              <h2 className="text-5xl font-black mb-4 text-gray-900">Ajoyib Natija!</h2>
-              {activeGame.type === 'TRUE_FALSE' && (
-                <p className="text-2xl font-bold text-green-600 mb-6">
-                  {parsedContent.length} ta dan {tfScore} ta to'g'ri topdingiz!
+              <Trophy className="w-20 h-20 text-accent mb-5" strokeWidth={1.4} />
+              <h2 className="font-display text-4xl font-semibold mb-3">Ajoyib natija!</h2>
+              {activeGame.type === "TRUE_FALSE" && (
+                <p className="text-xl font-semibold text-ok mb-2">
+                  {content.length} tadan {tfScore} tasiga toʻgʻri javob berdingiz
                 </p>
               )}
-              <p className="text-xl text-gray-500 mb-10 font-medium">Barcha bosqichlarni muvaffaqiyatli yakunladingiz.</p>
-              <div className="flex gap-4">
-                <button 
-                  onClick={() => setActiveGame(null)}
-                  className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-8 py-4 rounded-2xl font-black text-lg transition-all"
-                >
-                  Boshqa o'yinlar
-                </button>
-                <button 
-                  onClick={restartCurrentGame}
-                  className="bg-pink-600 hover:bg-pink-500 text-white px-8 py-4 rounded-2xl font-black text-lg shadow-xl shadow-pink-500/20 transition-all hover:scale-105"
-                >
-                  Yana o'ynash
-                </button>
+              {activeGame.type === "MEMORY" && <p className="text-xl font-semibold text-ok mb-2">Urinishlar soni: {moves}</p>}
+              <p className="text-muted mb-8">Barcha bosqichlarni muvaffaqiyatli yakunladingiz.</p>
+              <div className="flex flex-wrap justify-center gap-3">
+                <button onClick={() => setActiveGame(null)} className="btn btn-ghost">Boshqa oʻyinlar</button>
+                <button onClick={() => startGame(activeGame)} className="btn btn-primary">Yana oʻynash</button>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* --- GAME 1: MEMORY --- */}
-        {activeGame.type === 'MEMORY' && (
-          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 w-full max-w-4xl mx-auto">
-            {cards.map((card, index) => {
-              const isFlipped = flipped.includes(index) || solved.includes(index);
-              return (
-                <motion.div
-                  key={card.uniqueId}
-                  whileHover={{ scale: isFlipped ? 1 : 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => handleCardClick(index)}
-                  className={`relative aspect-square cursor-pointer rounded-2xl overflow-hidden transition-all duration-300 ${isFlipped ? '' : 'bg-gradient-to-br from-pink-500 to-rose-600 shadow-xl shadow-pink-500/20'}`}
-                  style={{ perspective: "1000px" }}
-                >
-                  <motion.div
-                    initial={false}
-                    animate={{ rotateY: isFlipped ? 180 : 0 }}
-                    transition={{ duration: 0.6, type: "spring", stiffness: 260, damping: 20 }}
-                    className="w-full h-full relative"
-                    style={{ transformStyle: "preserve-3d" }}
+        {/* XOTIRA */}
+        {activeGame.type === "MEMORY" && (
+          <div>
+            <p className="text-sm text-muted text-center mb-5">Urinishlar: <b className="text-ink">{moves}</b> · Topildi: <b className="text-ink">{solved.length / 2}</b> / {cards.length / 2}</p>
+            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3 max-w-3xl mx-auto">
+              {cards.map((card, index) => {
+                const up = flipped.includes(index) || solved.includes(index);
+                const done = solved.includes(index);
+                return (
+                  <button
+                    key={card.uid}
+                    onClick={() => onCard(index)}
+                    aria-label={up ? card.name : "Yopiq karta"}
+                    className="relative aspect-square [perspective:900px]"
                   >
-                    <div className="absolute w-full h-full backface-hidden" style={{ backfaceVisibility: "hidden" }}>
-                      <div className="w-full h-full flex items-center justify-center border-4 border-white/20 rounded-2xl">
-                        <Gamepad2 className="w-10 h-10 text-white/50" />
+                    <motion.div
+                      initial={false}
+                      animate={{ rotateY: up ? 180 : 0 }}
+                      transition={{ duration: 0.45, type: "spring", stiffness: 240, damping: 22 }}
+                      className="w-full h-full relative"
+                      style={{ transformStyle: "preserve-3d" }}
+                    >
+                      <div
+                        className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#0b7a5c] to-[#075c45] flex items-center justify-center shadow-[var(--shadow-sm)]"
+                        style={{ backfaceVisibility: "hidden" }}
+                      >
+                        <Brain className="w-8 h-8 text-white/50" />
                       </div>
-                    </div>
-                    
-                    <div className="absolute w-full h-full backface-hidden bg-white border-4 border-pink-100 rounded-2xl flex flex-col items-center justify-center p-2" style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}>
-                      {card.image ? (
-                        <img src={card.image} alt={card.name} className="w-12 h-12 object-contain mb-2" />
-                      ) : (
-                        <span className="text-4xl mb-2">{card.emoji}</span>
-                      )}
-                      <span className="font-bold text-xs text-center leading-tight text-gray-700">{card.name}</span>
-                    </div>
-                  </motion.div>
-                </motion.div>
-              )
-            })}
+                      <div
+                        className={`absolute inset-0 rounded-2xl border-2 flex flex-col items-center justify-center p-1.5 ${
+                          done ? "border-ok bg-ok-soft" : "border-brand bg-surface"
+                        }`}
+                        style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
+                      >
+                        {card.image ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={card.image} alt="" className="w-10 h-10 object-contain mb-1" />
+                        ) : (
+                          <span className="text-3xl mb-1" aria-hidden>{card.emoji}</span>
+                        )}
+                        <span className="font-semibold text-[0.7rem] text-center leading-tight text-ink-2">{card.name}</span>
+                      </div>
+                    </motion.div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         )}
 
-        {/* --- GAME 2: SCRAMBLE --- */}
-        {activeGame.type === 'SCRAMBLE' && !isWon && (
-          <div className="max-w-2xl mx-auto w-full text-center">
-            <div className="mb-4 inline-block bg-blue-50 text-blue-600 font-bold px-4 py-1.5 rounded-full text-sm">
-              Bosqich {currentScrambleIdx + 1} / {parsedContent.length}
-            </div>
-            <h2 className="text-2xl font-bold text-gray-500 mb-8">{parsedContent[currentScrambleIdx]?.hint}</h2>
-            
-            <div className="flex justify-center flex-wrap gap-3 mb-12">
-              {scrambleWord(parsedContent[currentScrambleIdx]?.word || "").split('').map((char, i) => (
-                <div key={i} className="w-16 h-16 bg-white border-2 border-gray-200 rounded-2xl flex items-center justify-center text-3xl font-black text-gray-800 shadow-md">
-                  {char}
+        {/* SOʻZ TOPISH */}
+        {activeGame.type === "SCRAMBLE" && !isWon && (
+          <div className="max-w-xl mx-auto w-full text-center">
+            <span className="chip chip-info mb-4">Bosqich {scrIdx + 1} / {content.length}</span>
+            <h2 className="font-display text-2xl font-semibold mb-8">{content[scrIdx]?.hint}</h2>
+            <div className="flex justify-center flex-wrap gap-2.5 mb-10" aria-label="Aralashtirilgan harflar">
+              {scrLetters.split("").map((ch, i) => (
+                <div key={i} className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-surface-2 border border-line-strong flex items-center justify-center font-display text-2xl font-semibold shadow-[var(--shadow-sm)]">
+                  {ch}
                 </div>
               ))}
             </div>
-
-            <form onSubmit={handleScrambleSubmit} className="flex flex-col items-center w-full max-w-md mx-auto">
-              <input 
-                type="text" 
-                value={scrambleInput}
-                onChange={e => setScrambleInput(e.target.value.toUpperCase())}
-                placeholder="To'g'ri so'zni yozing..."
-                className="w-full bg-gray-50 border-4 border-gray-200 rounded-2xl px-6 py-4 text-center text-2xl font-black uppercase tracking-widest focus:border-pink-500 focus:outline-none transition-all mb-4"
+            <form onSubmit={onScramble} className="grid gap-3 max-w-md mx-auto">
+              <input
+                className="input !text-center !text-xl !font-bold uppercase tracking-widest !py-3.5"
+                value={scrInput}
+                onChange={(e) => setScrInput(e.target.value.toUpperCase())}
+                placeholder="Soʻzni yozing…"
+                autoFocus
+                autoComplete="off"
+                aria-label="Topilgan soʻz"
               />
-              {scrambleError && (
-                <p className="text-red-500 font-bold mb-4">{scrambleError}</p>
-              )}
-              <button type="submit" className="w-full bg-pink-600 hover:bg-pink-500 text-white font-black text-xl py-4 rounded-2xl shadow-xl shadow-pink-500/20 transition-all hover:scale-105">
-                Tekshirish
-              </button>
+              <p className={`text-danger font-semibold min-h-6 ${scrError ? "" : "invisible"}`} role="alert">{scrError || "."}</p>
+              <button type="submit" className="btn btn-primary btn-lg">Tekshirish</button>
             </form>
           </div>
         )}
 
-        {/* --- GAME 3: TRUE / FALSE --- */}
-        {activeGame.type === 'TRUE_FALSE' && !isWon && (
-          <div className="max-w-3xl mx-auto w-full text-center">
-            <div className="flex justify-between items-center mb-8 px-4">
-              <span className="bg-gray-100 text-gray-600 font-bold px-4 py-2 rounded-xl">Savol {currentTFIdx + 1} / {parsedContent.length}</span>
-              <span className="bg-green-100 text-green-700 font-bold px-4 py-2 rounded-xl">Ochko: {tfScore}</span>
+        {/* TOʻGʻRI / NOTOʻGʻRI */}
+        {activeGame.type === "TRUE_FALSE" && !isWon && (
+          <div className="max-w-2xl mx-auto w-full text-center">
+            <div className="flex justify-between items-center mb-7">
+              <span className="chip">Savol {tfIdx + 1} / {content.length}</span>
+              <span className="chip chip-brand">Ball: {tfScore}</span>
             </div>
 
-            <div className="bg-white border-4 border-gray-100 p-10 rounded-[3rem] shadow-xl mb-10 relative overflow-hidden">
+            <div className="relative rounded-3xl border border-line bg-surface-2 px-6 py-12 md:px-10 mb-8 overflow-hidden">
               <AnimatePresence>
                 {tfFeedback && (
-                  <motion.div 
-                    initial={{ opacity: 0, scale: 0.5 }}
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.6 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 1.5 }}
-                    className="absolute inset-0 z-10 flex items-center justify-center bg-white/90 backdrop-blur-sm"
+                    exit={{ opacity: 0 }}
+                    className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-surface/95"
                   >
                     {tfFeedback === "correct" ? (
-                      <CheckCircle2 className="w-32 h-32 text-green-500 drop-shadow-xl" />
+                      <>
+                        <CheckCircle2 className="w-20 h-20 text-ok" />
+                        <p className="font-display text-2xl font-semibold text-ok mt-2">Toʻgʻri!</p>
+                      </>
                     ) : (
-                      <XCircle className="w-32 h-32 text-red-500 drop-shadow-xl" />
+                      <>
+                        <XCircle className="w-20 h-20 text-danger" />
+                        <p className="font-display text-2xl font-semibold text-danger mt-2">
+                          Notoʻgʻri. Aslida: {content[tfIdx]?.answer ? "toʻgʻri" : "notoʻgʻri"}
+                        </p>
+                      </>
                     )}
                   </motion.div>
                 )}
               </AnimatePresence>
-              <h2 className="text-3xl md:text-4xl font-black text-gray-800 leading-tight">
-                "{parsedContent[currentTFIdx]?.question}"
-              </h2>
+              <h2 className="font-display text-2xl md:text-3xl font-semibold leading-snug">«{content[tfIdx]?.question}»</h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-lg mx-auto">
-              <button 
-                onClick={() => handleTFAnswer(true)}
-                disabled={disabled}
-                className="bg-green-500 hover:bg-green-400 text-white font-black text-2xl py-6 rounded-3xl shadow-xl shadow-green-500/20 transition-all hover:scale-105 disabled:opacity-50"
-              >
-                TO'G'RI
+            <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
+              <button onClick={() => onTF(true)} disabled={locked} className="btn btn-lg !bg-ok !text-white hover:opacity-90">
+                Toʻgʻri
               </button>
-              <button 
-                onClick={() => handleTFAnswer(false)}
-                disabled={disabled}
-                className="bg-red-500 hover:bg-red-400 text-white font-black text-2xl py-6 rounded-3xl shadow-xl shadow-red-500/20 transition-all hover:scale-105 disabled:opacity-50"
-              >
-                NOTO'G'RI
+              <button onClick={() => onTF(false)} disabled={locked} className="btn btn-lg !bg-danger !text-white hover:opacity-90">
+                Notoʻgʻri
               </button>
             </div>
           </div>
         )}
-
       </div>
-    </div>
+    </Page>
   );
 }

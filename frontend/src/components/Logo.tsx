@@ -2,19 +2,24 @@ import Link from "next/link";
 
 interface LogoProps {
   className?: string;
-  isDark?: boolean;
+  /** "mark" — faqat belgi, "full" — belgi + nom */
+  variant?: "mark" | "full";
+  size?: number;
 }
 
-export function Logo({ className = "", isDark = false }: LogoProps) {
+export function Logo({ className = "", variant = "full", size = 44 }: LogoProps) {
+  const src = variant === "mark" ? "/logo-mark.png" : "/logo-full.png";
+  const ratio = variant === "mark" ? 286 / 240 : 417 / 314;
   return (
-    <Link href="/" className={`flex items-center gap-3 ${className}`}>
-      <div className="relative flex items-center justify-center h-full py-1">
-        <img 
-          src="/logo.png" 
-          alt="Biologiya" 
-          className="h-10 sm:h-12 w-auto object-contain"
-        />
-      </div>
+    <Link href="/" aria-label="Biokompetensiya — bosh sahifa" className={`inline-flex items-center ${className}`}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={src}
+        alt="Biokompetensiya.uz"
+        width={Math.round(size * ratio)}
+        height={size}
+        style={{ height: size, width: "auto" }}
+      />
     </Link>
   );
 }

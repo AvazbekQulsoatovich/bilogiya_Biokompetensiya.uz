@@ -1,184 +1,186 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle2, FlaskConical, Droplets, Sun, Sprout } from "lucide-react";
-import confetti from "canvas-confetti";
+import { useState } from "react";
+import { Sprout } from "lucide-react";
+import { LabShell, LabProps, Note, StageTitle, Readout } from "./LabShell";
 
-export default function GerminationLab({ lab, steps, completeLab, isCompleted }: any) {
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  
-  const [seedsPlanted, setSeedsPlanted] = useState(false);
-  const [watered, setWatered] = useState(false);
-  const [lightOn, setLightOn] = useState(false);
-  
-  const [growthDay, setGrowthDay] = useState(0);
+type Pot = {
+  id: string;
+  title: string;
+  cond: string;
+  water: "nam" | "quruq" | "botirilgan";
+  warm: boolean;
+  light: boolean;
+};
 
-  const handlePlantSeeds = () => {
-    setSeedsPlanted(true);
-    if (currentStepIndex === 0) setCurrentStepIndex(1);
-  };
+/** Nazorat tajribasi: har bir idishda faqat bitta omil oʻzgartirilgan. */
+const POTS: Pot[] = [
+  { id: "A", title: "Nazorat", cond: "Nam tuproq · iliq (22 °C) · yorugʻ", water: "nam", warm: true, light: true },
+  { id: "B", title: "Suvsiz", cond: "Quruq tuproq · iliq · yorugʻ", water: "quruq", warm: true, light: true },
+  { id: "C", title: "Sovuqda", cond: "Nam tuproq · sovuq (+3 °C) · yorugʻ", water: "nam", warm: false, light: true },
+  { id: "D", title: "Suv ostida", cond: "Suvga botirilgan · iliq · yorugʻ", water: "botirilgan", warm: true, light: true },
+  { id: "E", title: "Qorongʻida", cond: "Nam tuproq · iliq · qorongʻi", water: "nam", warm: true, light: false },
+];
 
-  const handleWater = () => {
-    setWatered(true);
-    if (currentStepIndex === 1) setCurrentStepIndex(2);
-  };
+const germinates = (p: Pot) => p.water === "nam" && p.warm;
 
-  const handleLight = () => {
-    setLightOn(!lightOn);
-  };
-
-  useEffect(() => {
-    if (seedsPlanted && watered && lightOn && growthDay < 5) {
-      const timer = setTimeout(() => {
-        setGrowthDay(prev => prev + 1);
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
-    
-    if (growthDay >= 5 && !isCompleted) {
-      completeLab();
-    }
-  }, [seedsPlanted, watered, lightOn, growthDay, isCompleted, completeLab]);
+function PotSvg({ pot, day, started, planted }: { pot: Pot; day: number; started: boolean; planted: boolean }) {
+  const ok = germinates(pot);
+  const root = started && ok && day >= 2 ? Math.min(34, (day - 1) * 7) : 0;
+  const shoot = started && ok && day >= 4 ? Math.min(pot.light ? 46 : 60, (day - 3) * (pot.light ? 11 : 15)) : 0;
+  const seedSwell = started && ok && day >= 1;
+  const rotten = started && pot.water === "botirilgan" && day >= 4;
+  const soilFill = pot.water === "quruq" ? "#a8855a" : "#6b4a2b";
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      {/* Left Column: Instructions */}
-      <div className="lg:col-span-1">
-        <div className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-xl sticky top-24">
-          <h3 className="text-xl font-black mb-6 flex items-center gap-2 text-gray-900">
-            <FlaskConical className="w-6 h-6 text-green-500" />
-            Unib chiqish tajribasi
-          </h3>
-          
-          <div className="space-y-4">
-            {steps.map((step: any, index: number) => (
-              <div 
-                key={index} 
-                className={`flex gap-4 p-5 rounded-2xl border-2 transition-all duration-300 ${
-                  index === currentStepIndex && !isCompleted
-                    ? 'bg-green-50 border-green-400 shadow-md scale-[1.02]' 
-                    : index < currentStepIndex || isCompleted
-                      ? 'bg-blue-50 border-blue-200 opacity-80'
-                      : 'bg-gray-50 border-gray-100 opacity-50'
-                }`}
-              >
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shrink-0 transition-colors ${
-                  index < currentStepIndex || isCompleted ? 'bg-blue-500 text-white shadow-md' : index === currentStepIndex ? 'bg-green-500 text-white shadow-md' : 'bg-gray-200 text-gray-500'
-                }`}>
-                  {index < currentStepIndex || isCompleted ? <CheckCircle2 className="w-5 h-5" /> : index + 1}
-                </div>
-                <div>
-                  <p className={`font-semibold text-sm leading-relaxed ${index === currentStepIndex && !isCompleted ? 'text-green-900' : 'text-gray-700'}`}>
-                    {step.title || (typeof step === 'string' ? step : step.instruction)}
-                  </p>
-                </div>
-              </div>
-            ))}
+    <svg viewBox="0 0 120 170" className="w-full" role="img" aria-label={`${pot.title} idishi, ${day}-kun`}>
+      {/* shisha stakan */}
+      <path d="M18 24 h84 l-8 130 q-1 8 -9 8 h-50 q-8 0 -9 -8 z" fill="rgba(190,225,245,0.25)" stroke="#6aa0b8" strokeWidth="2" />
+      {/* suv / tuproq */}
+      {pot.water === "botirilgan" ? (
+        <path d="M21 40 h78 l-6 112 q-1 6 -7 6 h-52 q-6 0 -7 -6 z" fill="rgba(80,150,230,0.4)" />
+      ) : null}
+      <path d={`M24 ${pot.water === "botirilgan" ? 118 : 96} h72 l-4 ${pot.water === "botirilgan" ? 34 : 56} q-1 6 -7 6 h-50 q-6 0 -7 -6 z`} fill={soilFill} />
+      {pot.water === "nam" && <path d="M28 100 h64" stroke="rgba(255,255,255,0.15)" strokeWidth="3" strokeDasharray="2 6" />}
+      {/* ildiz */}
+      {root > 0 && <path d={`M60 108 q-3 ${root / 2} 3 ${root}`} stroke="#f0e6cf" strokeWidth="2.6" fill="none" strokeLinecap="round" />}
+      {/* poyacha */}
+      {shoot > 0 && (
+        <g>
+          <path d={`M60 106 L60 ${106 - shoot}`} stroke={pot.light ? "#3f9d4b" : "#efe3a1"} strokeWidth={pot.light ? 3.2 : 1.8} strokeLinecap="round" />
+          {shoot > 28 && (
+            <>
+              <ellipse cx="53" cy={106 - shoot + 2} rx="7" ry="3.6" fill={pot.light ? "#4cae5c" : "#f4ecb3"} transform={`rotate(-30 53 ${106 - shoot + 2})`} />
+              <ellipse cx="67" cy={106 - shoot + 2} rx="7" ry="3.6" fill={pot.light ? "#4cae5c" : "#f4ecb3"} transform={`rotate(30 67 ${106 - shoot + 2})`} />
+            </>
+          )}
+        </g>
+      )}
+      {/* urugʻ */}
+      {planted && <ellipse cx="60" cy="106" rx={seedSwell ? 6.5 : 5} ry={seedSwell ? 4.4 : 3.4} fill={rotten ? "#5a4630" : "#c9a45a"} stroke="#8a6a2f" strokeWidth="1" />}
+      {rotten && <text x="60" y="140" textAnchor="middle" fontSize="8" fill="#d6c7a8">chirimoqda</text>}
+      {started && !pot.warm && <text x="60" y="140" textAnchor="middle" fontSize="8" fill="#a8d4f0">❄</text>}
+      {/* qorongʻi qopqoq */}
+      {!pot.light && <rect x="14" y="14" width="92" height="22" rx="5" fill="#222b3b" />}
+    </svg>
+  );
+}
+
+const FACTORS = ["Suv", "Havo", "Issiqlik", "Yorugʻlik", "Tuproq"];
+
+export default function GerminationLab({ steps, completeLab, isCompleted }: LabProps) {
+  const [planted, setPlanted] = useState(false);
+  const [started, setStarted] = useState(false);
+  const [day, setDay] = useState(0);
+  const [maxDay, setMaxDay] = useState(0);
+  const [sel, setSel] = useState<string[]>([]);
+  const [verdict, setVerdict] = useState<{ ok: boolean; text: string } | null>(null);
+
+  const stage = !planted ? 0 : !started || maxDay < 7 ? 1 : 2;
+
+  const check = () => {
+    const need = ["Suv", "Havo", "Issiqlik"].sort().join();
+    if (sel.slice().sort().join() === need) {
+      setVerdict({
+        ok: true,
+        text: "Toʻgʻri! Urugʻning unib chiqishi uchun suv, havo (kislorod) va yetarli issiqlik kerak. Yorugʻlik unishga shart emas: qorongʻidagi urugʻ ham undi, ammo uning poyasi rangsiz boʻldi. Yorugʻlik keyinchalik, fotosintez uchun zarur.",
+      });
+      completeLab();
+    } else if (sel.includes("Yorugʻlik") || sel.includes("Tuproq")) {
+      setVerdict({ ok: false, text: "E idishdagi (qorongʻi) urugʻga qarang va suv ostidagi D idish bilan solishtiring. Yorugʻlik va tuproq shart omillar emas." });
+    } else {
+      setVerdict({ ok: false, text: "Nazorat idishi (A) bilan boshqalarni solishtiring: qaysi omillar yetishmaganda urugʻ unmadi?" });
+    }
+  };
+
+  return (
+    <LabShell heading="Urugʻning unib chiqishi" icon={Sprout} steps={steps} current={stage} done={isCompleted}>
+      <StageTitle sub="Beshta idishda urugʻlar turli sharoitga qoʻyilgan. Har bir idishda faqat bitta omil oʻzgartirilgan. Natijalarni solishtirib, urugʻ unishi uchun nima kerakligini aniqlang.">
+        Nazorat tajribasi: loviya urugʻi
+      </StageTitle>
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3 mb-6">
+        {POTS.map((p) => (
+          <div key={p.id} className="lab-bench p-3 text-center">
+            <p className="font-display font-semibold">{p.id}. {p.title}</p>
+            <div className="max-w-[7.5rem] mx-auto my-1">
+              <PotSvg pot={p} day={day} started={started} planted={planted} />
+            </div>
+            <p className="text-[0.72rem] leading-snug text-muted min-h-[2.2rem]">{p.cond}</p>
+            {started && day >= 7 && (
+              <p className={`text-xs font-bold mt-1 ${germinates(p) ? "text-ok" : "text-danger"}`}>
+                {germinates(p) ? "undi" : "unmadi"}
+              </p>
+            )}
           </div>
-        </div>
+        ))}
       </div>
 
-      {/* Right Column: Interactive Lab Zone */}
-      <div className="lg:col-span-2">
-        <div className="bg-white p-6 md:p-10 rounded-3xl border border-gray-100 shadow-xl min-h-[500px] relative overflow-hidden flex flex-col justify-center items-center">
-          <div className={`absolute inset-0 transition-colors duration-1000 ${lightOn ? 'bg-yellow-50' : 'bg-gray-900'} pointer-events-none`} />
+      {!planted && (
+        <button className="btn btn-primary btn-lg" onClick={() => setPlanted(true)}>
+          <Sprout className="w-5 h-5" /> Urugʻlarni qadash
+        </button>
+      )}
 
-          <div className="relative z-10 w-full flex flex-col items-center">
-            
-            <div className="mb-4">
-              <span className={`px-4 py-2 rounded-full font-bold text-sm shadow-sm ${lightOn ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-700 text-gray-300'}`}>
-                {growthDay > 0 ? `${growthDay}-kun` : "Tayyorgarlik"}
-              </span>
-            </div>
-
-            {/* Pot & Plant */}
-            <div className="relative w-64 h-64 flex flex-col justify-end items-center mt-10">
-              
-              {/* The light ray effect */}
-              {lightOn && (
-                <motion.div initial={{opacity:0}} animate={{opacity:0.3}} className="absolute -top-32 w-48 h-64 bg-gradient-to-b from-yellow-300 to-transparent blur-2xl" />
-              )}
-
-              {/* Plant Growth */}
-              {seedsPlanted && (
-                <div className="relative w-full flex justify-center items-end bottom-0 z-0">
-                  <motion.div 
-                    className="w-2 bg-green-500 rounded-t-full shadow-sm"
-                    initial={{ height: 0 }}
-                    animate={{ height: growthDay * 30 }}
-                    transition={{ duration: 1 }}
-                  />
-                  {growthDay >= 3 && (
-                    <motion.div 
-                      initial={{ scale: 0 }} animate={{ scale: 1 }}
-                      className="absolute top-4 -ml-6 w-8 h-4 bg-green-400 rounded-full rotate-45"
-                    />
-                  )}
-                  {growthDay >= 4 && (
-                    <motion.div 
-                      initial={{ scale: 0 }} animate={{ scale: 1 }}
-                      className="absolute top-8 ml-6 w-8 h-4 bg-green-400 rounded-full -rotate-45"
-                    />
-                  )}
-                  {growthDay >= 5 && (
-                    <motion.div 
-                      initial={{ scale: 0 }} animate={{ scale: 1 }}
-                      className="absolute -top-4 w-12 h-6 bg-green-500 rounded-full"
-                    />
-                  )}
-                </div>
-              )}
-
-              {/* Pot Base */}
-              <div className="w-48 h-20 bg-amber-800 rounded-b-3xl border-t-8 border-amber-900 shadow-xl relative z-10 overflow-hidden">
-                <div className={`absolute top-0 w-full h-4 transition-colors duration-1000 ${watered ? 'bg-amber-900/60' : 'bg-transparent'}`} />
-                {seedsPlanted && !watered && (
-                  <div className="absolute top-2 w-full flex justify-around px-4">
-                     <div className="w-3 h-2 bg-yellow-600 rounded-full" />
-                     <div className="w-3 h-2 bg-yellow-600 rounded-full" />
-                     <div className="w-3 h-2 bg-yellow-600 rounded-full" />
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Controls */}
-            <div className="mt-16 flex flex-wrap justify-center gap-4 relative z-20">
-              <button
-                onClick={handlePlantSeeds}
-                disabled={seedsPlanted}
-                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold shadow-sm transition-all ${
-                  seedsPlanted ? 'bg-gray-200 text-gray-500 opacity-50' : 'bg-amber-100 text-amber-800 hover:bg-amber-200 hover:scale-105'
-                }`}
-              >
-                <Sprout className="w-5 h-5" /> Urug' qadash
-              </button>
-
-              <button
-                onClick={handleWater}
-                disabled={!seedsPlanted || watered}
-                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold shadow-sm transition-all ${
-                  !seedsPlanted || watered ? 'bg-gray-200 text-gray-500 opacity-50' : 'bg-blue-100 text-blue-700 hover:bg-blue-200 hover:scale-105'
-                }`}
-              >
-                <Droplets className="w-5 h-5" /> Sug'orish
-              </button>
-
-              <button
-                onClick={handleLight}
-                disabled={!watered}
-                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold shadow-sm transition-all ${
-                  !watered ? 'bg-gray-200 text-gray-500 opacity-50' : lightOn ? 'bg-yellow-500 text-white shadow-yellow-500/50' : 'bg-gray-100 text-gray-700 hover:bg-yellow-100 hover:text-yellow-700'
-                }`}
-              >
-                <Sun className={`w-5 h-5 ${lightOn ? 'animate-spin-slow' : ''}`} /> Yorug'lik
-              </button>
-            </div>
-
-          </div>
+      {planted && !started && (
+        <div className="grid gap-3 max-w-xl">
+          <Note tone="info">Urugʻlar qadaldi. Endi har bir idishga koʻrsatilgan sharoitni yarating va tajribani boshlang.</Note>
+          <button className="btn btn-primary" onClick={() => setStarted(true)}>Sharoitlarni yaratib, tajribani boshlash</button>
         </div>
-      </div>
-    </div>
+      )}
+
+      {started && (
+        <div className="grid gap-5 max-w-2xl">
+          <div className="flex flex-wrap items-end gap-5">
+            <Readout label="Kun" value={day} unit="/ 7" tone="info" />
+            <label className="flex-1 min-w-[14rem]">
+              <span className="text-sm font-semibold block mb-2">Vaqtni oldinga siljiting</span>
+              <input
+                type="range"
+                min={0}
+                max={7}
+                value={day}
+                onChange={(e) => {
+                  const d = Number(e.target.value);
+                  setDay(d);
+                  setMaxDay((m) => Math.max(m, d));
+                }}
+                className="w-full"
+                aria-label="Kunlar"
+              />
+            </label>
+          </div>
+
+          {maxDay < 7 && <Note tone="info">Toʻliq natijani koʻrish uchun 7-kungacha kuzating.</Note>}
+
+          {maxDay >= 7 && !isCompleted && (
+            <div className="grid gap-3">
+              <p className="font-semibold">Xulosa: urugʻning unib chiqishi uchun qaysi omillar zarur? (bir nechtasini tanlang)</p>
+              <div className="flex flex-wrap gap-2" role="group" aria-label="Omillar">
+                {FACTORS.map((f) => {
+                  const on = sel.includes(f);
+                  return (
+                    <button
+                      key={f}
+                      aria-pressed={on}
+                      onClick={() => {
+                        setSel((s) => (on ? s.filter((x) => x !== f) : [...s, f]));
+                        setVerdict(null);
+                      }}
+                      className={`btn btn-sm ${on ? "btn-primary" : "btn-ghost"}`}
+                    >
+                      {f}
+                    </button>
+                  );
+                })}
+              </div>
+              <button className="btn btn-primary w-fit" onClick={check} disabled={!sel.length}>Xulosani tekshirish</button>
+            </div>
+          )}
+
+          {verdict && <Note tone={verdict.ok ? "ok" : "err"}>{verdict.text}</Note>}
+        </div>
+      )}
+    </LabShell>
   );
 }

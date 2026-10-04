@@ -2,160 +2,139 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
-  BookOpen, Home, Microscope,
-  ClipboardList, LayoutGrid, Library, Lightbulb, Gamepad2, Box,
-  Settings, Menu, X, LogOut, User, FileText, BookMarked, ChevronRight
+  BookOpen, Microscope, ClipboardList, Library, Lightbulb, Gamepad2, Box,
+  Menu, X, FileText, BookMarked, LayoutDashboard, Grid3x3, ArrowLeft,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Logo } from "./Logo";
+import { ThemeToggle } from "./ThemeToggle";
 
-const menuItems = [
-  { name: "Saytga qaytish", href: "/", icon: Home, color: "#1f2937", bg: "#f3f4f6" },
-  { name: "Asosiy", href: "/dashboard", icon: LayoutGrid, color: "#3b82f6", bg: "#eff6ff" },
-  { name: "Mavzular", href: "/topics", icon: BookOpen, color: "#6366f1", bg: "#eef2ff" },
-  { name: "Darsliklar", href: "/books", icon: BookMarked, color: "#8b5cf6", bg: "#f5f3ff" },
-  { name: "Virtual Laboratoriyalar", href: "/labs", icon: Microscope, color: "#10b981", bg: "#ecfdf5" },
-  { name: "3D Modellar", href: "/models", icon: Box, color: "#a855f7", bg: "#faf5ff" },
-  { name: "Test Topshiriqlari", href: "/quizzes", icon: ClipboardList, color: "#f97316", bg: "#fff7ed" },
-  { name: "Darsdan tashqari", href: "/extracurricular", icon: FileText, color: "#14b8a6", bg: "#f0fdfa" },
-  { name: "Krossvordlar", href: "/crosswords", icon: LayoutGrid, color: "#06b6d4", bg: "#ecfeff" },
-  { name: "Interaktiv mashqlar", href: "/games", icon: Gamepad2, color: "#ec4899", bg: "#fdf2f8" },
-  { name: "Lug'at", href: "/glossary", icon: Library, color: "#f43f5e", bg: "#fff1f2" },
-  { name: "Faktlar", href: "/facts", icon: Lightbulb, color: "#f59e0b", bg: "#fffbeb" },
+const groups = [
+  {
+    label: "Oʻrganish",
+    items: [
+      { name: "Asosiy sahifa", href: "/dashboard", icon: LayoutDashboard },
+      { name: "Mavzular", href: "/topics", icon: BookOpen },
+      { name: "Darsliklar", href: "/books", icon: BookMarked },
+      { name: "Lugʻat", href: "/glossary", icon: Library },
+      { name: "Qiziqarli faktlar", href: "/facts", icon: Lightbulb },
+    ],
+  },
+  {
+    label: "Amaliyot",
+    items: [
+      { name: "Virtual laboratoriyalar", href: "/labs", icon: Microscope },
+      { name: "3D modellar", href: "/models", icon: Box },
+      { name: "Darsdan tashqari", href: "/extracurricular", icon: FileText },
+    ],
+  },
+  {
+    label: "Sinov va mashq",
+    items: [
+      { name: "Test topshiriqlari", href: "/quizzes", icon: ClipboardList },
+      { name: "Krossvordlar", href: "/crosswords", icon: Grid3x3 },
+      { name: "Interaktiv oʻyinlar", href: "/games", icon: Gamepad2 },
+    ],
+  },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
-  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
 
-  const SidebarContent = () => (
+  useEffect(() => setIsOpen(false), [pathname]);
+
+  const content = (
     <div className="flex flex-col h-full">
-      {/* Logo */}
-      <div className="px-6 pt-8 pb-6 flex flex-col items-center">
-        <div className="rounded-3xl bg-white p-4 shadow-xl border border-gray-100 w-36 h-36 flex items-center justify-center">
-          <div style={{ transform: "scale(2.5)", transformOrigin: "center" }}>
-            <Logo />
-          </div>
+      <div className="px-5 pt-6 pb-5">
+        <div className="rounded-2xl bg-white border border-line px-4 py-3 flex items-center justify-center shadow-[var(--shadow-sm)]">
+          <Logo variant="full" size={64} />
         </div>
       </div>
 
-      {/* Divider */}
-      <div className="mx-6 mb-2">
-        <div className="h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
-      </div>
+      <nav className="flex-1 overflow-y-auto px-3 pb-4" aria-label="Asosiy menyu">
+        {groups.map((g) => (
+          <div key={g.label} className="mb-5">
+            <p className="eyebrow px-3 mb-2 !text-muted">{g.label}</p>
+            <ul className="space-y-0.5">
+              {g.items.map((item) => {
+                const active = pathname === item.href || pathname.startsWith(item.href + "/");
+                const Icon = item.icon;
+                return (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      aria-current={active ? "page" : undefined}
+                      className={`relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-[0.92rem] font-semibold transition-colors ${
+                        active ? "bg-brand-soft text-brand" : "text-ink-2 hover:bg-surface-2 hover:text-ink"
+                      }`}
+                    >
+                      {active && (
+                        <motion.span
+                          layoutId="nav-active"
+                          className="absolute left-0 top-2 bottom-2 w-1 rounded-full bg-brand"
+                          transition={{ type: "spring", stiffness: 400, damping: 32 }}
+                        />
+                      )}
+                      <Icon className="w-[18px] h-[18px] shrink-0" strokeWidth={active ? 2.2 : 1.8} />
+                      <span className="truncate">{item.name}</span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
+      </nav>
 
-      {/* Section label */}
-      <div className="px-6 py-3">
-        <span className="text-[11px] font-black uppercase tracking-[0.25em] text-slate-400">Menyu</span>
-      </div>
-
-      {/* Menu */}
-      <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-1" style={{ scrollbarWidth: "thin", scrollbarColor: "#e2e8f0 transparent" }}>
-        {menuItems.map((item) => {
-          const isActive = pathname === item.href;
-          const Icon = item.icon;
-
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={() => setIsOpen(false)}
-              className="flex items-center gap-3 px-3 py-3 group transition-all duration-200 relative border-b border-gray-100 last:border-b-0"
-              style={{
-                background: isActive ? item.color : "transparent",
-                borderRadius: isActive ? "16px" : "0px"
-              }}
-            >
-              {/* Hover background */}
-              {!isActive && (
-                <div
-                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                  style={{ background: item.bg, borderRadius: "16px" }}
-                />
-              )}
-
-              {/* Icon */}
-              <div
-                className="relative z-10 w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-200"
-                style={{
-                  background: isActive ? "rgba(255,255,255,0.25)" : item.bg,
-                  color: isActive ? "#fff" : item.color,
-                  boxShadow: isActive ? `0 0 0 1px rgba(255,255,255,0.2) inset` : "none",
-                }}
-              >
-                <Icon className="w-[18px] h-[18px]" />
-              </div>
-
-              {/* Name */}
-              <span
-                className="relative z-10 text-[14px] font-bold flex-1 transition-colors duration-200"
-                style={{
-                  color: isActive ? "#fff" : "#000",
-                }}
-              >
-                {item.name}
-              </span>
-
-              {/* Active dot */}
-              {isActive && (
-                <motion.div
-                  layoutId="sidebar-dot"
-                  className="relative z-10 w-1.5 h-1.5 rounded-full bg-white/70 flex-shrink-0"
-                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                />
-              )}
-
-              {/* Hover arrow */}
-              {!isActive && (
-                <ChevronRight
-                  className="relative z-10 w-4 h-4 opacity-0 -translate-x-1 group-hover:opacity-60 group-hover:translate-x-0 transition-all duration-200 flex-shrink-0"
-                  style={{ color: item.color }}
-                />
-              )}
-            </Link>
-          );
-        })}
+      <div className="px-3 pb-5 pt-3 border-t border-line">
+        <Link
+          href="/"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-muted hover:bg-surface-2 hover:text-ink transition-colors"
+        >
+          <ArrowLeft className="w-[18px] h-[18px]" /> Bosh sahifaga qaytish
+        </Link>
       </div>
     </div>
   );
 
   return (
     <>
-      {/* Mobile button */}
-      <div className="md:hidden fixed top-4 left-4 z-[60] print:hidden">
+      <div className="md:hidden print-hide fixed top-0 inset-x-0 z-[60] h-14 flex items-center justify-between px-3 bg-bg/90 backdrop-blur-md border-b border-line">
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="p-3 bg-white rounded-2xl shadow-lg border border-gray-100"
+          aria-label={isOpen ? "Menyuni yopish" : "Menyuni ochish"}
+          aria-expanded={isOpen}
+          className="w-10 h-10 rounded-xl flex items-center justify-center border border-line bg-surface"
         >
-          {isOpen ? <X className="w-6 h-6 text-gray-700" /> : <Menu className="w-6 h-6 text-gray-700" />}
+          {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
+        <div className="bg-white rounded-lg px-2 py-0.5 border border-line">
+          <Logo variant="mark" size={30} />
+        </div>
+        <ThemeToggle />
       </div>
 
-      {/* Mobile backdrop */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="md:hidden fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="md:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
             onClick={() => setIsOpen(false)}
           />
         )}
       </AnimatePresence>
 
-      {/* Sidebar */}
       <aside
-        className={`
-          print:hidden w-72 h-screen fixed left-0 top-0 z-50
-          bg-white border-r border-gray-100
-          shadow-[4px_0_32px_rgba(0,0,0,0.05)]
-          transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]
-          ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
-        `}
+        className={`print-hide w-72 h-screen fixed left-0 top-0 z-50 bg-surface border-r border-line transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        }`}
       >
-        <SidebarContent />
+        {content}
       </aside>
     </>
   );

@@ -1,91 +1,105 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import { BookOpen, Search } from "lucide-react";
+import { Library, Search } from "lucide-react";
+import { Page, PageHeader, EmptyState, CardGridSkeleton } from "@/components/ui";
+import { includesUz, normalizeUz } from "@/lib/text";
 
 export default function GlossaryPage() {
   const [terms, setTerms] = useState<any[]>([]);
   const [search, setSearch] = useState("");
+  const [letter, setLetter] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchTerms();
+    (async () => {
+      try {
+        const res = await fetch(`/api/glossary`);
+        const data = await res.json();
+        setTerms(Array.isArray(data) ? data : data?.terms || []);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
-  const fetchTerms = async () => {
-    try {
-      const res = await fetch(`/api/glossary`);
-      const data = await res.json();
-      if (Array.isArray(data)) {
-        setTerms(data);
-      } else {
-        setTerms(data?.terms || []);
-      }
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const firstLetter = (t: string) => normalizeUz(t).replace(/[^a-zʻ']/i, "").charAt(0).toUpperCase() || "#";
 
-  const filteredTerms = (Array.isArray(terms) ? terms : []).filter(t => 
-    t.term.toLowerCase().includes(search.toLowerCase()) || 
-    t.definition.toLowerCase().includes(search.toLowerCase())
+  const sorted = useMemo(() => [...terms].sort((a, b) => a.term.localeCompare(b.term, "uz")), [terms]);
+  const letters = useMemo(() => Array.from(new Set(sorted.map((t) => firstLetter(t.term)))), [sorted]);
+
+  const filtered = sorted.filter(
+    (t) =>
+      (!letter || firstLetter(t.term) === letter) &&
+      (!search.trim() || includesUz(t.term, search) || includesUz(t.definition, search))
   );
 
   return (
-    <div className="p-8 max-w-5xl mx-auto w-full">
-      <div className="bg-rose-500 rounded-[2rem] p-6 md:p-8 mb-8 text-white shadow-lg shadow-rose-500/20 flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-white/20 backdrop-blur-sm rounded-2xl">
-            <BookOpen className="w-8 h-8 text-white" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold">Lug'at</h1>
-            <p className="text-white/80 mt-1">Biologik atamalar va ularning izohlari</p>
-          </div>
-        </div>
+    <Page narrow>
+      <PageHeader
+        icon={Library}
+        eyebrow="Oʻrganish"
+        title="Biologik atamalar lugʻati"
+        subtitle={`${terms.length || ""} ${terms.length ? "ta atama va ularning" : "Atamalar va"} ilmiy izohlari. Harf boʻyicha tanlang yoki qidiring.`}
+      />
 
-        <div className="relative w-full md:w-72">
-          <input
-            type="text"
-            placeholder="Atama qidirish..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-background border-2 border-border rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:border-rose-500 transition-colors"
-          />
-          <Search className="absolute left-3 top-3.5 w-5 h-5 text-foreground/40" />
-        </div>
+      <div className="relative mb-5">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
+        <input
+          type="search"
+          className="input !pl-12 !py-3.5"
+          placeholder="Atama yoki izoh boʻyicha qidirish…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          aria-label="Atama qidirish"
+        />
       </div>
 
-      {loading ? (
-        <div className="flex justify-center p-12">
-          <div className="w-8 h-8 border-4 border-rose-500 border-t-transparent rounded-full animate-spin"></div>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filteredTerms.length > 0 ? (
-            filteredTerms.map((t, index) => (
-              <motion.div
-                key={t.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className="glass p-6 rounded-2xl border border-border/50 hover:border-rose-500/30 transition-colors"
-              >
-                <h3 className="text-xl font-bold text-rose-500 mb-2">{t.term}</h3>
-                <p className="text-foreground/80 leading-relaxed">{t.definition}</p>
-              </motion.div>
-            ))
-          ) : (
-            <div className="col-span-full p-12 text-center text-foreground/50 border-2 border-dashed border-border/50 rounded-2xl">
-              Qidiruv natijasiga mos hech qanday atama topilmadi.
-            </div>
-          )}
+      {letters.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mb-8" role="group" aria-label="Harf boʻyicha filtr">
+          <button
+            onClick={() => setLetter(null)}
+            className={`chip cursor-pointer ${letter === null ? "chip-brand" : ""}`}
+            aria-pressed={letter === null}
+          >
+            Hammasi
+          </button>
+          {letters.map((l) => (
+            <button
+              key={l}
+              onClick={() => setLetter(letter === l ? null : l)}
+              className={`chip cursor-pointer min-w-8 justify-center ${letter === l ? "chip-brand" : ""}`}
+              aria-pressed={letter === l}
+            >
+              {l}
+            </button>
+          ))}
         </div>
       )}
-    </div>
+
+      {loading ? (
+        <CardGridSkeleton count={6} />
+      ) : filtered.length === 0 ? (
+        <EmptyState title="Atama topilmadi" text="Qidiruv soʻzini oʻzgartirib koʻring." />
+      ) : (
+        <dl className="grid gap-3">
+          {filtered.map((t, i) => (
+            <motion.div
+              key={t.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: Math.min(i, 10) * 0.025 }}
+              className="card px-6 py-5 grid grid-cols-1 sm:grid-cols-[13rem_1fr] gap-x-6 gap-y-1"
+            >
+              <dt className="font-display text-lg font-semibold text-brand">{t.term}</dt>
+              <dd className="text-ink-2 leading-relaxed">{t.definition}</dd>
+            </motion.div>
+          ))}
+        </dl>
+      )}
+    </Page>
   );
 }
-

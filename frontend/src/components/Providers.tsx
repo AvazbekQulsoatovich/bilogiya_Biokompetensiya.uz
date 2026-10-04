@@ -1,17 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
-import "../i18n";
+import { ThemeProvider } from "next-themes";
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  // Ensure i18n is loaded on the client side
-  useEffect(() => {
-    // i18n is initialized in the import above
-  }, []);
-
   return (
-    <>
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} storageKey="biokomp-theme">
       {children}
-    </>
+    </ThemeProvider>
   );
 }

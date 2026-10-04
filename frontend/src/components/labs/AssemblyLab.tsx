@@ -22,13 +22,13 @@ export default function AssemblyLab({ lab, steps, completeLab, isCompleted }: { 
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
       {/* Left Column */}
       <div className="lg:col-span-1">
-        <div className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-xl sticky top-24">
-          <h3 className="text-xl font-black mb-6 flex items-center gap-2 text-gray-900">
+        <div className="bg-surface p-6 md:p-8 rounded-3xl border border-line shadow-[var(--shadow-sm)] sticky top-24">
+          <h3 className="text-xl font-black mb-6 flex items-center gap-2 text-ink">
             <Layers className="w-6 h-6 text-purple-500" />
-            Yig'ish Tajribasi
+            Yigʻish Tajribasi
           </h3>
-          <p className="text-gray-600 mb-6 text-sm">
-            Hujayra organoidlarini to'g'ri joyiga qo'ying.
+          <p className="text-muted mb-6 text-sm">
+            Hujayra organoidlarini toʻgʻri joyiga qoʻying.
           </p>
           
           <div className="flex flex-col gap-4">
@@ -38,7 +38,7 @@ export default function AssemblyLab({ lab, steps, completeLab, isCompleted }: { 
                 onClick={() => handlePlacePart(part)}
                 disabled={placedParts.includes(part)}
                 className={`p-3 rounded-xl border-2 font-bold text-sm text-left transition-all ${
-                  placedParts.includes(part) ? 'bg-gray-100 border-gray-200 text-gray-400' : 'bg-white border-purple-200 text-purple-700 hover:border-purple-400 hover:shadow-md'
+                  placedParts.includes(part) ? 'bg-surface-2 border-line text-muted' : 'bg-surface border-purple-200 text-purple-700 hover:border-purple-400 hover:shadow-md'
                 }`}
               >
                 {part} {placedParts.includes(part) && <CheckCircle2 className="inline w-4 h-4 ml-2 text-green-500" />}
@@ -50,11 +50,11 @@ export default function AssemblyLab({ lab, steps, completeLab, isCompleted }: { 
 
       {/* Right Column */}
       <div className="lg:col-span-2">
-        <div className="bg-white p-6 md:p-10 rounded-3xl border border-gray-100 shadow-xl min-h-[500px] relative overflow-hidden flex flex-col justify-center items-center">
+        <div className="bg-surface p-6 md:p-10 rounded-3xl border border-line shadow-[var(--shadow-sm)] min-h-[500px] relative overflow-hidden flex flex-col justify-center items-center">
           
           <div className="relative w-80 h-80 flex items-center justify-center">
             {/* Outline */}
-            <div className="absolute inset-0 rounded-full border-4 border-dashed border-gray-300"></div>
+            <div className="absolute inset-0 rounded-full border-4 border-dashed border-line"></div>
 
             {/* Assembled Parts */}
             {placedParts.includes("Membrana") && (
@@ -74,7 +74,7 @@ export default function AssemblyLab({ lab, steps, completeLab, isCompleted }: { 
             )}
 
             {placedParts.length === 0 && (
-              <span className="text-gray-400 font-bold uppercase tracking-wider">Bo'sh Hujayra</span>
+              <span className="text-muted font-bold uppercase tracking-wider">Boʻsh Hujayra</span>
             )}
           </div>
           

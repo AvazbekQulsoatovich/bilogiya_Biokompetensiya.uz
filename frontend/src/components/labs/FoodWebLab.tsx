@@ -1,55 +1,148 @@
 "use client";
+
 import { useState } from "react";
-import { CheckCircle2 } from "lucide-react";
+import { Network, Undo2, RotateCcw } from "lucide-react";
+import { LabShell, LabProps, Note, StageTitle } from "./LabShell";
 
-export default function FoodWebLab({ completeLab, isCompleted }: any) {
+type Org = { id: string; name: string; emoji: string; level: "producer" | "herbivore" | "carnivore" };
+
+const ORGS: Org[] = [
+  { id: "plant", name: "Oʻsimlik (oʻt)", emoji: "🌿", level: "producer" },
+  { id: "grasshopper", name: "Chigirtka", emoji: "🦗", level: "herbivore" },
+  { id: "rabbit", name: "Quyon", emoji: "🐇", level: "herbivore" },
+  { id: "mouse", name: "Sichqon", emoji: "🐁", level: "herbivore" },
+  { id: "frog", name: "Qurbaqa", emoji: "🐸", level: "carnivore" },
+  { id: "snake", name: "Ilon", emoji: "🐍", level: "carnivore" },
+  { id: "wolf", name: "Boʻri", emoji: "🐺", level: "carnivore" },
+  { id: "eagle", name: "Burgut", emoji: "🦅", level: "carnivore" },
+];
+
+/** kim → kimni yeydi */
+const EATS: Record<string, string[]> = {
+  grasshopper: ["plant"],
+  rabbit: ["plant"],
+  mouse: ["plant"],
+  frog: ["grasshopper"],
+  snake: ["frog", "mouse"],
+  wolf: ["rabbit"],
+  eagle: ["snake", "rabbit", "mouse"],
+};
+
+const LEVEL_NAME = ["Ishlab chiqaruvchi", "1-tartib isteʼmolchi (oʻtxoʻr)", "2-tartib isteʼmolchi", "3-tartib isteʼmolchi", "4-tartib isteʼmolchi"];
+
+const byId = (id: string) => ORGS.find((o) => o.id === id)!;
+const hasPredator = (id: string) => Object.values(EATS).some((l) => l.includes(id));
+
+export default function FoodWebLab({ steps, completeLab, isCompleted }: LabProps) {
   const [chain, setChain] = useState<string[]>([]);
-  const organisms = ["O'simlik", "Hasharot", "Qurbaqa", "Ilon", "Burgut"];
+  const [msg, setMsg] = useState<{ tone: "info" | "ok" | "err" | "warn"; text: string } | null>(null);
 
-  const addOrganism = (org: string) => {
-    if (chain.length < 5 && org === organisms[chain.length]) {
-       const newChain = [...chain, org];
-       setChain(newChain);
-       if (newChain.length === 5) completeLab();
+  const last = chain[chain.length - 1];
+  const stage = chain.length === 0 ? 0 : chain.length < 3 ? 1 : 2;
+
+  const add = (id: string) => {
+    if (isCompleted) return;
+    if (chain.length === 0) {
+      if (byId(id).level !== "producer") {
+        return setMsg({ tone: "err", text: "Oziq zanjiri har doim ishlab chiqaruvchidan, yaʼni yashil oʻsimlikdan boshlanadi." });
+      }
+      setChain([id]);
+      return setMsg({ tone: "info", text: "Yaxshi boshlanish! Endi oʻsimlik bilan oziqlanadigan hayvonni tanlang." });
+    }
+    if (chain.includes(id)) return;
+    if (EATS[id]?.includes(last)) {
+      setChain([...chain, id]);
+      setMsg(null);
     } else {
-       alert("Xato! Oziq zanjiri to'g'ri ketma-ketlikda bo'lishi kerak.");
-       setChain([]);
+      setMsg({
+        tone: "err",
+        text: `${byId(id).name} ${byId(last).name.toLowerCase()} bilan oziqlanmaydi. Oʻqning yoʻnalishi: kim kimni yeydi — oziq modda va energiya yeyilgan organizmdan yeguvchiga oʻtadi.`,
+      });
     }
   };
 
+  const verify = () => {
+    if (chain.length < 4) return setMsg({ tone: "warn", text: "Zanjir kamida 4 boʻgʻindan iborat boʻlsin: ishlab chiqaruvchi va kamida uch isteʼmolchi." });
+    if (hasPredator(last)) return setMsg({ tone: "warn", text: `${byId(last).name}ni ham yeydigan hayvon bor. Zanjirni davom ettiring.` });
+    setMsg({ tone: "ok", text: "Oziq zanjiri toʻgʻri tuzildi! Har bir keyingi boʻgʻinga energiyaning taxminan 10 % igina oʻtishiga eʼtibor bering." });
+    completeLab();
+  };
+
+  const energy = (i: number) => 10000 / Math.pow(10, i);
+
   return (
-    <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 text-center">
-      <h2 className="text-2xl font-bold mb-2">Oziq Zanjiri</h2>
-      <p className="text-gray-600 mb-8">Quyidagi organizmlarni bosish orqali to'g'ri oziq zanjirini yarating (Kim kimni yeydi?).</p>
-      
-      <div className="flex justify-center gap-4 mb-12 flex-wrap">
-         {["Ilon", "O'simlik", "Burgut", "Hasharot", "Qurbaqa"].map(org => (
-           <button 
-             key={org}
-             onClick={() => addOrganism(org)}
-             disabled={chain.includes(org)}
-             className="bg-blue-100 text-blue-800 hover:bg-blue-200 px-6 py-3 rounded-xl font-bold border-2 border-blue-200 disabled:opacity-30"
-           >
-             {org}
-           </button>
-         ))}
+    <LabShell heading="Oziq zanjiri" icon={Network} steps={steps} current={stage} done={isCompleted}>
+      <StageTitle sub="Organizmlarni bosib, ekotizimdagi oziq zanjirini tuzing: oʻsimlikdan boshlab, har safar keyingi boʻgʻinni tanlang.">
+        Kim kimni yeydi?
+      </StageTitle>
+
+      <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+        {ORGS.map((o) => {
+          const used = chain.includes(o.id);
+          return (
+            <button
+              key={o.id}
+              onClick={() => add(o.id)}
+              disabled={used || isCompleted}
+              className={`card text-left p-4 flex items-center gap-3 transition-all ${
+                used ? "opacity-40" : "hover:border-brand hover:-translate-y-0.5"
+              }`}
+            >
+              <span className="text-3xl" aria-hidden>{o.emoji}</span>
+              <span>
+                <span className="font-semibold block leading-tight">{o.name}</span>
+                <span className="text-xs text-muted">{o.level === "producer" ? "ishlab chiqaruvchi" : o.level === "herbivore" ? "oʻtxoʻr" : "yirtqich"}</span>
+              </span>
+            </button>
+          );
+        })}
       </div>
 
-      <div className="bg-gray-50 p-6 rounded-2xl min-h-[120px] flex items-center justify-center gap-2 flex-wrap">
-         {chain.length === 0 && <span className="text-gray-400">Zanjir bu yerda shakllanadi...</span>}
-         {chain.map((org, index) => (
-           <div key={org} className="flex items-center gap-2">
-             <div className="bg-green-500 text-white px-4 py-2 rounded-lg font-bold">{org}</div>
-             {index < chain.length - 1 && <div className="text-green-500 font-bold">➔</div>}
-           </div>
-         ))}
+      <div className="lab-bench p-5 mb-5 min-h-[11rem]">
+        {chain.length === 0 ? (
+          <p className="text-muted text-center py-10">Zanjir shu yerda hosil boʻladi…</p>
+        ) : (
+          <div className="flex flex-wrap items-center gap-2">
+            {chain.map((id, i) => (
+              <div key={id} className="flex items-center gap-2">
+                <div className="rounded-2xl bg-brand text-brand-ink px-4 py-3 text-center min-w-[7rem]">
+                  <div className="text-2xl" aria-hidden>{byId(id).emoji}</div>
+                  <div className="font-semibold text-sm">{byId(id).name}</div>
+                  <div className="text-[0.68rem] opacity-80 mt-0.5">{LEVEL_NAME[i]}</div>
+                </div>
+                {i < chain.length - 1 && <span className="text-2xl font-bold text-brand" aria-label="yeyiladi">→</span>}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-      
-      {isCompleted && (
-        <div className="text-green-600 font-bold text-xl flex items-center justify-center gap-2 mt-8">
-          <CheckCircle2 /> Tabiatda oziq zanjiri muvaffaqiyatli tuzildi!
+
+      {chain.length >= 2 && (
+        <div className="mb-5">
+          <p className="eyebrow !text-muted mb-2">Energiya piramidasi (shartli, kJ) — 10 % qoidasi</p>
+          <div className="grid gap-1.5">
+            {chain.map((id, i) => (
+              <div key={id} className="flex items-center gap-3 text-sm">
+                <span className="w-28 text-muted truncate">{byId(id).name}</span>
+                <div className="h-5 rounded-md bg-accent" style={{ width: `${Math.max(3, 100 / Math.pow(2.6, i))}%` }} />
+                <span className="font-mono font-semibold tabular-nums">{energy(i).toLocaleString("uz")}</span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
-    </div>
+
+      <div className="flex flex-wrap gap-2.5 mb-4">
+        <button className="btn btn-primary" onClick={verify} disabled={chain.length === 0 || isCompleted}>Zanjirni tekshirish</button>
+        <button className="btn btn-ghost" onClick={() => { setChain(chain.slice(0, -1)); setMsg(null); }} disabled={!chain.length || isCompleted}>
+          <Undo2 className="w-4 h-4" /> Oxirgisini olib tashlash
+        </button>
+        <button className="btn btn-ghost" onClick={() => { setChain([]); setMsg(null); }} disabled={!chain.length || isCompleted}>
+          <RotateCcw className="w-4 h-4" /> Boshidan boshlash
+        </button>
+      </div>
+
+      {msg && <Note tone={msg.tone}>{msg.text}</Note>}
+    </LabShell>
   );
 }

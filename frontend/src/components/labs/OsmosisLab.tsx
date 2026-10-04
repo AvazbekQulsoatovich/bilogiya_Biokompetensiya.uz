@@ -1,84 +1,147 @@
 "use client";
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Droplets, CheckCircle2, Clock } from "lucide-react";
 
-export default function OsmosisLab({ lab, steps, completeLab, isCompleted }: any) {
-  const [potato1Weight, setPotato1Weight] = useState(50);
-  const [potato2Weight, setPotato2Weight] = useState(50);
-  const [timePassed, setTimePassed] = useState(0);
-  const [isSimulating, setIsSimulating] = useState(false);
+import { useEffect, useRef, useState } from "react";
+import { Droplets, Clock } from "lucide-react";
+import { LabShell, LabProps, Note, StageTitle, Readout } from "./LabShell";
 
-  const simulateTime = () => {
-    setIsSimulating(true);
-    let t = 0;
-    const interval = setInterval(() => {
-      t += 10;
-      setTimePassed(t);
-      // Potato 1 in fresh water (gains weight)
-      setPotato1Weight(50 + (t / 60) * 5); 
-      // Potato 2 in salt water (loses weight)
-      setPotato2Weight(50 - (t / 60) * 10);
-      
-      if (t >= 60) {
-        clearInterval(interval);
-        setIsSimulating(false);
-        completeLab();
-      }
-    }, 200);
-  };
+type Sol = { id: string; title: string; sub: string; delta: number; color: string; cell: "turgor" | "norm" | "plasmo" };
+
+/** Boshlangʻich massa 10,0 g. Oʻzgarish (g) 60 daqiqadan keyin. */
+const SOLS: Sol[] = [
+  { id: "water", title: "Distillangan suv", sub: "0 % NaCl (gipotonik)", delta: +0.9, color: "rgba(90,160,235,0.45)", cell: "turgor" },
+  { id: "iso", title: "Fiziologik eritma", sub: "0,9 % NaCl (izotonik)", delta: 0.0, color: "rgba(110,175,215,0.5)", cell: "norm" },
+  { id: "salt", title: "Konsentrlangan tuz", sub: "10 % NaCl (gipertonik)", delta: -1.1, color: "rgba(60,120,200,0.6)", cell: "plasmo" },
+];
+
+function Cell({ kind }: { kind: Sol["cell"] }) {
+  // hujayra devori qattiq, membrana (protoplast) hajmi oʻzgaradi
+  const inset = kind === "turgor" ? 3 : kind === "norm" ? 9 : 24;
+  return (
+    <svg viewBox="0 0 90 70" className="w-full max-w-[7rem]" role="img" aria-label={kind === "plasmo" ? "Plazmoliz" : kind === "turgor" ? "Turgor holati" : "Normal hujayra"}>
+      <rect x="4" y="4" width="82" height="62" rx="4" fill="none" stroke="#2b7a3b" strokeWidth="3" />
+      <rect x={4 + inset} y={4 + inset * 0.8} width={82 - inset * 2} height={62 - inset * 1.6} rx="12" fill="rgba(196,232,168,0.7)" stroke="#6fbf73" strokeWidth="1.5" />
+      <ellipse cx="45" cy="35" rx={Math.max(6, 20 - inset * 0.45)} ry={Math.max(4, 12 - inset * 0.3)} fill="rgba(160,215,235,0.8)" />
+      <circle cx="30" cy="22" r="3" fill="#2f9e44" />
+      <circle cx="60" cy="48" r="3" fill="#2f9e44" />
+    </svg>
+  );
+}
+
+export default function OsmosisLab({ steps, completeLab, isCompleted }: LabProps) {
+  const [t, setT] = useState(0);
+  const [running, setRunning] = useState(false);
+  const [q1, setQ1] = useState<string | null>(null);
+  const [q2, setQ2] = useState<string | null>(null);
+  const timer = useRef<number | null>(null);
+
+  const done = t >= 60;
+  const stage = !done ? 0 : 1;
+
+  useEffect(() => {
+    if (!running) return;
+    timer.current = window.setInterval(() => {
+      setT((x) => {
+        if (x >= 60) return x;
+        const n = x + 2;
+        if (n >= 60) setRunning(false);
+        return n;
+      });
+    }, 150);
+    return () => {
+      if (timer.current) clearInterval(timer.current);
+    };
+  }, [running]);
+
+  const mass = (s: Sol) => 10 + s.delta * (t / 60);
+
+  useEffect(() => {
+    if (q1 === "from-cell" && q2 === "plasmolysis" && !isCompleted) completeLab();
+  }, [q1, q2, isCompleted, completeLab]);
 
   return (
-    <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-      <h2 className="text-2xl font-bold mb-4">Osmos va Plazmoliz</h2>
-      <p className="text-gray-600 mb-6">Kartoshka bo'laklarini chuchuk suvga va sho'r suvga solib, osmos hodisasini (suvning konsentratsiyasi yuqori tomonga o'tishini) kuzatamiz.</p>
-      
-      <div className="grid grid-cols-2 gap-8 mb-8">
-        {/* Beaker 1 */}
-        <div className="flex flex-col items-center">
-          <h3 className="font-bold mb-2">Chuchuk Suv (Toza suv)</h3>
-          <div className="w-32 h-40 border-4 border-b-[8px] border-gray-300 rounded-b-3xl relative overflow-hidden bg-blue-50/50">
-            <div className="absolute bottom-0 w-full h-2/3 bg-blue-300/40"></div>
-            <motion.div 
-              className="absolute bg-orange-200 rounded-lg border-2 border-orange-400 bottom-4 left-1/2 -translate-x-1/2"
-              animate={{ width: 40 + (potato1Weight - 50), height: 30 + (potato1Weight - 50) }}
-            />
-          </div>
-          <div className="mt-4 bg-gray-800 text-green-400 font-mono px-4 py-2 rounded-lg text-2xl font-bold">
-            {potato1Weight.toFixed(1)} g
-          </div>
-        </div>
-        
-        {/* Beaker 2 */}
-        <div className="flex flex-col items-center">
-          <h3 className="font-bold mb-2">Sho'r Suv (10% NaCl)</h3>
-          <div className="w-32 h-40 border-4 border-b-[8px] border-gray-300 rounded-b-3xl relative overflow-hidden bg-blue-50/50">
-            <div className="absolute bottom-0 w-full h-2/3 bg-blue-400/60"></div>
-            {/* Salt particles */}
-            <div className="absolute inset-0 opacity-30 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:10px_10px]"></div>
-            <motion.div 
-              className="absolute bg-orange-200 rounded-lg border-2 border-orange-400 bottom-4 left-1/2 -translate-x-1/2"
-              animate={{ width: 40 + (potato2Weight - 50), height: 30 + (potato2Weight - 50) }}
-            />
-          </div>
-          <div className="mt-4 bg-gray-800 text-red-400 font-mono px-4 py-2 rounded-lg text-2xl font-bold">
-            {potato2Weight.toFixed(1)} g
-          </div>
-        </div>
+    <LabShell heading="Osmos hodisasi" icon={Droplets} steps={steps} current={stage} done={isCompleted}>
+      <StageTitle sub="Bir xil kartoshka boʻlaklari (har biri 10,0 g) turli konsentratsiyali eritmalarga solindi. 60 daqiqadan keyin massa va hujayralar holatini solishtiring.">
+        Kartoshka boʻlaklari: suv va tuz eritmalarida
+      </StageTitle>
+
+      <div className="grid md:grid-cols-3 gap-4 mb-6">
+        {SOLS.map((s) => {
+          const m = mass(s);
+          const w = 54 + (m - 10) * 18;
+          return (
+            <div key={s.id} className="lab-bench p-4 text-center">
+              <p className="font-display font-semibold leading-tight">{s.title}</p>
+              <p className="text-xs text-muted mb-3">{s.sub}</p>
+              <svg viewBox="0 0 140 130" className="w-full max-w-[9rem] mx-auto" role="img" aria-label={`${s.title} stakani`}>
+                <path d="M20 10 h100 l-8 108 q-1 8 -9 8 h-66 q-8 0 -9 -8 z" fill="rgba(200,230,255,0.2)" stroke="#6aa0b8" strokeWidth="2.5" />
+                <path d="M24 44 h92 l-6 74 q-1 8 -9 8 h-62 q-8 0 -9 -8 z" fill={s.color} />
+                <rect x={70 - w / 2} y={72} width={w} height={34 + (m - 10) * 6} rx="6" fill="#f0d9a0" stroke="#c9a45a" strokeWidth="2" />
+              </svg>
+              <div className="mt-2 flex justify-center">
+                <Readout label="Massa" value={m.toFixed(2)} unit="g" tone={s.delta > 0 ? "info" : s.delta < 0 ? "danger" : "brand"} />
+              </div>
+              {done && (
+                <div className="mt-3 flex flex-col items-center gap-1">
+                  <Cell kind={s.cell} />
+                  <p className="text-xs text-muted">
+                    {s.cell === "turgor" ? "Turgor: hujayra suv bilan toʻlgan" : s.cell === "norm" ? "Hujayra normal holatda" : "Plazmoliz: protoplast devordan ajralgan"}
+                  </p>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
-      
-      <div className="flex justify-center items-center gap-6">
-        <button 
-          onClick={simulateTime}
-          disabled={isSimulating || isCompleted}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 disabled:opacity-50"
-        >
-          <Clock /> 60 daqiqa vaqtni tezlatish
+
+      <div className="flex flex-wrap items-center gap-4 mb-6">
+        <button className="btn btn-primary" disabled={running || done} onClick={() => setRunning(true)}>
+          <Clock className="w-4 h-4" /> {t === 0 ? "Tajribani boshlash" : "Davom etilmoqda…"}
         </button>
-        <div className="text-lg font-bold">
-          O'tgan vaqt: {timePassed} daqiqa
+        <Readout label="Oʻtgan vaqt" value={t} unit="daq" tone="info" />
+        <div className="flex-1 min-w-[12rem] h-2 rounded-full bg-surface-2 overflow-hidden">
+          <div className="h-full bg-brand transition-all" style={{ width: `${(t / 60) * 100}%` }} />
         </div>
       </div>
-    </div>
+
+      {done && (
+        <div className="grid gap-5 max-w-2xl">
+          <Note tone="info">
+            Osmos — suvning yarim oʻtkazuvchan membrana orqali eritmaning konsentratsiyasi past tomonidan konsentratsiyasi yuqori tomoniga oʻtishidir.
+          </Note>
+
+          <div>
+            <p className="font-semibold mb-2">1. Konsentrlangan tuz eritmasida kartoshka massasi kamaydi. Suv qayoqqa oʻtdi?</p>
+            <div className="flex flex-wrap gap-2">
+              {[
+                ["from-cell", "Hujayradan eritmaga"],
+                ["into-cell", "Eritmadan hujayra ichiga"],
+                ["none", "Suv harakatlanmadi"],
+              ].map(([k, l]) => (
+                <button key={k} onClick={() => setQ1(k)} className={`btn btn-sm ${q1 === k ? (k === "from-cell" ? "btn-primary" : "!bg-danger-soft !text-danger") : "btn-ghost"}`}>
+                  {l}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <p className="font-semibold mb-2">2. Protoplastning hujayra devoridan ajralishi nima deyiladi?</p>
+            <div className="flex flex-wrap gap-2">
+              {[
+                ["plasmolysis", "Plazmoliz"],
+                ["turgor", "Turgor"],
+                ["photosynthesis", "Fotosintez"],
+              ].map(([k, l]) => (
+                <button key={k} onClick={() => setQ2(k)} className={`btn btn-sm ${q2 === k ? (k === "plasmolysis" ? "btn-primary" : "!bg-danger-soft !text-danger") : "btn-ghost"}`}>
+                  {l}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {isCompleted && <Note tone="ok">Toʻgʻri! Distillangan suvda hujayralar suv shimib taranglashadi (turgor), tuzli eritmada esa suv yoʻqotib plazmoliz yuz beradi.</Note>}
+        </div>
+      )}
+    </LabShell>
   );
 }

@@ -1,271 +1,401 @@
 "use client";
 
-import { useState } from "react";
-import { motion } from "framer-motion";
-import { CheckCircle2, FlaskConical, Search, Lightbulb, Droplet, Pipette, Microscope } from "lucide-react";
+import { useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Microscope, Sun, Search } from "lucide-react";
+import { LabShell, LabProps, Note, StageTitle, Readout } from "./LabShell";
 
-export default function MicroscopeLab({ lab, steps, completeLab, isCompleted }: { lab: any, steps: any[], completeLab: () => void, isCompleted: boolean }) {
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [errorItem, setErrorItem] = useState<string | null>(null);
+/* ───────── Preparat tayyorlash ketma-ketligi ───────── */
+const SEQUENCE = ["oyna", "elodeya", "tomizgich", "qoplagich"] as const;
+type Tool = (typeof SEQUENCE)[number] | "lupa" | "ildiz";
 
-  // Microscope States
-  const [zoomLevel, setZoomLevel] = useState(1);
-  const [lightOn, setLightOn] = useState(true);
-  const [stainAdded, setStainAdded] = useState(false);
-  const [readyToView, setReadyToView] = useState(false);
+const TOOL_LABEL: Record<Tool, string> = {
+  oyna: "Buyum oynasi",
+  elodeya: "Elodeya bargi",
+  tomizgich: "Tomizgich (suv)",
+  qoplagich: "Qoplagich oyna",
+  lupa: "Lupa",
+  ildiz: "Ildiz boʻlagi",
+};
 
-  // Parse steps Json safely
-  let requiredTools = ["piyoz", "oyna", "tomizgich", "qoplagich", "mikroskop"];
-  try {
-    const labConfig = JSON.parse(lab?.stepsJson || "{}");
-    if (labConfig.tools) requiredTools = labConfig.tools;
-  } catch(e) {}
+const HINT: Record<string, string> = {
+  oyna: "Avval toza buyum oynasini stolga qoʻying.",
+  elodeya: "Endi elodeya bargini oyna ustiga joylashtiring.",
+  tomizgich: "Bargga bir tomchi suv tomizing, shunda hujayralar qurib qolmaydi.",
+  qoplagich: "Oxirida qoplagich oynani qiya tutib, havo pufakchalari qolmasligi uchun sekin yoping.",
+};
 
-  const handleItemClick = (itemName: string) => {
-    if (readyToView) return;
-    
-    // Simplistic progression: any valid required tool can advance a step
-    if (requiredTools.includes(itemName)) {
-      setErrorItem(null);
-      if (currentStepIndex < steps.length - 1) {
-        setCurrentStepIndex(prev => prev + 1);
-      } else {
-        setReadyToView(true);
-      }
-    } else {
-      setErrorItem(itemName);
-      setTimeout(() => setErrorItem(null), 1000);
+/* ───────── Taxminan tasodifiy, ammo barqaror son ───────── */
+function rng(seed: number) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+const CELL_W = 46;
+const CELL_H = 27;
+
+type CellDef = { cx: number; cy: number; chloro: { a: number; k: number; dur: number; delay: number }[] };
+
+function buildCells(): CellDef[] {
+  const cells: CellDef[] = [];
+  for (let r = -10; r <= 10; r++) {
+    for (let c = -6; c <= 6; c++) {
+      const rand = rng((r + 20) * 1000 + (c + 20) + 7);
+      const off = Math.abs(r) % 2 ? CELL_W / 2 : 0;
+      const n = 9 + Math.floor(rand() * 4);
+      cells.push({
+        cx: 200 + c * CELL_W + off,
+        cy: 200 + r * CELL_H,
+        chloro: Array.from({ length: n }, () => ({
+          a: rand() * Math.PI * 2,
+          k: 0.74 + rand() * 0.18,
+          dur: 22 + rand() * 14,
+          delay: -rand() * 20,
+        })),
+      });
     }
-  };
+  }
+  return cells;
+}
 
-  const handleZoomChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = parseFloat(e.target.value);
-    setZoomLevel(val);
-    if (val >= 3 && lightOn && (stainAdded || !requiredTools.includes("tomizgich")) && readyToView) {
-      completeLab();
-    }
-  };
+const RX = CELL_W / 2 - 3;
+const RY = CELL_H / 2 - 3;
 
-  const itemIcons: any = {
-    "piyoz": <div className="w-16 h-16 rounded-full bg-purple-100 border-2 border-purple-400 flex items-center justify-center text-3xl shadow-sm hover:scale-110 transition-transform" title="Piyoz">🧅</div>,
-    "elodeya": <div className="w-16 h-16 rounded-full bg-green-100 border-2 border-green-500 flex items-center justify-center text-3xl shadow-sm hover:scale-110 transition-transform" title="Elodeya">🌿</div>,
-    "ildiz": <div className="w-16 h-16 rounded-full bg-amber-100 border-2 border-amber-600 flex items-center justify-center text-3xl shadow-sm hover:scale-110 transition-transform" title="Ildiz">🌱</div>,
-    "lupa": <div className="w-16 h-16 rounded-full bg-gray-100 border-4 border-gray-400 flex items-center justify-center text-3xl shadow-sm hover:scale-110 transition-transform" title="Lupa">🔍</div>,
-    "oyna": <div className="w-24 h-10 bg-blue-50/80 border border-blue-200 rounded-sm shadow-[inset_0_2px_10px_rgba(255,255,255,0.9)] flex items-center justify-center text-xs font-bold text-blue-700 hover:scale-105 transition-transform" title="Predmet oynasi">Oyna</div>,
-    "tomizgich": <Pipette className="w-14 h-14 text-orange-500 drop-shadow-md hover:scale-110 transition-transform" title="Tomizgich" />,
-    "qoplagich": <div className="w-10 h-10 bg-white/40 border border-gray-400 shadow-sm rotate-12 hover:scale-110 transition-transform" title="Qoplagich oyna" />,
-    "mikroskop": <Microscope className="w-24 h-24 text-gray-800 drop-shadow-xl hover:scale-105 transition-transform" title="Mikroskop" />
-  };
-
-  const topTools = requiredTools.filter(t => ['oyna', 'mikroskop', 'lupa'].includes(t));
-  const bottomTools = requiredTools.filter(t => !topTools.includes(t));
+/* ───────── Koʻrish maydoni (elodeya hujayralari) ───────── */
+function Field({ zoom, animate }: { zoom: number; animate: boolean }) {
+  const cells = useMemo(buildCells, []);
+  const rx = RX;
+  const ry = RY;
+  const visible = cells.filter((c) => {
+    const dx = c.cx - 200;
+    const dy = c.cy - 200;
+    const lim = 215 / zoom + CELL_W;
+    return dx * dx + dy * dy < lim * lim;
+  });
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      {/* Left Column: Instructions */}
-      <div className="lg:col-span-1">
-        <div className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-xl sticky top-24">
-          <h3 className="text-xl font-black mb-6 flex items-center gap-2 text-gray-900">
-            <FlaskConical className="w-6 h-6 text-blue-500" />
-            Tajriba Qadamlari
-          </h3>
-          
-          <div className="space-y-4">
-            {steps.map((step, index) => (
-              <div 
-                key={index} 
-                className={`flex gap-4 p-5 rounded-2xl border-2 transition-all duration-300 ${
-                  index === currentStepIndex && !readyToView
-                    ? 'bg-blue-50 border-blue-400 shadow-md scale-[1.02]' 
-                    : index < currentStepIndex || readyToView
-                      ? 'bg-green-50 border-green-200 opacity-80'
-                      : 'bg-gray-50 border-gray-100 opacity-50'
-                }`}
-              >
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shrink-0 transition-colors ${
-                  index < currentStepIndex || readyToView ? 'bg-green-500 text-white shadow-md' : index === currentStepIndex ? 'bg-blue-500 text-white shadow-md' : 'bg-gray-200 text-gray-500'
-                }`}>
-                  {index < currentStepIndex || readyToView ? <CheckCircle2 className="w-5 h-5" /> : index + 1}
-                </div>
-                <div>
-                  <p className={`font-semibold text-sm leading-relaxed ${index === currentStepIndex && !readyToView ? 'text-blue-900' : 'text-gray-700'}`}>
-                    {typeof step === 'string' ? step : (step.title || step.instruction)}
-                  </p>
-                </div>
-              </div>
-            ))}
-            {readyToView && !isCompleted && (
-              <div className="flex gap-4 p-5 rounded-2xl border-2 bg-blue-50 border-blue-400 shadow-md scale-[1.02]">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shrink-0 bg-blue-500 text-white shadow-md">
-                  <Search className="w-4 h-4" />
-                </div>
-                <p className="font-semibold text-sm leading-relaxed text-blue-900">
-                  Mikroskopdan ko'ring va 300x gacha kattalashtiring.
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+    <g transform={`translate(200 200) scale(${zoom}) translate(-200 -200)`}>
+      {visible.map((cell, i) => (
+        <g key={i} transform={`translate(${cell.cx} ${cell.cy})`}>
+          {/* hujayra devori */}
+          <rect x={-CELL_W / 2} y={-CELL_H / 2} width={CELL_W} height={CELL_H} rx={2.5} fill="rgba(196,232,168,0.45)" stroke="#2b7a3b" strokeWidth={1.4 / Math.sqrt(zoom)} />
+          {/* markaziy vakuola */}
+          <rect x={-CELL_W / 2 + 6} y={-CELL_H / 2 + 5} width={CELL_W - 12} height={CELL_H - 10} rx={5} fill="rgba(226,244,222,0.55)" />
+          {/* xloroplastlar — devor boʻylab joylashadi */}
+          {cell.chloro.map((p, j) => {
+            const px = Math.cos(p.a) * rx * p.k;
+            const py = Math.sin(p.a) * ry * p.k;
+            const ell = (
+              <ellipse rx={3.1} ry={1.9} fill="#2f9e44" stroke="#1d6b2b" strokeWidth={0.45} />
+            );
+            const isCenter = cell.cx === 200 && cell.cy === 200;
+            if (animate && !isCenter) {
+              const R = p.k;
+              const path = `M ${rx * R} 0 a ${rx * R} ${ry * R} 0 1 0 ${-2 * rx * R} 0 a ${rx * R} ${ry * R} 0 1 0 ${2 * rx * R} 0`;
+              return (
+                <g key={j}>
+                  <g>
+                    {ell}
+                    <animateMotion dur={`${p.dur}s`} begin={`${p.delay}s`} repeatCount="indefinite" path={path} />
+                  </g>
+                </g>
+              );
+            }
+            return (
+              <g key={j} transform={`translate(${px} ${py})`}>
+                {ell}
+              </g>
+            );
+          })}
+        </g>
+      ))}
+    </g>
+  );
+}
 
-      {/* Right Column: Interactive Lab Zone */}
-      <div className="lg:col-span-2">
-        <div className="bg-white p-6 md:p-10 rounded-3xl border border-gray-100 shadow-xl min-h-[700px] relative overflow-hidden flex flex-col">
-          {/* Ambient Background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-white to-green-50/50 pointer-events-none" />
-          
-          <div className="relative z-10 flex justify-between items-center mb-10 border-b border-gray-100 pb-4">
-            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-[0.2em]">
-              Interaktiv Stoli
-            </h3>
-            {isCompleted && (
-              <div className="flex gap-2">
-                <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold uppercase tracking-wide">Tajriba Yakunlandi</span>
-              </div>
-            )}
-          </div>
+/* ───────── Preparat chizmasi ───────── */
+function Slide({ done }: { done: number }) {
+  return (
+    <svg viewBox="0 0 320 120" className="w-full max-w-md" role="img" aria-label="Preparat tayyorlanish holati">
+      <rect x="20" y="64" width="280" height="14" rx="3" fill="rgba(160,200,220,0.35)" stroke="#6aa0b8" strokeWidth="1.5" style={{ opacity: done >= 1 ? 1 : 0.15 }} />
+      {done >= 2 && <path d="M 110 62 q 20 -28 50 -20 q 28 6 50 20 z" fill="#4cae5c" stroke="#2b7a3b" strokeWidth="1.5" />}
+      {done >= 3 && <ellipse cx="160" cy="56" rx="48" ry="9" fill="rgba(110,190,235,0.45)" stroke="#4aa3d8" strokeWidth="1" />}
+      {done >= 4 && <rect x="104" y="44" width="112" height="6" rx="1.5" fill="rgba(220,240,250,0.7)" stroke="#6aa0b8" strokeWidth="1.2" />}
+      <text x="160" y="104" textAnchor="middle" fontSize="11" fill="currentColor" opacity="0.6">
+        {done === 0 ? "Preparat hali tayyor emas" : done < 4 ? "Preparat tayyorlanmoqda…" : "Preparat tayyor"}
+      </text>
+    </svg>
+  );
+}
 
-          <div className="flex-1 flex flex-col items-center justify-center relative z-10">
-            {readyToView ? (
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5 }}
-                className="flex flex-col items-center justify-center w-full max-w-2xl gap-8"
-              >
-                <div className="relative w-80 h-80 md:w-96 md:h-96 rounded-full border-[12px] border-gray-900 shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden bg-black flex items-center justify-center group transition-all duration-300">
-                  <motion.div 
-                    className={`relative w-full h-full flex items-center justify-center transition-all duration-500 ease-out ${!lightOn ? 'opacity-10' : 'opacity-100'}`}
-                    style={{ scale: zoomLevel }}
+export default function MicroscopeLab({ steps, completeLab, isCompleted }: LabProps) {
+  const [phase, setPhase] = useState<0 | 1 | 2>(0);
+
+  // 0 — preparat
+  const [made, setMade] = useState(0);
+  const [shake, setShake] = useState<Tool | null>(null);
+  const [hint, setHint] = useState<string | null>(HINT.oyna);
+
+  // 1 — yoritish
+  const [mirror, setMirror] = useState(5);
+  const brightness = Math.max(0, 1 - Math.abs(mirror - 45) / 45);
+  const lit = brightness >= 0.85;
+
+  // 2 — kuzatish
+  const [zoom, setZoom] = useState<1 | 3.4>(1);
+  const [focus, setFocus] = useState(8);
+  const target = zoom === 1 ? 36 : 64;
+  const blur = Math.min(7, Math.abs(focus - target) * 0.22);
+  const sharp = blur < 0.9;
+  const marker2 = useMemo(() => {
+    const centre = buildCells().find((c) => c.cx === 200 && c.cy === 200)!;
+    const p = centre.chloro[0];
+    return { x: 200 + Math.cos(p.a) * RX * p.k * zoom, y: 200 + Math.sin(p.a) * RY * p.k * zoom };
+  }, [zoom]);
+  const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [verdict, setVerdict] = useState<{ ok: boolean; text: string } | null>(null);
+
+  const tools: Tool[] = ["tomizgich", "lupa", "oyna", "ildiz", "qoplagich", "elodeya"];
+
+  const pick = (t: Tool) => {
+    const need = SEQUENCE[made];
+    if (t === need) {
+      const next = made + 1;
+      setMade(next);
+      setHint(next < 4 ? HINT[SEQUENCE[next]] : "Preparat tayyor. Endi uni mikroskop stoliga qoʻying.");
+    } else {
+      setShake(t);
+      setTimeout(() => setShake(null), 400);
+      setHint(
+        SEQUENCE.includes(t as any)
+          ? `Notoʻgʻri ketma-ketlik. Hozir kerakli narsa: ${TOOL_LABEL[need]}.`
+          : `${TOOL_LABEL[t]} bu tajribada kerak emas.`
+      );
+    }
+  };
+
+  const check = () => {
+    const correct: Record<number, string> = { 1: "Hujayra devori", 2: "Xloroplast", 3: "Vakuola" };
+    const bad = Object.entries(correct).filter(([k, v]) => answers[Number(k)] !== v);
+    if (bad.length === 0) {
+      setVerdict({ ok: true, text: "Toʻgʻri! Elodeya hujayrasida zich devor, yashil xloroplastlar va markaziy vakuola koʻrinadi." });
+      completeLab();
+    } else {
+      setVerdict({ ok: false, text: "Baʼzi nomlar notoʻgʻri. Rasmga diqqat bilan qarang: yashil donachalar fotosintez qiladi, devor esa hujayrani tashqaridan oʻrab turadi." });
+    }
+  };
+
+  return (
+    <LabShell heading="Mikroskop bilan ishlash" icon={Microscope} steps={steps} current={phase} done={isCompleted}>
+      <AnimatePresence mode="wait">
+        {/* ───────── 1. PREPARAT ───────── */}
+        {phase === 0 && (
+          <motion.div key="p0" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <StageTitle sub="Kerakli buyumlarni toʻgʻri ketma-ketlikda tanlang: buyum oynasi → elodeya bargi → suv tomchisi → qoplagich oyna.">
+              Vaqtinchalik preparat tayyorlash
+            </StageTitle>
+
+            <div className="lab-bench p-6 mb-6 flex justify-center">
+              <Slide done={made} />
+            </div>
+
+            <div className="flex flex-wrap gap-2.5 mb-5" aria-label="Laboratoriya buyumlari">
+              {tools.map((t) => {
+                const used = SEQUENCE.includes(t as any) && SEQUENCE.indexOf(t as any) < made;
+                return (
+                  <button
+                    key={t}
+                    disabled={used || made >= 4}
+                    onClick={() => pick(t)}
+                    className={`btn btn-ghost ${shake === t ? "animate-shake !border-danger" : ""} ${used ? "!bg-ok-soft !text-ok" : ""}`}
                   >
-                    <div className={`absolute inset-0 transition-colors duration-1000 ${stainAdded ? 'bg-orange-200/40' : 'bg-transparent'}`}></div>
-                    
-                    {/* Changed SVG based on plant type */}
-                    {requiredTools.includes("elodeya") ? (
-                      <svg viewBox="0 0 100 100" className="w-[150%] h-[150%] opacity-80">
-                         <rect x="20" y="20" width="60" height="40" fill="rgba(34, 197, 94, 0.4)" stroke="rgba(21, 128, 61, 0.8)" strokeWidth="2" />
-                         <circle cx="30" cy="30" r="3" fill="#166534" />
-                         <circle cx="50" cy="40" r="3" fill="#166534" />
-                         <circle cx="70" cy="30" r="3" fill="#166534" />
-                      </svg>
-                    ) : (
-                      <svg viewBox="0 0 100 100" className="w-[150%] h-[150%] opacity-80" style={{ filter: 'drop-shadow(0px 0px 2px rgba(0,0,0,0.5))' }}>
-                        <path d="M 20 20 Q 40 10 60 30 T 40 70 T 10 50 Z" fill={stainAdded ? "rgba(168, 85, 247, 0.4)" : "rgba(200, 200, 200, 0.2)"} stroke={stainAdded ? "rgba(126, 34, 206, 0.8)" : "rgba(150, 150, 150, 0.8)"} strokeWidth="1.5" />
-                        <circle cx="35" cy="40" r={stainAdded ? "4" : "1"} fill={stainAdded ? "#581c87" : "transparent"} opacity={stainAdded ? "1" : "0"} className="transition-all duration-1000" />
-                        
-                        <path d="M 55 25 Q 75 15 90 40 T 70 80 T 45 60 Z" fill={stainAdded ? "rgba(168, 85, 247, 0.3)" : "rgba(200, 200, 200, 0.15)"} stroke={stainAdded ? "rgba(126, 34, 206, 0.7)" : "rgba(150, 150, 150, 0.7)"} strokeWidth="1.5" />
-                        <circle cx="70" cy="50" r={stainAdded ? "5" : "1"} fill={stainAdded ? "#581c87" : "transparent"} opacity={stainAdded ? "1" : "0"} className="transition-all duration-1000" />
-                        
-                        <path d="M 15 60 Q 30 50 45 75 T 25 95 T 5 80 Z" fill={stainAdded ? "rgba(168, 85, 247, 0.35)" : "rgba(200, 200, 200, 0.25)"} stroke={stainAdded ? "rgba(126, 34, 206, 0.9)" : "rgba(150, 150, 150, 0.9)"} strokeWidth="1.5" />
-                        <circle cx="25" cy="75" r={stainAdded ? "3.5" : "1"} fill={stainAdded ? "#581c87" : "transparent"} opacity={stainAdded ? "1" : "0"} className="transition-all duration-1000" />
-                      </svg>
+                    {used ? "✓ " : ""}
+                    {TOOL_LABEL[t]}
+                  </button>
+                );
+              })}
+            </div>
+
+            {hint && <Note tone={made >= 4 ? "ok" : "info"}>{hint}</Note>}
+
+            {made >= 4 && (
+              <button className="btn btn-primary btn-lg mt-6" onClick={() => setPhase(1)}>
+                <Microscope className="w-5 h-5" /> Preparatni mikroskop stoliga qoʻyish
+              </button>
+            )}
+          </motion.div>
+        )}
+
+        {/* ───────── 2. YORITISH ───────── */}
+        {phase === 1 && (
+          <motion.div key="p1" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <StageTitle sub="Ko‘zguni buring: yorug‘lik preparat orqali oʻtib, koʻrish maydonini tekis yoritishi kerak.">
+              Koʻrish maydonini yoritish
+            </StageTitle>
+
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-8 items-center">
+              <div className="lab-bench p-6 flex justify-center">
+                <svg viewBox="0 0 260 260" className="w-full max-w-xs" role="img" aria-label="Mikroskop va koʻzgu">
+                  {/* shtativ */}
+                  <path d="M150 20 l30 0 l0 18 l-30 0 z" fill="#2b3a55" />
+                  <rect x="158" y="38" width="14" height="86" rx="4" fill="#33466a" transform="rotate(14 165 80)" />
+                  <path d="M185 70 q50 20 22 110 l-38 0 q26 -56 -8 -88 z" fill="#2b3a55" />
+                  <rect x="82" y="148" width="104" height="9" rx="2" fill="#4a5f86" />
+                  <rect x="70" y="214" width="150" height="14" rx="5" fill="#2b3a55" />
+                  {/* preparat */}
+                  <rect x="102" y="141" width="64" height="7" rx="1.5" fill="rgba(160,210,230,0.8)" stroke="#6aa0b8" />
+                  <ellipse cx="134" cy="140" rx="16" ry="3" fill="#4cae5c" />
+                  {/* yorugʻlik nuri */}
+                  <polygon
+                    points={`134,205 112,148 156,148`}
+                    fill="rgba(255,220,100,0.8)"
+                    style={{ opacity: brightness * 0.9 }}
+                  />
+                  {/* koʻzgu */}
+                  <g transform={`rotate(${(mirror - 45) * 0.9} 134 212)`}>
+                    <ellipse cx="134" cy="212" rx="30" ry="6" fill="#9fb4d6" stroke="#6a85b5" strokeWidth="2" />
+                  </g>
+                  <rect x="130" y="212" width="8" height="14" fill="#33466a" />
+                </svg>
+              </div>
+
+              <div className="grid gap-4 min-w-[15rem]">
+                <Readout label="Yoritilganlik" value={Math.round(brightness * 100)} unit="%" tone={lit ? "brand" : "accent"} />
+                <label className="block">
+                  <span className="text-sm font-semibold flex items-center gap-2 mb-2">
+                    <Sun className="w-4 h-4 text-accent" /> Koʻzgu burchagi
+                  </span>
+                  <input
+                    type="range"
+                    min={0}
+                    max={90}
+                    value={mirror}
+                    onChange={(e) => setMirror(Number(e.target.value))}
+                    className="w-full"
+                    aria-label="Koʻzgu burchagi"
+                  />
+                </label>
+                <Note tone={lit ? "ok" : "warn"}>
+                  {lit ? "Maydon yaxshi yoritildi. Davom etishingiz mumkin." : brightness < 0.4 ? "Juda qorongʻi: koʻzguni yorugʻlik manbai tomon buring." : "Yaxshiroq yoritish uchun koʻzguni sal burib koʻring."}
+                </Note>
+                <button className="btn btn-primary" disabled={!lit} onClick={() => setPhase(2)}>
+                  Kuzatishga oʻtish
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* ───────── 3. KUZATISH ───────── */}
+        {phase === 2 && (
+          <motion.div key="p2" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <StageTitle sub="Obyektivni tanlang va aniqlik vintini burab tasvirni fokusga keltiring. Soʻng raqamlangan tuzilmalarni nomlang.">
+              Hujayralarni kuzatish
+            </StageTitle>
+
+            <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,26rem)_1fr] gap-8 items-start">
+              <div>
+                <div className="relative mx-auto w-full max-w-[26rem] aspect-square rounded-full border-[10px] border-[#1c2433] bg-[#e9f4e4] overflow-hidden shadow-[var(--shadow-lg)]">
+                  <svg
+                    viewBox="0 0 400 400"
+                    className="w-full h-full"
+                    style={{ filter: `blur(${blur}px) brightness(${0.35 + brightness * 0.75})`, transition: "filter 0.2s" }}
+                    role="img"
+                    aria-label="Mikroskopdagi elodeya hujayralari"
+                  >
+                    <rect width="400" height="400" fill="#eef7ea" />
+                    <Field zoom={zoom} animate={zoom > 1 && sharp} />
+                    {zoom > 1 && sharp && !isCompleted && (
+                      <g fontFamily="var(--font-sans)" fontWeight={700} fontSize="13" textAnchor="middle">
+                        {[
+                          { n: 1, x: 200 - (CELL_W / 2) * zoom, y: 200 },
+                          { n: 2, x: marker2.x, y: marker2.y },
+                          { n: 3, x: 200, y: 200 },
+                        ].map((m) => (
+                          <g key={m.n}>
+                            <circle cx={m.x} cy={m.y} r={11} fill="#0e2119" stroke="#fff" strokeWidth={2} />
+                            <text x={m.x} y={m.y + 4.5} fill="#fff">{m.n}</text>
+                          </g>
+                        ))}
+                      </g>
                     )}
-                  </motion.div>
-                  <div className="absolute inset-0 rounded-full shadow-[inset_0_0_60px_rgba(0,0,0,0.9)] pointer-events-none"></div>
-                  <div className="absolute w-full h-[1px] bg-black/40 pointer-events-none"></div>
-                  <div className="absolute h-full w-[1px] bg-black/40 pointer-events-none"></div>
+                  </svg>
+                  <div className="absolute inset-0 rounded-full pointer-events-none" style={{ boxShadow: "inset 0 0 60px rgba(0,0,0,0.55)" }} />
+                </div>
+              </div>
+
+              <div className="grid gap-5">
+                <div className="flex flex-wrap gap-3">
+                  <Readout label="Kattalashtirish" value={`×${zoom === 1 ? 10 : 40}`} />
+                  <Readout label="Aniqlik" value={sharp ? "yaxshi" : "xira"} tone={sharp ? "brand" : "danger"} />
                 </div>
 
-                <div className="w-full bg-gray-50 border border-gray-200 p-6 rounded-3xl shadow-sm">
-                  <h4 className="font-bold text-gray-800 mb-6 text-center text-lg">Asbob Boshqaruvi</h4>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="flex flex-col gap-3">
-                      <label className="flex items-center justify-between text-sm font-bold text-gray-600">
-                        <span className="flex items-center gap-2"><Search className="w-4 h-4 text-blue-500" /> Kattalashtirish</span>
-                        <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs">{(zoomLevel * 100).toFixed(0)}x</span>
-                      </label>
-                      <input 
-                        type="range" 
-                        min="1" 
-                        max="4" 
-                        step="0.1" 
-                        value={zoomLevel} 
-                        onChange={handleZoomChange}
-                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-                      />
-                    </div>
-
-                    <div className="flex justify-between md:justify-end gap-4">
-                      <button 
+                <div>
+                  <p className="text-sm font-semibold mb-2">Obyektiv</p>
+                  <div className="flex gap-2">
+                    {([1, 3.4] as const).map((z) => (
+                      <button
+                        key={z}
                         onClick={() => {
-                          setLightOn(!lightOn);
-                          if (!lightOn && zoomLevel >= 3 && (stainAdded || !requiredTools.includes("tomizgich"))) completeLab();
+                          setZoom(z);
+                          setVerdict(null);
                         }}
-                        className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-all ${lightOn ? 'bg-yellow-100 text-yellow-700 border border-yellow-300' : 'bg-gray-200 text-gray-600'}`}
+                        className={`btn btn-sm ${zoom === z ? "btn-primary" : "btn-ghost"}`}
                       >
-                        <Lightbulb className={`w-5 h-5 ${lightOn ? 'text-yellow-500 fill-yellow-200' : ''}`} />
-                        Chiroq
+                        <Search className="w-4 h-4" /> ×{z === 1 ? 10 : 40}
                       </button>
-                      
-                      {requiredTools.includes("tomizgich") && (
-                        <button 
-                          onClick={() => {
-                            setStainAdded(true);
-                            if (zoomLevel >= 3 && lightOn) completeLab();
-                          }}
-                          className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-all ${stainAdded ? 'bg-purple-100 text-purple-700 border border-purple-300' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'}`}
-                        >
-                          <Droplet className={`w-5 h-5 ${stainAdded ? 'text-purple-500 fill-purple-200' : 'text-gray-400'}`} />
-                          Yod
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ) : (
-              <>
-                <div className="flex-1 w-full flex flex-col items-center justify-center mt-10">
-                  <div className="flex flex-wrap justify-center gap-10 mb-24 w-full">
-                    {topTools.map(item => (
-                      <motion.div 
-                        key={item}
-                        whileHover={{ scale: 1.05, y: -5 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => handleItemClick(item)}
-                        className={`cursor-pointer flex flex-col items-center gap-4 ${errorItem === item ? 'animate-shake' : ''}`}
-                      >
-                        <div className={`p-8 rounded-3xl transition-all duration-300 shadow-md ${
-                          errorItem === item 
-                            ? 'bg-red-50 border-2 border-red-400 shadow-red-200' 
-                            : 'bg-white border border-gray-200 hover:border-blue-400 hover:shadow-blue-100'
-                        }`}>
-                          {itemIcons[item]}
-                        </div>
-                        <span className="text-sm font-bold uppercase tracking-wide text-gray-600 bg-gray-100 px-4 py-1.5 rounded-full">{item}</span>
-                      </motion.div>
                     ))}
                   </div>
-
-                  {bottomTools.length > 0 && (
-                    <div className="w-full max-w-xl mx-auto bg-gray-100 p-8 rounded-[2.5rem] border border-gray-200 flex justify-around items-end shadow-inner relative">
-                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gray-200 text-gray-500 text-xs font-bold uppercase px-4 py-1 rounded-full tracking-widest">
-                        Materiallar
-                      </div>
-                      
-                      {bottomTools.map(item => (
-                        <motion.div 
-                          key={item}
-                          whileHover={{ y: -15, scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => handleItemClick(item)}
-                          className={`cursor-pointer flex flex-col items-center gap-3 relative z-10 ${errorItem === item ? 'animate-shake' : ''}`}
-                        >
-                          <div className={`relative p-1 ${errorItem === item ? 'after:absolute after:inset-0 after:rounded-full after:border-4 after:border-red-500 after:animate-ping' : ''}`}>
-                            {itemIcons[item] || <div className="w-10 h-10 bg-gray-300 rounded-full"/>}
-                          </div>
-                          <span className="text-xs font-bold uppercase text-gray-500">{item}</span>
-                        </motion.div>
-                      ))}
-                    </div>
-                  )}
                 </div>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
+
+                <label className="block">
+                  <span className="text-sm font-semibold block mb-2">Aniqlik vinti (mikrovint)</span>
+                  <input type="range" min={0} max={100} value={focus} onChange={(e) => setFocus(Number(e.target.value))} className="w-full" aria-label="Aniqlik vinti" />
+                </label>
+
+                {!sharp && <Note tone="warn">Tasvir xira. Vintni sekin burab, hujayra devorlari aniq koʻringunicha sozlang. ×40 obyektivda fokus boshqa joyda boʻladi.</Note>}
+                {sharp && zoom === 1 && <Note tone="info">Hujayralar koʻrinyapti. Tuzilmalarni nomlash uchun ×40 obyektivga oʻting.</Note>}
+
+                {sharp && zoom > 1 && !isCompleted && (
+                  <div className="grid gap-3">
+                    <p className="text-sm font-semibold">Rasmdagi raqamlangan qismlarni nomlang:</p>
+                    {[1, 2, 3].map((n) => (
+                      <label key={n} className="flex items-center gap-3">
+                        <span className="w-7 h-7 rounded-full bg-ink text-bg text-sm font-bold flex items-center justify-center shrink-0">{n}</span>
+                        <select
+                          className="input !py-2.5"
+                          value={answers[n] || ""}
+                          onChange={(e) => {
+                            setAnswers((a) => ({ ...a, [n]: e.target.value }));
+                            setVerdict(null);
+                          }}
+                          aria-label={`${n}-qism nomi`}
+                        >
+                          <option value="">Tanlang…</option>
+                          {["Hujayra devori", "Xloroplast", "Vakuola", "Yadro", "Sitoplazma"].map((o) => (
+                            <option key={o}>{o}</option>
+                          ))}
+                        </select>
+                      </label>
+                    ))}
+                    <button className="btn btn-primary" onClick={check} disabled={Object.keys(answers).length < 3}>
+                      Tekshirish
+                    </button>
+                  </div>
+                )}
+
+                {verdict && <Note tone={verdict.ok ? "ok" : "err"}>{verdict.text}</Note>}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </LabShell>
   );
 }

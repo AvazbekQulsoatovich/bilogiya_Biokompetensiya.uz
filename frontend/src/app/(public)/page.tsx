@@ -3,225 +3,274 @@
 import Link from "next/link";
 import { motion, useScroll, useMotionValueEvent } from "framer-motion";
 import { useState } from "react";
-import { ArrowRight, Globe, Gamepad2, FlaskConical, BookMarked, Microscope } from "lucide-react";
+import {
+  ArrowRight, Box, Microscope, ClipboardList, Gamepad2, BookOpen,
+  Sparkles, ShieldCheck, Target, Layers, Lightbulb,
+} from "lucide-react";
 import { Logo } from "@/components/Logo";
+import { ThemeToggle } from "@/components/ThemeToggle";
+
+/** Mikroskop ostidagi hujayralarni eslatuvchi sekin suzuvchi shakllar. */
+function CellBackdrop() {
+  const cells = Array.from({ length: 16 }, (_, i) => ({
+    x: (i * 53) % 100,
+    y: (i * 37 + 11) % 100,
+    r: 60 + ((i * 29) % 120),
+    d: 14 + ((i * 7) % 16),
+    delay: -((i * 3) % 14),
+  }));
+  return (
+    <div className="absolute inset-0 overflow-hidden" aria-hidden>
+      <div className="absolute inset-0 bg-[radial-gradient(80%_80%_at_70%_30%,#0f3d2e_0%,#06110d_70%)]" />
+      {cells.map((c, i) => (
+        <span
+          key={i}
+          className="absolute rounded-full border border-emerald-300/20"
+          style={{
+            left: `${c.x}%`,
+            top: `${c.y}%`,
+            width: c.r,
+            height: c.r,
+            background: "radial-gradient(circle at 35% 30%, rgba(110,227,184,0.22), rgba(110,227,184,0.04) 60%, transparent 70%)",
+            animation: `drift ${c.d}s ${c.delay}s ease-in-out infinite`,
+          }}
+        >
+          <span className="absolute rounded-full bg-emerald-300/25" style={{ width: c.r * 0.28, height: c.r * 0.28, left: "38%", top: "36%" }} />
+        </span>
+      ))}
+    </div>
+  );
+}
+
+const NAV = [
+  { label: "Mavzular", href: "/topics" },
+  { label: "Laboratoriyalar", href: "/labs" },
+  { label: "3D modellar", href: "/models" },
+  { label: "Testlar", href: "/quizzes" },
+];
+
+const STATS = [
+  { num: "190", label: "test savoli" },
+  { num: "8", label: "virtual laboratoriya" },
+  { num: "6", label: "interaktiv model" },
+  { num: "93", label: "biologik atama" },
+];
+
+const FEATURES = [
+  {
+    title: "Virtual laboratoriyalar",
+    text: "Mikroskop, osmos, fotosintez va boshqa tajribalarni xavfsiz muhitda oʻzingiz bajaring: har bir qadam tekshiriladi.",
+    icon: Microscope,
+    href: "/labs",
+    span: "lg:col-span-2",
+  },
+  {
+    title: "3D modellar",
+    text: "Hujayra, DNK va organizmlarning tuzilishini qismlarga ajratib, oʻzbekcha izohlar bilan oʻrganing.",
+    icon: Box,
+    href: "/models",
+    span: "",
+  },
+  {
+    title: "Mavzular va darsliklar",
+    text: "Darslik mazmuniga mos, tartibli mavzular, video va qoʻshimcha fayllar.",
+    icon: BookOpen,
+    href: "/topics",
+    span: "",
+  },
+  {
+    title: "Test topshiriqlari",
+    text: "Har bir mavzu boʻyicha savollar; natija va toʻplangan ball darhol koʻrinadi.",
+    icon: ClipboardList,
+    href: "/quizzes",
+    span: "",
+  },
+  {
+    title: "Krossvord va oʻyinlar",
+    text: "Atamalarni oʻynab yodlash: xotira, soʻz topish, “toʻgʻri yoki notoʻgʻri”.",
+    icon: Gamepad2,
+    href: "/games",
+    span: "lg:col-span-2",
+  },
+];
+
+const STEPS = [
+  { icon: BookOpen, title: "Oʻrganing", text: "Mavzuni oʻqing, video va 3D modellar bilan tuzilishni tushunib oling." },
+  { icon: Microscope, title: "Sinab koʻring", text: "Virtual laboratoriyada tajribani oʻzingiz bajaring va natijani kuzating." },
+  { icon: Target, title: "Mustahkamlang", text: "Test, krossvord va oʻyinlar bilan bilimingizni tekshirib, ball toʻplang." },
+];
 
 export default function LandingPage() {
   const { scrollY } = useScroll();
-  // Navbar har doim ko'rinadi
-  // Tepada — shaffof (video orqali ko'rinadi)
-  // Pastga tushganda — oq fon, qaytarilgan burchaklar
   const [scrolled, setScrolled] = useState(false);
-
-  useMotionValueEvent(scrollY, "change", (latest) => {
-    setScrolled(latest > 80);
-  });
-
-  const features = [
-    { title: "3D Modellar", description: "Hujayra, DNK, amyoba va boshqa biologik ob'yektlarning uch o'lchamli ko'rinishlari.", icon: <Globe className="w-8 h-8" />, gradient: "from-blue-500 to-indigo-600", bg: "bg-blue-50", iconColor: "text-blue-600", href: "/models" },
-    { title: "Virtual Laboratoriya", description: "Xavfsiz muhitda mikroskop, kimyo va simulyatsiya tajribalari.", icon: <Microscope className="w-8 h-8" />, gradient: "from-emerald-500 to-teal-600", bg: "bg-emerald-50", iconColor: "text-emerald-600", href: "/labs" },
-    { title: "Test Topshiriqlari", description: "5–6-sinf biologiyasi bo'yicha 100+ savol bilan bilimingizni tekshiring.", icon: <BookMarked className="w-8 h-8" />, gradient: "from-orange-500 to-amber-600", bg: "bg-orange-50", iconColor: "text-orange-600", href: "/quizzes" },
-    { title: "Interaktiv O'yinlar", description: "Biologiya atamalarini o'ynash orqali qiziqarli tarzda o'rganing.", icon: <Gamepad2 className="w-8 h-8" />, gradient: "from-pink-500 to-rose-600", bg: "bg-pink-50", iconColor: "text-pink-600", href: "/games" },
-  ];
-
-  const previewCards = [
-    { label: "3D Hujayra modeli", image: "/images/plant_cell_3d_1786544055211.jpg" },
-    { label: "Infuzoriya-tufelka", image: "/images/paramecium_3d_1786544182313.jpg" },
-    { label: "Bargning ichki tuzilishi", image: "/images/leaf_structure_3d_1786544229321.jpg" },
-  ];
+  useMotionValueEvent(scrollY, "change", (v) => setScrolled(v > 40));
 
   return (
-    <div className="min-h-screen bg-white">
-
-      {/* ═══ NAVBAR ═══
-          - Dastlab yo'q (opacity 0, y: -100%)
-          - 80px pastga tushganda paydo bo'ladi va qaytmaydi
-          - Pastki burchaklar qaytarilgan, chiroyli soya
-      */}
-      <motion.nav
-        style={{
-          position: "fixed",
-          top: 0, left: 0, right: 0,
-          zIndex: 100,
-          background: scrolled ? "rgba(255,255,255,0.98)" : "rgba(255,255,255,0)",
-          backdropFilter: scrolled ? "blur(20px)" : "none",
-          borderBottomLeftRadius: scrolled ? "40px" : "0px",
-          borderBottomRightRadius: scrolled ? "40px" : "0px",
-          boxShadow: scrolled ? "0 8px 40px rgba(0,0,0,0.12)" : "none",
-          transition: "background 0.4s, border-radius 0.4s, box-shadow 0.4s, backdrop-filter 0.4s",
-        }}
+    <div className="min-h-screen bg-bg text-ink">
+      {/* ───────── Navigatsiya ───────── */}
+      <header
+        className={`fixed top-0 inset-x-0 z-[100] transition-all duration-300 ${
+          scrolled ? "bg-surface/90 backdrop-blur-xl border-b border-line shadow-[var(--shadow-sm)]" : "bg-transparent"
+        }`}
       >
-        <div className="max-w-7xl mx-auto px-8 lg:px-14">
-          <div className="flex items-center justify-between" style={{ height: "80px" }}>
+        <div className="max-w-7xl mx-auto px-5 lg:px-10 h-[72px] flex items-center justify-between">
+          <div className="bg-white rounded-xl px-3 py-1.5 shadow-[var(--shadow-sm)]">
+            <Logo variant="full" size={44} />
+          </div>
 
-            {/* Logo — shaffof holatda oq, oq navbarda normal */}
-            <div style={{
-              transform: "scale(2.2)",
-              transformOrigin: "left center",
-              filter: scrolled ? "none" : "brightness(0) invert(1)",
-              transition: "filter 0.4s"
-            }}>
-              <Logo />
-            </div>
-
-            {/* Havolalar — qora, katta */}
-            <div className="hidden lg:flex items-center gap-9">
-              {[
-                { label: "Asosiy", href: "/dashboard" },
-                { label: "Mavzular", href: "/topics" },
-                { label: "Laboratoriyalar", href: "/labs" },
-                { label: "3D Modellar", href: "/models" },
-              ].map(item => (
-                <Link key={item.label} href={item.href}
-                  className={`relative text-xl font-black tracking-tight transition-colors group py-1 ${
-                    scrolled ? "text-gray-900 hover:text-emerald-600" : "text-white hover:text-emerald-300"
-                  }`}>
-                  {item.label}
-                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-emerald-500 rounded-full transition-all duration-300 group-hover:w-full" />
-                </Link>
-              ))}
-            </div>
-
-            {/* Tugmalar */}
-            <div className="flex items-center gap-4">
-              <Link href="/admin" className={`text-sm font-semibold transition-colors ${
-                scrolled ? "text-gray-400 hover:text-gray-700" : "text-white/80 hover:text-white"
-              }`}>
-                Admin
+          <nav className="hidden lg:flex items-center gap-1" aria-label="Asosiy">
+            {NAV.map((n) => (
+              <Link
+                key={n.href}
+                href={n.href}
+                className={`px-4 py-2 rounded-xl text-[0.95rem] font-semibold transition-colors ${
+                  scrolled ? "text-ink-2 hover:bg-surface-2" : "text-white/90 hover:bg-white/10"
+                }`}
+              >
+                {n.label}
               </Link>
-              <Link href="/dashboard"
-                className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold px-6 py-3 rounded-full transition-all hover:scale-105 shadow-lg shadow-emerald-500/25 text-sm">
-                Boshlash <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
+            ))}
+          </nav>
+
+          <div className="flex items-center gap-2">
+            <ThemeToggle className={scrolled ? "" : "!bg-white/10 !border-white/20 !text-white hover:!bg-white/20"} />
+            <Link href="/dashboard" className="btn btn-primary">
+              Boshlash <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
         </div>
-      </motion.nav>
+      </header>
 
-      {/* ═══ HERO — to'liq ekran, navbar yo'q tepada ═══ */}
-      <section className="relative overflow-hidden" style={{ minHeight: "100vh" }}>
-        <div className="absolute inset-0 z-0 bg-gray-950">
-          <video autoPlay loop muted playsInline
-            className="w-full h-full object-cover" style={{ opacity: 0.82 }}>
-            <source src="/bg-video.mp4" type="video/mp4" />
-          </video>
-          <div className="absolute inset-0" style={{
-            background: "linear-gradient(135deg, rgba(2,8,18,0.80) 0%, rgba(2,8,18,0.35) 55%, rgba(2,8,18,0.18) 100%)"
-          }} />
+      {/* ───────── Hero ───────── */}
+      <section className="relative overflow-hidden bg-[#06110d] text-white">
+        <CellBackdrop />
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(100deg, rgba(4,16,11,0.85) 0%, rgba(4,16,11,0.5) 55%, rgba(4,16,11,0.15) 100%), radial-gradient(60% 80% at 80% 20%, rgba(62,207,155,0.18), transparent 70%)",
+          }}
+        />
+
+        <div className="relative max-w-7xl mx-auto px-5 lg:px-10 pt-36 pb-24 md:pt-44 md:pb-32 grid grid-cols-1 lg:grid-cols-[1.15fr_0.85fr] gap-14 items-center">
+          <div>
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 backdrop-blur px-4 py-1.5 text-xs font-bold tracking-[0.14em] uppercase text-emerald-200 mb-7"
+            >
+              <Sparkles className="w-3.5 h-3.5" /> 5–6-sinf biologiyasi uchun
+            </motion.p>
+
+            <motion.h1
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.06 }}
+              className="font-display font-semibold leading-[1.04] text-[clamp(2.6rem,6vw,5rem)]"
+            >
+              Biologiyani <em className="not-italic text-emerald-300">koʻrib, sinab</em> va
+              tushunib oʻrganing
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.14 }}
+              className="mt-6 max-w-xl text-lg text-white/80 leading-relaxed"
+            >
+              Biokompetensiya — mavzular, virtual laboratoriyalar, 3D modellar, testlar va oʻquv oʻyinlarini bir joyga
+              jamlagan interaktiv platforma. Darslik mazmuniga mos, oʻzbek tilida.
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.22 }}
+              className="mt-9 flex flex-wrap gap-3"
+            >
+              <Link href="/dashboard" className="btn btn-primary btn-lg !bg-emerald-400 !text-[#04140d] hover:!bg-emerald-300">
+                Platformaga kirish <ArrowRight className="w-5 h-5" />
+              </Link>
+              <Link href="#imkoniyatlar" className="btn btn-lg border border-white/30 text-white hover:bg-white/10">
+                Imkoniyatlar bilan tanishish
+              </Link>
+            </motion.div>
+          </div>
+
+          {/* Oʻng tomon: platforma qismlari */}
+          <div className="hidden lg:grid gap-3">
+            {[
+              { icon: Microscope, t: "Mikroskop laboratoriyasi", s: "Preparat tayyorlash va kuzatish" },
+              { icon: Box, t: "Hujayra va DNK modellari", s: "Qismlarni bosib oʻrganing" },
+              { icon: ClipboardList, t: "Mavzuli testlar", s: "Natija va ball darhol" },
+            ].map((c, i) => (
+              <motion.div
+                key={c.t}
+                initial={{ opacity: 0, x: 40 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.25 + i * 0.1, type: "spring", stiffness: 90 }}
+                className="flex items-center gap-4 rounded-2xl border border-white/15 bg-white/[0.08] backdrop-blur-md p-4"
+              >
+                <div className="w-12 h-12 rounded-xl bg-emerald-400/15 text-emerald-300 flex items-center justify-center">
+                  <c.icon className="w-6 h-6" strokeWidth={1.7} />
+                </div>
+                <div>
+                  <p className="font-semibold">{c.t}</p>
+                  <p className="text-sm text-white/60">{c.s}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         </div>
 
-        <div className="relative z-10 w-full max-w-7xl mx-auto px-6 lg:px-12 flex items-center" style={{ minHeight: "100vh" }}>
-          <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-16 items-center py-20">
-
-            {/* CHAP — matn */}
-            <div>
-              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-                className="inline-flex items-center gap-2 bg-emerald-500/15 border border-emerald-400/25 text-emerald-300 px-4 py-2 rounded-full text-sm font-bold tracking-wider uppercase mb-8">
-                <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                Biologiya o'quv platformasi
-              </motion.div>
-
-              <motion.h1 initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.08 }}
-                className="font-black text-white leading-[1.05] mb-6"
-                style={{ fontSize: "clamp(3.5rem, 6vw, 6rem)" }}>
-                Zamonaviy<br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400">
-                  Biologiya
-                </span>
-              </motion.h1>
-
-              <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.16 }}
-                className="text-gray-200 leading-relaxed mb-10 max-w-md font-medium"
-                style={{ fontSize: "1.2rem" }}>
-                Maktab o'quvchilari uchun maxsus ishlab chiqilgan —
-                3D modellar, virtual laboratoriyalar va qiziqarli
-                o'yinlar bilan to'liq o'quv platformasi.
-              </motion.p>
-
-              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.24 }}
-                className="flex flex-wrap gap-4 mb-12">
-                <Link href="/dashboard"
-                  className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold px-9 py-4 rounded-2xl transition-all hover:scale-105 shadow-2xl shadow-emerald-500/30 text-lg">
-                  Platformaga kirish <ArrowRight className="w-5 h-5" />
-                </Link>
-                <Link href="#features"
-                  className="flex items-center bg-white/12 hover:bg-white/20 border border-white/25 text-white font-bold px-9 py-4 rounded-2xl transition-all backdrop-blur-sm text-lg">
-                  Ko'proq ma'lumot
-                </Link>
-              </motion.div>
-
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
-                className="flex gap-10">
-                {[{ num: "100+", label: "Test savoli" }, { num: "50+", label: "Qiziqarli fakt" }, { num: "10+", label: "Krossvord" }].map(s => (
-                  <div key={s.label}>
-                    <div className="text-4xl font-black text-white">{s.num}</div>
-                    <div className="text-sm text-gray-300 mt-1 font-semibold">{s.label}</div>
-                  </div>
-                ))}
-              </motion.div>
-            </div>
-
-            {/* O'NG — preview kartalar */}
-            <div className="hidden lg:flex flex-col gap-4">
-              {previewCards.map((card, i) => (
-                <motion.div key={i}
-                  initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.2 + i * 0.13, type: "spring", stiffness: 85 }}
-                  className="flex items-center gap-4 bg-white/10 hover:bg-white/18 border border-white/15 rounded-2xl p-4 group transition-all cursor-pointer backdrop-blur-md shadow-xl">
-                  <div className="w-24 h-18 rounded-xl overflow-hidden flex-shrink-0 ring-1 ring-white/15" style={{ height: "72px" }}>
-                    <img src={card.image} alt={card.label}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-white font-bold text-base">{card.label}</p>
-                    <p className="text-white/50 text-sm mt-1">Interaktiv 3D ko'rinish</p>
-                  </div>
-                  <div className="w-9 h-9 rounded-full bg-white/10 border border-white/20 flex items-center justify-center group-hover:bg-emerald-500 transition-all">
-                    <ArrowRight className="w-4 h-4 text-white" />
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
+        {/* Statistika */}
+        <div className="relative border-t border-white/10 bg-black/30 backdrop-blur">
+          <dl className="max-w-7xl mx-auto px-5 lg:px-10 py-6 grid grid-cols-2 md:grid-cols-4 gap-6">
+            {STATS.map((s) => (
+              <div key={s.label}>
+                <dt className="sr-only">{s.label}</dt>
+                <dd>
+                  <span className="font-display text-3xl md:text-4xl font-semibold text-white">{s.num}</span>
+                  <span className="block text-sm text-white/60">{s.label}</span>
+                </dd>
+              </div>
+            ))}
+          </dl>
         </div>
       </section>
 
-      {/* ═══ FEATURES ═══ */}
-      <section id="features" className="py-28 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-6 lg:px-12">
-          <div className="text-center mb-16">
-            <span className="inline-block bg-emerald-50 text-emerald-600 font-bold uppercase tracking-widest text-sm px-5 py-2 rounded-full mb-5">
-              Platforma haqida
-            </span>
-            <h2 className="text-5xl font-black text-gray-900 mb-5">Platforma imkoniyatlari</h2>
-            <p className="text-gray-600 text-xl max-w-xl mx-auto">
-              Biologiyani yangi usulda o'rganing — ko'rgazmali, interaktiv va qiziqarli.
+      {/* ───────── Imkoniyatlar ───────── */}
+      <section id="imkoniyatlar" className="py-24 md:py-28">
+        <div className="max-w-7xl mx-auto px-5 lg:px-10">
+          <div className="max-w-2xl mb-14">
+            <p className="eyebrow mb-3">Platforma imkoniyatlari</p>
+            <h2 className="font-display text-4xl md:text-5xl font-semibold leading-tight">
+              Bitta joyda — toʻliq oʻquv jarayoni
+            </h2>
+            <p className="text-muted mt-4 text-lg">
+              Nazariya, amaliyot va oʻzini tekshirish: oʻquvchi har bir bosqichni bir-biriga bogʻlangan holda bosib oʻtadi.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {features.map((f, i) => (
-              <motion.div key={i}
-                initial={{ opacity: 0, y: 28 }}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+            {FEATURES.map((f, i) => (
+              <motion.div
+                key={f.title}
+                className={f.span}
+                initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.09 }}>
-                <Link href={f.href}
-                  className="group relative flex flex-col h-full bg-white rounded-3xl overflow-hidden shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
-                  <div className={`h-1.5 w-full bg-gradient-to-r ${f.gradient}`} />
-                  <div className="p-8 flex flex-col flex-1">
-                    <div className={`w-16 h-16 ${f.bg} ${f.iconColor} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
-                      {f.icon}
-                    </div>
-                    <h3 className="font-black text-gray-900 text-xl mb-3">{f.title}</h3>
-                    <p className="text-gray-500 leading-relaxed flex-1 text-base">{f.description}</p>
-                    <div className="mt-6 flex items-center gap-2 text-base font-bold text-emerald-600">
-                      Ko'rish <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                    </div>
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ delay: i * 0.06 }}
+              >
+                <Link href={f.href} className="card card-hover group flex flex-col h-full p-7 min-h-[220px]">
+                  <div className="w-12 h-12 rounded-2xl bg-brand-soft text-brand flex items-center justify-center mb-5 group-hover:scale-105 transition-transform">
+                    <f.icon className="w-6 h-6" strokeWidth={1.8} />
                   </div>
+                  <h3 className="font-display text-xl font-semibold mb-2">{f.title}</h3>
+                  <p className="text-muted leading-relaxed flex-1">{f.text}</p>
+                  <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-brand">
+                    Ochish <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </span>
                 </Link>
               </motion.div>
             ))}
@@ -229,76 +278,127 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ═══ FOOTER ═══ */}
-      <footer className="relative overflow-hidden" style={{
-        background: "linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #064e3b 100%)"
-      }}>
-        <div className="absolute top-0 right-0 w-96 h-96 rounded-full opacity-10 pointer-events-none"
-          style={{ background: "radial-gradient(circle, #34d399, transparent 70%)", transform: "translate(30%, -30%)" }} />
-
-        <div className="relative z-10 max-w-7xl mx-auto px-8 lg:px-14 py-20">
-          <div className="flex flex-col md:flex-row items-start justify-between gap-14 mb-14">
-
-            {/* Logo + tavsif */}
-            <div className="flex flex-col gap-6 max-w-sm">
-              {/* Logo oq fonda katta ko'rinadi */}
-              <div className="bg-white rounded-3xl p-6 inline-flex w-fit shadow-xl" style={{ minWidth: "240px", minHeight: "140px", alignItems: "center", justifyContent: "center" }}>
-                <div style={{ transform: "scale(3.2)", transformOrigin: "center center", display: "flex", alignItems: "center", justifyContent: "center", width: "100%", height: "80px" }}>
-                  <Logo />
-                </div>
-              </div>
-              <p className="text-gray-300 text-base leading-relaxed">
-                Maktab o'quvchilari uchun biologiya fanini interaktiv va
-                qiziqarli tarzda o'rgatuvchi zamonaviy platforma.
-              </p>
-            </div>
-
-            {/* Havolalar */}
-            <div className="flex flex-col gap-4">
-              <h4 className="text-white font-bold text-base mb-2 uppercase tracking-wider">Bo'limlar</h4>
-              {[
-                { label: "Asosiy sahifa", href: "/dashboard" },
-                { label: "Mavzular", href: "/topics" },
-                { label: "Laboratoriyalar", href: "/labs" },
-                { label: "3D Modellar", href: "/models" },
-                { label: "Testlar", href: "/quizzes" },
-                { label: "O'yinlar", href: "/games" },
-              ].map(item => (
-                <Link key={item.label} href={item.href}
-                  className="text-gray-400 hover:text-white text-base font-medium transition-colors">
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-
-            {/* Platforma haqida */}
-            <div className="flex flex-col gap-4">
-              <h4 className="text-white font-bold text-base mb-2 uppercase tracking-wider">Platforma</h4>
-              {[
-                { label: "Lug'at", href: "/glossary" },
-                { label: "Krossvordlar", href: "/crosswords" },
-                { label: "Qiziqarli faktlar", href: "/facts" },
-                { label: "Darsliklar", href: "/books" },
-              ].map(item => (
-                <Link key={item.label} href={item.href}
-                  className="text-gray-400 hover:text-white text-base font-medium transition-colors">
-                  {item.label}
-                </Link>
-              ))}
-            </div>
+      {/* ───────── Qanday ishlaydi ───────── */}
+      <section className="py-24 md:py-28 bg-surface border-y border-line">
+        <div className="max-w-7xl mx-auto px-5 lg:px-10">
+          <div className="max-w-2xl mb-14">
+            <p className="eyebrow mb-3">Oʻqitish yondashuvi</p>
+            <h2 className="font-display text-4xl md:text-5xl font-semibold leading-tight">
+              Bilimdan koʻnikmagacha: uch qadam
+            </h2>
           </div>
 
-          <div className="h-px bg-white/10 mb-8" />
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-gray-400 text-base">© {new Date().getFullYear()} Biokompetensiya. Barcha huquqlar himoyalangan.</p>
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 bg-emerald-400 rounded-full animate-pulse" />
-              <span className="text-gray-400 text-base font-medium">Platforma faol ishlayapti</span>
+          <ol className="grid md:grid-cols-3 gap-6">
+            {STEPS.map((s, i) => (
+              <li key={s.title} className="relative card p-7">
+                <span className="absolute top-6 right-7 font-display text-6xl font-semibold text-line-strong/70 select-none">
+                  {i + 1}
+                </span>
+                <div className="w-12 h-12 rounded-2xl bg-brand text-brand-ink flex items-center justify-center mb-5">
+                  <s.icon className="w-6 h-6" strokeWidth={1.8} />
+                </div>
+                <h3 className="font-display text-xl font-semibold mb-2">{s.title}</h3>
+                <p className="text-muted leading-relaxed">{s.text}</p>
+              </li>
+            ))}
+          </ol>
+
+          <div className="mt-10 grid sm:grid-cols-3 gap-4 text-sm">
+            {[
+              { icon: ShieldCheck, t: "Ilmiy aniqlik", s: "Atamalar va izohlar darslik asosida" },
+              { icon: Layers, t: "5 va 6-sinf", s: "Har bir sinf uchun alohida boʻlim" },
+              { icon: Lightbulb, t: "Oʻz ustida ishlash", s: "Qoʻshimcha topshiriq va faktlar" },
+            ].map((x) => (
+              <div key={x.t} className="flex items-start gap-3">
+                <x.icon className="w-5 h-5 text-brand mt-0.5 shrink-0" />
+                <p>
+                  <span className="font-semibold text-ink">{x.t}.</span> <span className="text-muted">{x.s}</span>
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ───────── CTA ───────── */}
+      <section className="py-24">
+        <div className="max-w-5xl mx-auto px-5 lg:px-10">
+          <div className="relative overflow-hidden rounded-[2rem] bg-[#0a2a1f] text-white p-10 md:p-16 text-center">
+            <div
+              className="absolute inset-0 opacity-70"
+              style={{ background: "radial-gradient(70% 90% at 50% 0%, rgba(62,207,155,0.35), transparent 70%)" }}
+            />
+            <div className="relative">
+              <h2 className="font-display text-3xl md:text-5xl font-semibold leading-tight">
+                Bugunoq birinchi tajribangizni bajaring
+              </h2>
+              <p className="text-white/75 mt-4 max-w-xl mx-auto text-lg">
+                Roʻyxatdan oʻtish shart emas — platformaning barcha boʻlimlari ochiq.
+              </p>
+              <div className="mt-8 flex flex-wrap justify-center gap-3">
+                <Link href="/labs" className="btn btn-lg !bg-emerald-400 !text-[#04140d] hover:!bg-emerald-300">
+                  <Microscope className="w-5 h-5" /> Laboratoriyaga kirish
+                </Link>
+                <Link href="/quizzes" className="btn btn-lg border border-white/30 text-white hover:bg-white/10">
+                  Test ishlash
+                </Link>
+              </div>
             </div>
           </div>
         </div>
-      </footer>
+      </section>
 
+      {/* ───────── Pastki qism ───────── */}
+      <footer className="border-t border-line bg-surface">
+        <div className="max-w-7xl mx-auto px-5 lg:px-10 py-14 grid grid-cols-1 gap-10 md:grid-cols-[1.4fr_1fr_1fr]">
+          <div className="max-w-sm">
+            <div className="inline-block bg-white rounded-xl px-3 py-2 border border-line">
+              <Logo variant="full" size={52} />
+            </div>
+            <p className="text-muted mt-5 leading-relaxed">
+              Maktab oʻquvchilari uchun biologiyani interaktiv, koʻrgazmali va tushunarli qilib oʻrgatadigan platforma.
+            </p>
+          </div>
+
+          <div>
+            <h4 className="eyebrow !text-ink mb-4">Oʻrganish</h4>
+            <ul className="space-y-2.5 text-muted">
+              {[
+                ["Mavzular", "/topics"],
+                ["Darsliklar", "/books"],
+                ["Lugʻat", "/glossary"],
+                ["Qiziqarli faktlar", "/facts"],
+              ].map(([l, h]) => (
+                <li key={h}>
+                  <Link href={h} className="hover:text-brand transition-colors">{l}</Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="eyebrow !text-ink mb-4">Amaliyot</h4>
+            <ul className="space-y-2.5 text-muted">
+              {[
+                ["Virtual laboratoriyalar", "/labs"],
+                ["3D modellar", "/models"],
+                ["Testlar", "/quizzes"],
+                ["Krossvordlar", "/crosswords"],
+                ["Oʻyinlar", "/games"],
+              ].map(([l, h]) => (
+                <li key={h}>
+                  <Link href={h} className="hover:text-brand transition-colors">{l}</Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+        <div className="border-t border-line">
+          <p className="max-w-7xl mx-auto px-5 lg:px-10 py-5 text-sm text-muted">
+            © {new Date().getFullYear()} Biokompetensiya. Barcha huquqlar himoyalangan.
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }

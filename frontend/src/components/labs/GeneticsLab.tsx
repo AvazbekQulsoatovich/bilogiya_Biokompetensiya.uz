@@ -23,9 +23,9 @@ export default function GeneticsLab({ completeLab, isCompleted }: any) {
   const dominantCount = offspring.filter(g => g.includes('A')).length;
   
   return (
-    <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+    <div className="bg-surface p-6 rounded-3xl shadow-[var(--shadow-sm)] border border-line">
       <h2 className="text-2xl font-bold mb-2">Pennet Panjarasi (Mendel Qonuni)</h2>
-      <p className="text-gray-600 mb-8">No'xat urug'larining rangi: A - Sariq (dominant), a - Yashil (retsessiv).</p>
+      <p className="text-muted mb-8">Noʻxat urugʻlarining rangi: A - Sariq (dominant), a - Yashil (retsessiv).</p>
       
       <div className="flex gap-8 justify-center mb-8">
         <div>
@@ -51,7 +51,7 @@ export default function GeneticsLab({ completeLab, isCompleted }: any) {
           <table className="border-collapse border-2 border-gray-800 text-2xl text-center">
             <tbody>
               <tr>
-                <td className="p-4 border-2 border-gray-800 bg-gray-100"></td>
+                <td className="p-4 border-2 border-gray-800 bg-surface-2"></td>
                 <td className="p-4 border-2 border-gray-800 bg-blue-50 font-bold">{parent2[0]}</td>
                 <td className="p-4 border-2 border-gray-800 bg-blue-50 font-bold">{parent2[1]}</td>
               </tr>
@@ -68,8 +68,8 @@ export default function GeneticsLab({ completeLab, isCompleted }: any) {
             </tbody>
           </table>
           <div className="mt-6 text-xl">
-             Sariq urug'lar: <span className="font-bold text-yellow-600">{dominantCount / 4 * 100}%</span> | 
-             Yashil urug'lar: <span className="font-bold text-green-600">{(4 - dominantCount) / 4 * 100}%</span>
+             Sariq urugʻlar: <span className="font-bold text-yellow-600">{dominantCount / 4 * 100}%</span> | 
+             Yashil urugʻlar: <span className="font-bold text-green-600">{(4 - dominantCount) / 4 * 100}%</span>
           </div>
         </div>
       )}

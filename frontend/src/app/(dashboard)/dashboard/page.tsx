@@ -1,164 +1,104 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import {
-  BookOpen, CheckCircle2, FlaskConical, Scroll,
-  ArrowRight, Play
-} from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
+import {
+  BookOpen, BookMarked, Microscope, Box, ClipboardList, Grid3x3, Gamepad2, Library,
+  Lightbulb, FileText, ArrowRight, Play,
+} from "lucide-react";
+import { Page } from "@/components/ui";
 
 const MODULES = [
-  {
-    title: "Mavzular",
-    desc: "Barcha mavzuv mavzularni o'rganing.",
-    href: "/topics",
-    icon: BookOpen,
-    iconBg: "bg-blue-50",
-    iconColor: "text-blue-500",
-    linkColor: "text-blue-500",
-  },
-  {
-    title: "Darsliklar",
-    desc: "Elektron darsliklar va o'qish materiallari.",
-    href: "/books",
-    icon: Scroll,
-    iconBg: "bg-purple-50",
-    iconColor: "text-purple-500",
-    linkColor: "text-purple-500",
-  },
-  {
-    title: "Testlar",
-    desc: "Bilimingizni sinovdan o'tkazing.",
-    href: "/quizzes",
-    icon: CheckCircle2,
-    iconBg: "bg-orange-50",
-    iconColor: "text-orange-500",
-    linkColor: "text-orange-500",
-  },
-  {
-    title: "Laboratoriyalar",
-    desc: "Virtual tajribalar va amaliy mashg'ulotlar.",
-    href: "/labs",
-    icon: FlaskConical,
-    iconBg: "bg-green-50",
-    iconColor: "text-green-500",
-    linkColor: "text-green-500",
-  },
+  { title: "Mavzular", desc: "Darslik mavzulari, video va qoʻshimcha fayllar.", href: "/topics", icon: BookOpen },
+  { title: "Darsliklar", desc: "Elektron darsliklarni oʻqing yoki yuklab oling.", href: "/books", icon: BookMarked },
+  { title: "Virtual laboratoriyalar", desc: "Tajribalarni bosqichma-bosqich bajaring.", href: "/labs", icon: Microscope },
+  { title: "3D modellar", desc: "Hujayra, DNK va organizmlar tuzilishi.", href: "/models", icon: Box },
+  { title: "Test topshiriqlari", desc: "Bilimingizni mavzular boʻyicha tekshiring.", href: "/quizzes", icon: ClipboardList },
+  { title: "Krossvordlar", desc: "Atamalarni krossvord orqali mustahkamlang.", href: "/crosswords", icon: Grid3x3 },
+  { title: "Interaktiv oʻyinlar", desc: "Xotira, soʻz topish va “toʻgʻri/notoʻgʻri”.", href: "/games", icon: Gamepad2 },
+  { title: "Lugʻat", desc: "Biologik atamalar va ularning izohlari.", href: "/glossary", icon: Library },
+  { title: "Darsdan tashqari", desc: "Mustaqil izlanish topshiriqlari.", href: "/extracurricular", icon: FileText },
 ];
 
 export default function DashboardHome() {
+  const [fact, setFact] = useState<{ title: string; content: string } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/facts")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d) => {
+        const list = Array.isArray(d) ? d : d?.facts || [];
+        if (list.length) setFact(list[Math.floor(Math.random() * list.length)]);
+      })
+      .catch(() => {});
+  }, []);
+
   return (
-    <div className="p-6 md:p-8 max-w-7xl mx-auto w-full space-y-8 bg-gray-50/50 min-h-screen">
-
-      {/* ── HERO ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
+    <Page>
+      {/* Hero */}
+      <motion.section
+        initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden"
+        className="relative overflow-hidden rounded-[1.75rem] bg-[#0a2a1f] text-white p-6 sm:p-8 md:p-12 mb-10"
       >
-        <div className="flex flex-col md:flex-row items-stretch h-full">
-
-          {/* Left: Content */}
-          <div className="flex-1 p-8 md:p-12 flex flex-col justify-center">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 w-fit bg-green-50 text-green-600 px-4 py-1.5 rounded-full text-sm font-semibold mb-6">
-              <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
-              </svg>
-              Biologiya o'quv platformasi
-            </div>
-
-            <h1 className="text-4xl md:text-5xl font-black text-[#1e293b] leading-tight mb-4">
-              Xush kelibsiz, o'quvchi!
-            </h1>
-            <p className="text-gray-500 text-base max-w-md leading-relaxed mb-8">
-              Biologiya fanini qiziqarli usulda o'rganing. 3D modellar, virtual
-              laboratoriyalar, testlar va o'yinlar sizni kutmoqda.
+        <div
+          className="absolute inset-0 opacity-80"
+          style={{ background: "radial-gradient(60% 100% at 90% 0%, rgba(62,207,155,0.3), transparent 70%)" }}
+        />
+        <div className="relative grid grid-cols-1 md:grid-cols-[1.4fr_1fr] gap-10 items-center">
+          <div>
+            <p className="eyebrow !text-emerald-300 mb-3">Biokompetensiya</p>
+            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-semibold leading-tight">Xush kelibsiz, oʻquvchi!</h1>
+            <p className="text-white/75 mt-4 max-w-lg leading-relaxed">
+              Mavzuni oʻrganing, laboratoriyada tajriba oʻtkazing va testlar bilan bilimingizni mustahkamlang.
             </p>
-
-            <div className="flex flex-wrap gap-4">
-              <Link
-                href="/topics"
-                className="inline-flex items-center gap-2 bg-[#3b82f6] hover:bg-blue-600 text-white font-semibold px-6 py-3.5 rounded-xl transition-all shadow-md shadow-blue-200 hover:shadow-lg text-sm"
-              >
-                <Play className="w-4 h-4 fill-white" /> O'qishni boshlash
+            <div className="mt-7 flex flex-wrap gap-3">
+              <Link href="/topics" className="btn btn-lg !bg-emerald-400 !text-[#04140d] hover:!bg-emerald-300">
+                <Play className="w-4 h-4 fill-current" /> Oʻqishni boshlash
               </Link>
-              <Link
-                href="/quizzes"
-                className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 font-semibold px-6 py-3.5 rounded-xl transition-all text-sm"
-              >
-                Test ishlash <ArrowRight className="w-4 h-4" />
+              <Link href="/labs" className="btn btn-lg border border-white/30 text-white hover:bg-white/10">
+                Laboratoriyaga oʻtish
               </Link>
             </div>
           </div>
 
-          {/* Right: Generated Illustration */}
-          <div className="hidden md:flex flex-1 items-center justify-center p-6 relative min-h-[300px]">
-             {/* Using the generated image that perfectly matches the biology theme */}
-             <div className="relative w-full h-full max-w-md" style={{ minHeight: "280px" }}>
-               <Image 
-                 src="/hero-illustration.jpg" 
-                 alt="Biology education illustration" 
-                 fill
-                 className="object-contain"
-                 priority
-               />
-             </div>
-          </div>
+          {fact && (
+            <aside className="rounded-2xl border border-white/15 bg-white/[0.07] backdrop-blur p-6">
+              <p className="inline-flex items-center gap-2 text-xs font-bold tracking-[0.14em] uppercase text-amber-300 mb-3">
+                <Lightbulb className="w-4 h-4" /> Bugungi fakt
+              </p>
+              <h2 className="font-display text-xl font-semibold mb-2">{fact.title}</h2>
+              <p className="text-white/75 text-sm leading-relaxed line-clamp-5">{fact.content}</p>
+              <Link href="/facts" className="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-300 mt-4 hover:underline">
+                Barcha faktlar <ArrowRight className="w-4 h-4" />
+              </Link>
+            </aside>
+          )}
         </div>
-      </motion.div>
+      </motion.section>
 
-      {/* ── MODULES GRID ── */}
-      <div>
-        <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-          <svg className="w-6 h-6 text-green-500" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="10" stroke="#22c55e" strokeWidth="2"/>
-            <circle cx="12" cy="12" r="4" fill="#22c55e"/>
-            <circle cx="12" cy="4" r="2" fill="#4ade80"/>
-            <circle cx="12" cy="20" r="2" fill="#4ade80"/>
-            <circle cx="4" cy="12" r="2" fill="#4ade80"/>
-            <circle cx="20" cy="12" r="2" fill="#4ade80"/>
-          </svg>
-          Bo'limlar
-        </h2>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {MODULES.map((mod, idx) => {
-            const Icon = mod.icon;
-            return (
-              <motion.div
-                key={idx}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.05, duration: 0.3 }}
-              >
-                <Link
-                  href={mod.href}
-                  className="group flex flex-col bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-200 h-full"
-                >
-                  {/* Icon */}
-                  <div className={`w-12 h-12 ${mod.iconBg} rounded-xl flex items-center justify-center mb-5 ${mod.iconColor} transition-transform`}>
-                    <Icon className="w-6 h-6" />
-                  </div>
-
-                  <h3 className="font-bold text-gray-900 text-base mb-2">
-                    {mod.title}
-                  </h3>
-                  <p className="text-gray-500 text-sm leading-relaxed flex-1">
-                    {mod.desc}
-                  </p>
-
-                  <div className={`mt-4 inline-flex items-center gap-1.5 text-sm font-semibold ${mod.linkColor}`}>
-                    Kirish <ArrowRight className="w-4 h-4" />
-                  </div>
-                </Link>
-              </motion.div>
-            );
-          })}
-        </div>
+      <div className="mb-6">
+        <p className="eyebrow mb-1.5">Boʻlimlar</p>
+        <h2 className="font-display text-2xl md:text-3xl font-semibold">Nimani oʻrganmoqchisiz?</h2>
       </div>
-    </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {MODULES.map((m, i) => (
+          <motion.div key={m.href} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
+            <Link href={m.href} className="card card-hover group flex items-start gap-4 p-6 h-full">
+              <div className="w-12 h-12 shrink-0 rounded-2xl bg-brand-soft text-brand flex items-center justify-center">
+                <m.icon className="w-6 h-6" strokeWidth={1.8} />
+              </div>
+              <div className="min-w-0">
+                <h3 className="font-display text-lg font-semibold leading-snug">{m.title}</h3>
+                <p className="text-muted text-sm mt-1">{m.desc}</p>
+              </div>
+              <ArrowRight className="w-4 h-4 text-muted ml-auto mt-1 shrink-0 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+            </Link>
+          </motion.div>
+        ))}
+      </div>
+    </Page>
   );
 }

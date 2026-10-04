@@ -1,26 +1,21 @@
 import type { NextConfig } from "next";
 
+const API_ORIGIN = process.env.API_ORIGIN || "http://localhost:5000";
+
 const nextConfig: NextConfig = {
-  devIndicators: {
-    appIsrStatus: false,
-    buildActivity: false,
-  },
   typescript: {
     ignoreBuildErrors: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
   },
   async rewrites() {
     return [
       {
-        source: '/api/:path*',
-        destination: 'http://localhost:5000/api/:path*',
+        source: "/api/:path*",
+        destination: `${API_ORIGIN}/api/:path*`,
       },
       {
-        source: '/uploads/:path*',
-        destination: 'http://localhost:5000/uploads/:path*',
-      }
+        source: "/uploads/:path*",
+        destination: `${API_ORIGIN}/uploads/:path*`,
+      },
     ];
   },
 };

@@ -26,11 +26,11 @@ export default function HeartRateLab({ completeLab, isCompleted }: any) {
   };
 
   return (
-    <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 text-center">
+    <div className="bg-surface p-6 rounded-3xl shadow-[var(--shadow-sm)] border border-line text-center">
       <h2 className="text-2xl font-bold mb-2">Jismoniy Mashq va Yurak Urishi</h2>
-      <p className="text-gray-600 mb-8">Tinch holatda va yugurgandan so'ng yurak urish tezligini (Pulsni) o'lchang.</p>
+      <p className="text-muted mb-8">Tinch holatda va yugurgandan soʻng yurak urish tezligini (Pulsni) oʻlchang.</p>
       
-      <div className="flex justify-center mb-8 h-48 items-end pb-4 border-b-4 border-gray-200">
+      <div className="flex justify-center mb-8 h-48 items-end pb-4 border-b-4 border-line">
         <div className={`transition-all duration-300 ${state === 'RUNNING' ? 'animate-bounce' : ''}`}>
           <div className="w-16 h-16 bg-blue-200 rounded-full mx-auto mb-2 relative">
              <div className="absolute inset-0 flex items-center justify-center">
@@ -47,17 +47,17 @@ export default function HeartRateLab({ completeLab, isCompleted }: any) {
            <Play /> Yugurish (30s)
         </button>
         <button onClick={measure} className="bg-red-500 text-white px-6 py-2 rounded-lg font-bold flex items-center gap-2">
-           <Activity /> Pulsni o'lchash
+           <Activity /> Pulsni oʻlchash
         </button>
       </div>
 
       <div className="grid grid-cols-2 gap-4 max-w-md mx-auto mb-4">
-         <div className="bg-gray-100 p-4 rounded-xl">
-           <div className="text-sm text-gray-500 font-bold mb-1">Tinch holatda:</div>
+         <div className="bg-surface-2 p-4 rounded-xl">
+           <div className="text-sm text-muted font-bold mb-1">Tinch holatda:</div>
            <div className="text-2xl font-black text-blue-600">{measuredRest || '--'} <span className="text-sm font-normal">BPM</span></div>
          </div>
-         <div className="bg-gray-100 p-4 rounded-xl">
-           <div className="text-sm text-gray-500 font-bold mb-1">Mashqdan so'ng:</div>
+         <div className="bg-surface-2 p-4 rounded-xl">
+           <div className="text-sm text-muted font-bold mb-1">Mashqdan soʻng:</div>
            <div className="text-2xl font-black text-red-600">{measuredRun || '--'} <span className="text-sm font-normal">BPM</span></div>
          </div>
       </div>

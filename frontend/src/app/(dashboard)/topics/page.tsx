@@ -1,185 +1,179 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import { BookOpen, File, FileText, Image as ImageIcon, Video, PlaySquare } from "lucide-react";
+import { BookOpen, File, FileText, Image as ImageIcon, Video, Search, ArrowRight, Paperclip } from "lucide-react";
 import Link from "next/link";
+import { Page, PageHeader, Segmented, EmptyState, CardGridSkeleton } from "@/components/ui";
+import { includesUz, formatDateUz } from "@/lib/text";
+
+function getYoutubeEmbedUrl(url: string) {
+  try {
+    let videoId = "";
+    if (url.includes("youtu.be/")) videoId = url.split("youtu.be/")[1]?.split("?")[0];
+    else if (url.includes("youtube.com/watch")) videoId = new URL(url).searchParams.get("v") || "";
+    else if (url.includes("youtube.com/embed/")) videoId = url.split("youtube.com/embed/")[1]?.split("?")[0];
+    return videoId ? `https://www.youtube.com/embed/${videoId}` : url;
+  } catch {
+    return url;
+  }
+}
+
+function FileIcon({ type }: { type: string }) {
+  const t = type || "";
+  if (t.includes("image")) return <ImageIcon className="w-4 h-4 text-info" />;
+  if (t.includes("video")) return <Video className="w-4 h-4 text-accent" />;
+  if (t.includes("pdf")) return <FileText className="w-4 h-4 text-danger" />;
+  return <File className="w-4 h-4 text-muted" />;
+}
 
 export default function TopicsPage() {
   const [topics, setTopics] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<number>(5);
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const savedTab = sessionStorage.getItem("topicsActiveTab");
-      if (savedTab) setActiveTab(Number(savedTab));
-    }
-    fetchTopics();
+    try {
+      const saved = sessionStorage.getItem("topicsActiveTab");
+      if (saved) setActiveTab(Number(saved));
+    } catch {}
+    (async () => {
+      try {
+        const res = await fetch(`/api/topics`);
+        const data = await res.json();
+        setTopics(Array.isArray(data) ? data : data?.topics || []);
+      } catch (e) {
+        console.error("Mavzularni yuklab boʻlmadi", e);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
-  const handleTabChange = (tab: number) => {
+  const handleTab = (tab: number) => {
     setActiveTab(tab);
-    if (typeof window !== "undefined") {
+    try {
       sessionStorage.setItem("topicsActiveTab", String(tab));
-    }
+    } catch {}
   };
 
-  const fetchTopics = async () => {
-    try {
-      const res = await fetch(`/api/topics`);
-      const data = await res.json();
-      if (Array.isArray(data)) {
-        setTopics(data);
-      } else {
-        setTopics(data?.topics || []);
-      }
-    } catch (error) {
-      console.error("Failed to fetch topics", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getFileIcon = (fileType: string) => {
-    if (fileType.includes("image")) return <ImageIcon className="w-5 h-5 text-blue-500" />;
-    if (fileType.includes("video")) return <Video className="w-5 h-5 text-purple-500" />;
-    if (fileType.includes("pdf")) return <FileText className="w-5 h-5 text-red-500" />;
-    return <File className="w-5 h-5 text-gray-500" />;
-  };
-
-  const getYoutubeEmbedUrl = (url: string) => {
-    try {
-      let videoId = "";
-      if (url.includes("youtu.be/")) {
-        videoId = url.split("youtu.be/")[1]?.split("?")[0];
-      } else if (url.includes("youtube.com/watch")) {
-        videoId = new URL(url).searchParams.get("v") || "";
-      } else if (url.includes("youtube.com/embed/")) {
-        videoId = url.split("youtube.com/embed/")[1]?.split("?")[0];
-      }
-      return videoId ? `https://www.youtube.com/embed/${videoId}` : url;
-    } catch (e) {
-      return url;
-    }
-  };
+  const list = useMemo(() => {
+    return topics
+      .filter((t) => (t.course?.gradeLevel || 5) === activeTab)
+      .filter((t) => !query.trim() || includesUz(t.title, query))
+      .sort((a, b) => {
+        const na = parseInt(a.title.replace(/\D/g, "")) || 0;
+        const nb = parseInt(b.title.replace(/\D/g, "")) || 0;
+        return na !== nb ? na - nb : a.title.localeCompare(b.title);
+      });
+  }, [topics, activeTab, query]);
 
   return (
-    <div className="p-8 max-w-7xl mx-auto w-full">
-      <div className="bg-indigo-500 rounded-[2rem] p-6 md:p-8 mb-8 text-white shadow-lg shadow-indigo-500/20 flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-white/20 backdrop-blur-sm rounded-2xl">
-            <BookOpen className="w-8 h-8 text-white" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold">Mavzular va o'quv materiallari</h1>
-            <p className="text-white/80 mt-1">Darslarni o'qing va videolarni ko'ring</p>
-          </div>
-        </div>
-      </div>
+    <Page>
+      <PageHeader
+        icon={BookOpen}
+        eyebrow="Oʻrganish"
+        title="Mavzular va oʻquv materiallari"
+        subtitle="Darslik mavzularini oʻqing, video darslarni koʻring va qoʻshimcha fayllarni yuklab oling."
+      />
 
-      <div className="flex gap-4 mb-6">
-        <button 
-          onClick={() => handleTabChange(5)}
-          className={`px-6 py-2 rounded-xl font-medium transition-all ${activeTab === 5 ? 'bg-indigo-500 text-white shadow-lg' : 'bg-card border border-border/50 text-foreground/70 hover:bg-indigo-500/10'}`}
-        >
-          5-sinf Botanika
-        </button>
-        <button 
-          onClick={() => handleTabChange(6)}
-          className={`px-6 py-2 rounded-xl font-medium transition-all ${activeTab === 6 ? 'bg-indigo-500 text-white shadow-lg' : 'bg-card border border-border/50 text-foreground/70 hover:bg-indigo-500/10'}`}
-        >
-          6-sinf Biologiya
-        </button>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <Segmented
+          label="Sinf"
+          value={activeTab}
+          onChange={handleTab}
+          options={[
+            { value: 5, label: "5-sinf", hint: "Tabiiy fanlar" },
+            { value: 6, label: "6-sinf", hint: "Biologiya" },
+          ]}
+        />
+        <div className="relative w-full sm:w-72">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
+          <input
+            className="input !pl-10"
+            placeholder="Mavzuni qidirish…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            aria-label="Mavzuni qidirish"
+          />
+        </div>
       </div>
 
       {loading ? (
-        <div className="flex justify-center p-12">
-          <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-        </div>
-      ) : !Array.isArray(topics) || topics.filter(t => (t.course?.gradeLevel || 5) === activeTab).length === 0 ? (
-        <div className="glass p-12 text-center rounded-3xl border-dashed border-2 border-border/50">
-          <BookOpen className="w-12 h-12 text-foreground/30 mx-auto mb-4" />
-          <h3 className="text-xl font-medium mb-2">Hali mavzular yo'q</h3>
-          <p className="text-foreground/60">Tez orada mavzular qo'shiladi.</p>
-        </div>
+        <CardGridSkeleton count={4} />
+      ) : list.length === 0 ? (
+        <EmptyState
+          icon={BookOpen}
+          title={query ? "Hech narsa topilmadi" : "Hozircha mavzular yoʻq"}
+          text={query ? "Boshqa soʻz bilan qidirib koʻring." : "Tez orada mavzular qoʻshiladi."}
+        />
       ) : (
-        <div className="grid grid-cols-1 gap-6">
-          {(Array.isArray(topics) ? topics : [])
-            .filter(t => (t.course?.gradeLevel || 5) === activeTab)
-            .sort((a, b) => {
-              // Extract number from titles like "12-sahifa darsligi"
-              const numA = parseInt(a.title.replace(/\D/g, '')) || 0;
-              const numB = parseInt(b.title.replace(/\D/g, '')) || 0;
-              if (numA !== numB) return numA - numB;
-              return a.title.localeCompare(b.title);
-            })
-            .map((topic) => (
-            <motion.div 
+        <div className="grid gap-4">
+          {list.map((topic, i) => (
+            <motion.article
               key={topic.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="glass p-6 rounded-2xl border border-border/50 relative overflow-hidden group"
+              transition={{ delay: Math.min(i, 8) * 0.03 }}
+              className="card p-6"
             >
-              <div className="absolute top-0 left-0 w-2 h-full bg-indigo-500" />
-              <div className="flex flex-col justify-between items-start pl-4 gap-2">
-                <Link href={`/topics/${topic.id}`} className="hover:text-indigo-600 transition-colors">
-                  <h3 className="text-xl font-bold">{topic.title}</h3>
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <Link href={`/topics/${topic.id}`} className="group inline-block">
+                    <h2 className="font-display text-xl font-semibold group-hover:text-brand transition-colors">
+                      {topic.title}
+                    </h2>
+                  </Link>
+                  <p className="text-sm text-muted mt-1">Qoʻshilgan sana: {formatDateUz(topic.createdAt)}</p>
+                </div>
+                <Link href={`/topics/${topic.id}`} className="btn btn-soft btn-sm shrink-0 self-start">
+                  Oʻqish <ArrowRight className="w-4 h-4" />
                 </Link>
-                <p className="text-foreground/60 text-sm">
-                  Yaratilgan vaqt: {new Date(topic.createdAt).toLocaleDateString()}
-                </p>
               </div>
 
-              {/* Video Player */}
               {topic.videoUrl && (
-                <div className="mt-6 pl-4">
-                  <div className="aspect-video w-full max-w-3xl rounded-xl overflow-hidden shadow-lg border border-border/50">
-                    {topic.videoUrl.startsWith('/uploads/') ? (
-                      <video 
-                        src={`${topic.videoUrl}`} 
-                        controls 
-                        className="w-full h-full object-contain bg-black"
-                      />
-                    ) : (
-                      <iframe 
-                        src={getYoutubeEmbedUrl(topic.videoUrl)} 
-                        title={topic.title}
-                        className="w-full h-full"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                      ></iframe>
-                    )}
-                  </div>
+                <div className="mt-5 aspect-video w-full max-w-3xl rounded-xl overflow-hidden border border-line bg-black">
+                  {topic.videoUrl.startsWith("/uploads/") ? (
+                    <video src={topic.videoUrl} controls preload="metadata" className="w-full h-full object-contain" />
+                  ) : (
+                    <iframe
+                      src={getYoutubeEmbedUrl(topic.videoUrl)}
+                      title={topic.title}
+                      loading="lazy"
+                      className="w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  )}
                 </div>
               )}
 
-              {/* Attachments List */}
-              {topic.attachments && topic.attachments.length > 0 && (
-                <div className="mt-6 pl-4">
-                  <h4 className="text-sm font-semibold text-foreground/50 uppercase tracking-wider mb-3">
-                    Biriktirilgan fayllar ({topic.attachments.length})
-                  </h4>
-                  <div className="flex flex-wrap gap-3">
+              {topic.attachments?.length > 0 && (
+                <div className="mt-5">
+                  <p className="eyebrow !text-muted mb-2.5 flex items-center gap-1.5">
+                    <Paperclip className="w-3.5 h-3.5" /> Biriktirilgan fayllar ({topic.attachments.length})
+                  </p>
+                  <div className="flex flex-wrap gap-2">
                     {topic.attachments.map((file: any) => (
-                      <a 
-                        key={file.id} 
-                        href={`${file.fileUrl}`} 
-                        target="_blank" 
+                      <a
+                        key={file.id}
+                        href={file.fileUrl}
+                        target="_blank"
                         rel="noreferrer"
-                        className="flex items-center gap-3 bg-background/50 border border-border/50 px-4 py-2 rounded-xl hover:border-indigo-500/50 hover:bg-indigo-500/5 transition-all"
+                        className="inline-flex items-center gap-2 rounded-xl border border-line bg-surface-2 px-3.5 py-2 text-sm font-medium hover:border-brand hover:text-brand transition-colors"
                       >
-                        {getFileIcon(file.fileType)}
-                        <span className="text-sm font-medium">{file.fileName}</span>
+                        <FileIcon type={file.fileType} />
+                        <span className="max-w-[16rem] truncate">{file.fileName}</span>
                       </a>
                     ))}
                   </div>
                 </div>
               )}
-            </motion.div>
+            </motion.article>
           ))}
         </div>
       )}
-    </div>
+    </Page>
   );
 }

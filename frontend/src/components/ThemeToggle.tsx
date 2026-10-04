@@ -4,34 +4,24 @@ import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { Sun, Moon } from "lucide-react";
 
-export function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
+export function ThemeToggle({ className = "" }: { className?: string }) {
+  const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useEffect(() => setMounted(true), []);
 
-  if (!mounted) {
-    return <div className="w-10 h-10 rounded-xl bg-foreground/5 animate-pulse" />;
-  }
+  if (!mounted) return <div className={`w-10 h-10 rounded-xl bg-surface-2 ${className}`} />;
 
-  const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  const isDark = resolvedTheme === "dark";
 
   return (
     <button
       onClick={() => setTheme(isDark ? "light" : "dark")}
-      className="p-3 rounded-xl transition-all duration-300 flex items-center justify-center hover:bg-white/10 bg-white/5 border border-white/10"
-      title="Temani o'zgartirish"
+      className={`w-10 h-10 rounded-xl flex items-center justify-center border border-line bg-surface text-ink-2 hover:bg-surface-2 transition-colors ${className}`}
+      title={isDark ? "Yorugʻ mavzu" : "Qorongʻi mavzu"}
+      aria-label={isDark ? "Yorugʻ mavzuga oʻtish" : "Qorongʻi mavzuga oʻtish"}
     >
-      <div className="relative w-5 h-5 flex items-center justify-center">
-        <Sun 
-          className={`absolute transition-all duration-500 text-yellow-500 ${isDark ? 'opacity-0 rotate-90 scale-50' : 'opacity-100 rotate-0 scale-100'}`} 
-        />
-        <Moon 
-          className={`absolute transition-all duration-500 text-blue-500 ${isDark ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-90 scale-50'}`} 
-        />
-      </div>
+      {isDark ? <Sun className="w-[18px] h-[18px]" /> : <Moon className="w-[18px] h-[18px]" />}
     </button>
   );
 }
