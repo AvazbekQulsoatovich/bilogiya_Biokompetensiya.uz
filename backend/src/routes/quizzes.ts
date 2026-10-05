@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../lib/prisma';
 import { authenticate, authorize, AuthRequest } from '../middleware/auth';
+import { grantXp } from '../lib/xp';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // Get all quizzes
 router.get('/', async (req, res) => {
@@ -65,35 +65,35 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Submit quiz answers and get XP
+// Javoblarni yuborish: ball serverda qayta hisoblanadi, XP faqat yaxshilangan natija uchun beriladi
 router.post('/:id/submit', authenticate, async (req: AuthRequest, res) => {
   try {
     const id = req.params.id as string;
-    const { score, timeSpentSeconds, answers } = req.body;
-    const userId = req.user?.id;
-    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+    const userId = req.user.id as string;
+    const answers = req.body?.answers && typeof req.body.answers === 'object' ? req.body.answers : {};
+    const spent = Number(req.body?.timeSpentSeconds);
+    const timeSpentSeconds = Number.isFinite(spent) ? Math.max(0, Math.min(86400, Math.round(spent))) : 0;
 
-    // Calculate XP based on score
-    const rewardXp = Math.round(score); // 1 score = 1 XP
-    
-    // Update progress
-    await prisma.user.update({
-      where: { id: userId },
-      data: { xp: { increment: rewardXp } }
-    });
+    const quiz = await prisma.quiz.findUnique({ where: { id }, include: { questions: true } });
+    if (!quiz) return res.status(404).json({ error: 'Quiz not found' });
+
+    // Har bir toʻgʻri javob = 10 ball
+    let correct = 0;
+    for (const q of quiz.questions) if (answers[q.id] === q.correctAnswer) correct += 1;
+    const score = correct * 10;
+
+    const prev = await prisma.quizAttempt.findMany({ where: { userId, quizId: id }, select: { score: true } });
+    const best = prev.reduce((m, a) => Math.max(m, a.score), 0);
+    const rewardXp = Math.max(0, score - best);
 
     const attempt = await prisma.quizAttempt.create({
-      data: {
-        userId,
-        quizId: id,
-        score,
-        timeSpentSeconds,
-        answers: JSON.stringify(answers)
-      }
+      data: { userId, quizId: id, score, timeSpentSeconds, answers: JSON.stringify(answers) }
     });
+    const progress = await grantXp(userId, rewardXp);
 
-    res.json({ success: true, attempt, rewardXp });
+    res.json({ success: true, attempt, score, correct, total: quiz.questions.length, rewardXp, progress });
   } catch (error) {
+    console.error('Quiz submit error:', (error as Error).message);
     res.status(500).json({ error: 'Failed to submit quiz' });
   }
 });

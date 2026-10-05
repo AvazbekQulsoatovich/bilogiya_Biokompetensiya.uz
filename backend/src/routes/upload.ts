@@ -1,13 +1,22 @@
 import { Router } from 'express';
 import multer from 'multer';
 import path from 'path';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../lib/prisma';
 import fs from 'fs';
+import { authenticate, authorize } from '../middleware/auth';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // Configure storage
+const ALLOWED: Record<string, string[]> = {
+  '.jpg': ['image/jpeg'], '.jpeg': ['image/jpeg'], '.png': ['image/png'], '.webp': ['image/webp'], '.gif': ['image/gif'],
+  '.pdf': ['application/pdf'], '.mp4': ['video/mp4'], '.webm': ['video/webm'],
+  '.doc': ['application/msword'],
+  '.docx': ['application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+  '.pptx': ['application/vnd.openxmlformats-officedocument.presentationml.presentation'],
+  '.xlsx': ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+};
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const uploadDir = path.join(__dirname, '../../uploads');
@@ -18,17 +27,26 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
+    cb(null, uniqueSuffix + path.extname(file.originalname).toLowerCase());
   }
 });
 
-const upload = multer({ 
+const upload = multer({
   storage,
-  limits: { fileSize: 500 * 1024 * 1024 } // 500MB limit for textbooks/videos
+  limits: { fileSize: 200 * 1024 * 1024, files: 1 },
+  // Faqat ruxsat etilgan turlar (HTML/JS/exe va h.k. yuklanmaydi)
+  fileFilter: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    const ok = !!ALLOWED[ext] && ALLOWED[ext].includes(file.mimetype);
+    if (ok) cb(null, true);
+    else cb(new Error('Bu turdagi fayl ruxsat etilmagan.') as any, false);
+  },
 });
 
+const guard = [authenticate, authorize(['SUPER_ADMIN'])];
+
 // Generic file upload (for books, avatars, etc.)
-router.post('/file', upload.single('file'), (req, res) => {
+router.post('/file', ...guard, upload.single('file'), (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
@@ -42,7 +60,7 @@ router.post('/file', upload.single('file'), (req, res) => {
 });
 
 // Upload attachment to a lesson
-router.post('/:lessonId', upload.single('file'), async (req, res) => {
+router.post('/:lessonId', ...guard, upload.single('file'), async (req, res) => {
   try {
     const lessonId = req.params.lessonId as string;
     
@@ -82,7 +100,7 @@ router.post('/:lessonId', upload.single('file'), async (req, res) => {
 });
 
 // Upload main video to a lesson
-router.post('/video/:lessonId', upload.single('file'), async (req, res) => {
+router.post('/video/:lessonId', ...guard, upload.single('file'), async (req, res) => {
   try {
     const lessonId = req.params.lessonId as string;
     
@@ -134,7 +152,7 @@ router.get('/:lessonId', async (req, res) => {
 });
 
 // Delete attachment
-router.delete('/attachment/:id', async (req, res) => {
+router.delete('/attachment/:id', ...guard, async (req, res) => {
   try {
     const id = req.params.id as string;
     
@@ -147,7 +165,7 @@ router.delete('/attachment/:id', async (req, res) => {
     }
 
     // Delete file
-    const filePath = path.join(__dirname, '../..', attachment.fileUrl);
+    const filePath = path.join(__dirname, '../..', 'uploads', path.basename(attachment.fileUrl));
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }

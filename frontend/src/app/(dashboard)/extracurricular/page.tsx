@@ -128,10 +128,10 @@ export default function ExtracurricularPage() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: Math.min(i, 9) * 0.04 }}
-              className="card card-hover flex flex-col p-6"
+              className="card card-hover group flex flex-col p-6"
             >
               <div className="flex items-center justify-between mb-4">
-                <span className="w-10 h-10 rounded-xl bg-brand-soft text-brand flex items-center justify-center">
+                <span className="tile w-12 h-12">
                   <ListTodo className="w-5 h-5" />
                 </span>
                 <span className="chip chip-accent">★ +{task.xpReward} XP</span>

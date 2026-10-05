@@ -27,6 +27,7 @@ model User {
   achievements UserAchievement[]
   LabResult    LabResult[]
   extracurricularSubmissions ExtracurricularTaskSubmission[]
+  completions  Completion[]
 }
 
 model Course {
@@ -233,4 +234,16 @@ model Book {
   pdfUrl    String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Completion {
+  id        String   @id @default(uuid())
+  userId    String
+  kind      String
+  refId     String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, kind, refId])
 }

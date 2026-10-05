@@ -38,7 +38,7 @@ export default function GlossaryPage() {
   );
 
   return (
-    <Page narrow>
+    <Page>
       <PageHeader
         icon={Library}
         eyebrow="Oʻrganish"
@@ -46,7 +46,7 @@ export default function GlossaryPage() {
         subtitle={`${terms.length || ""} ${terms.length ? "ta atama va ularning" : "Atamalar va"} ilmiy izohlari. Harf boʻyicha tanlang yoki qidiring.`}
       />
 
-      <div className="relative mb-5">
+      <div className="relative mb-5 max-w-2xl">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
         <input
           type="search"
@@ -85,16 +85,16 @@ export default function GlossaryPage() {
       ) : filtered.length === 0 ? (
         <EmptyState title="Atama topilmadi" text="Qidiruv soʻzini oʻzgartirib koʻring." />
       ) : (
-        <dl className="grid gap-3">
+        <dl className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4">
           {filtered.map((t, i) => (
             <motion.div
               key={t.id}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: Math.min(i, 10) * 0.025 }}
-              className="card px-6 py-5 grid grid-cols-1 sm:grid-cols-[13rem_1fr] gap-x-6 gap-y-1"
+              className="card card-hover accent-bar pl-7 pr-6 py-5 flex flex-col gap-1.5"
             >
-              <dt className="font-display text-lg font-semibold text-brand">{t.term}</dt>
+              <dt className="font-display text-xl font-semibold text-brand">{t.term}</dt>
               <dd className="text-ink-2 leading-relaxed">{t.definition}</dd>
             </motion.div>
           ))}

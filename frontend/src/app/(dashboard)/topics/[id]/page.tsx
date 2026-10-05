@@ -59,9 +59,9 @@ export default function TopicDetailPage() {
       <BackButton onClick={() => router.back()}>Orqaga qaytish</BackButton>
 
       <motion.article initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card overflow-hidden">
-        <header className="px-6 md:px-10 pt-8 pb-7 border-b border-line bg-gradient-to-b from-brand-soft/60 to-transparent">
-          <span className="chip chip-brand mb-4">{topic.course?.title || "Biologiya"}</span>
-          <h1 className="font-display text-3xl md:text-4xl font-semibold leading-tight">{topic.title}</h1>
+        <header className="page-hero !rounded-none !border-0 !border-b !border-line px-6 md:px-10 pt-8 pb-7">
+          <span className="chip chip-brand mb-4 relative z-[1]">{topic.course?.title || "Biologiya"}</span>
+          <h1 className="relative z-[1] font-display text-3xl md:text-4xl font-semibold leading-tight text-balance">{topic.title}</h1>
         </header>
 
         <div className="px-6 md:px-10 py-8">
@@ -87,7 +87,20 @@ export default function TopicDetailPage() {
           )}
 
           <div className="md">
-            <ReactMarkdown>{topic.contentMd || "*Maʼlumot kiritilmagan*"}</ReactMarkdown>
+            <ReactMarkdown
+              components={{
+                img: ({ src: raw, alt }) => {
+                  // JPEG2000 (.jpx) brauzerda ochilmaydi — oldindan JPEG nusxasi yaratilgan
+                  const src = typeof raw === "string" ? raw.replace(/\.jpx$/i, ".jpx.jpg") : undefined;
+                  return (
+                  <a href={src} target="_blank" rel="noreferrer" title="Katta ochish">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={src} alt={alt || "Darslik sahifasi"} loading="lazy" decoding="async" />
+                  </a>
+                  );
+                },
+              }}
+            >{topic.contentMd || "*Maʼlumot kiritilmagan*"}</ReactMarkdown>
           </div>
 
           {topic.attachments?.length > 0 && (

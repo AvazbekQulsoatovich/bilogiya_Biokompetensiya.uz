@@ -66,13 +66,13 @@ export default function FactsPage() {
                 initial={{ opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: Math.min(i % 9, 8) * 0.04 }}
-                className="card card-hover flex flex-col p-6"
+                className={`${fact.category === "ZOOLOGY" ? "tone-amber" : "tone-green"} card card-hover relative flex flex-col p-6 pt-7 overflow-hidden`}
               >
                 <div className="flex items-center justify-between mb-4">
                   <span className="chip chip-brand">
                     <Icon className="w-3.5 h-3.5" /> {cat.label}
                   </span>
-                  <span className="text-xs font-semibold text-muted tabular-nums">№ {i + 1}</span>
+                  <span className="font-display text-3xl font-semibold text-brand/25 tabular-nums leading-none">{String(i + 1).padStart(2, "0")}</span>
                 </div>
                 <h2 className="font-display text-xl font-semibold leading-snug mb-2.5">{fact.title}</h2>
                 <p className="text-ink-2 text-[0.95rem] leading-relaxed whitespace-pre-wrap">{fact.content}</p>

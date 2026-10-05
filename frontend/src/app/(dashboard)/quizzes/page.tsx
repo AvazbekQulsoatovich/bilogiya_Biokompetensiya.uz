@@ -92,20 +92,30 @@ export default function QuizzesPage() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: (i % 9) * 0.03 }}
-              className="card card-hover flex flex-col p-6"
+              className="h-full"
             >
-              <div className="flex items-center justify-between mb-4">
-                <span className="chip">
-                  <Layers className="w-3.5 h-3.5" /> {n} savol
-                </span>
-                <span className="chip chip-accent">★ {n * 10} XP gacha</span>
-              </div>
-              <h3 className="font-display text-lg font-semibold leading-snug line-clamp-2 min-h-[3.2rem]">{quiz.title}</h3>
-              <p className="text-muted text-sm mt-2 mb-5 flex-1">
-                Mavzu boʻyicha test ishlab, oʻzlashtirgan bilimlaringizni tekshiring.
-              </p>
-              <Link href={`/quizzes/${quiz.id}`} className="btn btn-primary w-full">
-                <Play className="w-4 h-4 fill-current" /> Testni boshlash
+              <Link href={`/quizzes/${quiz.id}`} className="card card-hover group relative flex h-full flex-col p-6 overflow-hidden">
+                <div
+                  className="absolute -right-12 -top-12 w-40 h-40 rounded-full opacity-70 group-hover:opacity-100 transition-opacity"
+                  style={{ background: "radial-gradient(closest-side, color-mix(in srgb, var(--brand) 16%, transparent), transparent)" }}
+                  aria-hidden
+                />
+                <div className="relative flex items-center justify-between mb-5">
+                  <span className="tile w-11 h-11 font-display text-lg font-semibold">{i + 1}</span>
+                  <span className="chip chip-accent">★ {n * 10} XP gacha</span>
+                </div>
+                <h3 className="relative font-display text-lg font-semibold leading-snug line-clamp-2 min-h-[3.2rem] text-balance">{quiz.title}</h3>
+                <p className="relative text-muted text-sm mt-2 mb-5 flex-1">
+                  Mavzu boʻyicha test ishlab, oʻzlashtirgan bilimlaringizni tekshiring.
+                </p>
+                <div className="relative flex items-center justify-between pt-4 border-t border-line">
+                  <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted">
+                    <Layers className="w-4 h-4" /> {n} savol
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 text-sm font-bold text-brand">
+                    Boshlash <Play className="w-3.5 h-3.5 fill-current transition-transform group-hover:translate-x-0.5" />
+                  </span>
+                </div>
               </Link>
             </motion.div>
           );

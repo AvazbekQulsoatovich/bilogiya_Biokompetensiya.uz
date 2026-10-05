@@ -57,7 +57,15 @@ export default function BooksPage() {
                     className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-500"
                   />
                 ) : (
-                  <BookMarked className="w-14 h-14 text-line-strong" strokeWidth={1.4} />
+                  <div className="absolute inset-0 flex flex-col justify-between p-6 text-white bg-gradient-to-br from-[var(--brand)] to-[var(--brand-strong)]">
+                    <BookMarked className="w-9 h-9 opacity-80" strokeWidth={1.6} />
+                    <div>
+                      <p className="font-display text-2xl font-semibold leading-tight text-balance">{book.title}</p>
+                      {book.author && <p className="text-white/75 text-sm mt-2">{book.author}</p>}
+                    </div>
+                    <div className="absolute -right-10 -bottom-10 w-44 h-44 rounded-full bg-white/10" aria-hidden />
+                    <div className="absolute right-6 top-6 w-16 h-16 rounded-full border-2 border-white/20" aria-hidden />
+                  </div>
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-6">
                   <a href={book.pdfUrl} target="_blank" rel="noreferrer" className="btn btn-primary">

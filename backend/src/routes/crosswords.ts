@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../lib/prisma';
 import { authenticate, authorize, AuthRequest } from '../middleware/auth';
+import { grantXp } from '../lib/xp';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // Get all crosswords
 router.get('/', async (req, res) => {
@@ -53,22 +53,22 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Submit crossword for XP
+// Krossvord yakuni: XP har bir foydalanuvchiga faqat bir marta
 router.post('/:id/submit', authenticate, async (req: AuthRequest, res) => {
   try {
-    const userId = req.user?.id;
-    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+    const userId = req.user.id as string;
+    const refId = req.params.id as string;
+    const found = await prisma.crossword.findUnique({ where: { id: refId }, select: { id: true } });
+    if (!found) return res.status(404).json({ error: 'Crossword not found' });
 
-    // Flat 50 XP for completing a crossword
-    const rewardXp = 50;
-    
-    await prisma.user.update({
-      where: { id: userId },
-      data: { xp: { increment: rewardXp } }
-    });
+    const done = await prisma.completion.findUnique({ where: { userId_kind_refId: { userId, kind: 'CROSSWORD', refId } } });
+    if (done) return res.json({ success: true, rewardXp: 0, repeat: true });
 
-    res.json({ success: true, rewardXp });
+    await prisma.completion.create({ data: { userId, kind: 'CROSSWORD', refId } });
+    const progress = await grantXp(userId, 50);
+    res.json({ success: true, rewardXp: 50, progress });
   } catch (error) {
+    console.error('Crossword submit error:', (error as Error).message);
     res.status(500).json({ error: 'Failed to complete crossword' });
   }
 });

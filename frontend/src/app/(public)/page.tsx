@@ -90,7 +90,7 @@ const FEATURES = [
     text: "Atamalarni oʻynab yodlash: xotira, soʻz topish, “toʻgʻri yoki notoʻgʻri”.",
     icon: Gamepad2,
     href: "/games",
-    span: "lg:col-span-2",
+    span: "lg:col-span-3",
   },
 ];
 

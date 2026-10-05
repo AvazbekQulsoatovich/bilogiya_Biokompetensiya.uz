@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { authenticate, authorize } from '../middleware/auth';
+import { prisma } from '../lib/prisma';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // Get all glossary terms
 router.get('/', async (req, res) => {
@@ -30,7 +30,7 @@ router.get('/', async (req, res) => {
 });
 
 // Create a new term
-router.post('/', async (req, res) => {
+router.post('/', authenticate, authorize(['SUPER_ADMIN']), async (req, res) => {
   try {
     const { term, definition, imageUrl } = req.body;
     if (!term || !definition) {
@@ -47,11 +47,11 @@ router.post('/', async (req, res) => {
 });
 
 // Update a term
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticate, authorize(['SUPER_ADMIN']), async (req, res) => {
   try {
     const { term, definition, imageUrl } = req.body;
     const entry = await prisma.glossary.update({
-      where: { id: req.params.id },
+      where: { id: req.params.id as string },
       data: { term, definition, imageUrl }
     });
     res.json(entry);
@@ -61,9 +61,9 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete a term
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticate, authorize(['SUPER_ADMIN']), async (req, res) => {
   try {
-    await prisma.glossary.delete({ where: { id: req.params.id } });
+    await prisma.glossary.delete({ where: { id: req.params.id as string } });
     res.json({ message: 'Deleted' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete glossary term' });

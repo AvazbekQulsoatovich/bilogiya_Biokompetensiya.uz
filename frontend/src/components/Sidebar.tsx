@@ -8,8 +8,8 @@ import {
   Menu, X, FileText, BookMarked, LayoutDashboard, Grid3x3, ArrowLeft,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Logo } from "./Logo";
 import { ThemeToggle } from "./ThemeToggle";
+import { SECTION_TONE } from "./tones";
 
 const groups = [
   {
@@ -48,37 +48,42 @@ export function Sidebar() {
 
   const content = (
     <div className="flex flex-col h-full">
-      <div className="px-5 pt-6 pb-5">
-        <div className="rounded-2xl bg-white border border-line px-4 py-3 flex items-center justify-center shadow-[var(--shadow-sm)]">
-          <Logo variant="full" size={64} />
-        </div>
-      </div>
+      <Link href="/" className="mx-4 mt-5 mb-4 flex items-center gap-3 rounded-2xl border border-line bg-surface-2/60 p-3 hover:border-line-strong transition-colors" aria-label="Biokompetensiya — bosh sahifa">
+        <span className="shrink-0 w-11 h-11 rounded-xl bg-white border border-line flex items-center justify-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-mark.png" alt="" width={30} height={30} style={{ height: 30, width: "auto" }} />
+        </span>
+        <span className="min-w-0 leading-tight">
+          <span className="block font-display text-[1.05rem] font-semibold text-ink truncate">Biokompetensiya</span>
+          <span className="block text-[0.7rem] font-semibold tracking-wide text-muted">5–6-sinf biologiya · .uz</span>
+        </span>
+      </Link>
 
       <nav className="flex-1 overflow-y-auto px-3 pb-4" aria-label="Asosiy menyu">
         {groups.map((g) => (
-          <div key={g.label} className="mb-5">
-            <p className="eyebrow px-3 mb-2 !text-muted">{g.label}</p>
+          <div key={g.label} className="mb-4">
+            <p className="px-3 mb-1.5 text-[0.68rem] font-bold uppercase tracking-[0.16em] text-muted">{g.label}</p>
             <ul className="space-y-0.5">
               {g.items.map((item) => {
                 const active = pathname === item.href || pathname.startsWith(item.href + "/");
                 const Icon = item.icon;
+                const tone = SECTION_TONE[item.href.slice(1)] ?? "green";
                 return (
-                  <li key={item.href}>
+                  <li key={item.href} className={`tone-${tone}`}>
                     <Link
                       href={item.href}
                       aria-current={active ? "page" : undefined}
-                      className={`relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-[0.92rem] font-semibold transition-colors ${
+                      className={`group relative flex items-center gap-3 px-2.5 py-2 rounded-xl text-[0.92rem] font-semibold transition-colors ${
                         active ? "bg-brand-soft text-brand" : "text-ink-2 hover:bg-surface-2 hover:text-ink"
                       }`}
                     >
-                      {active && (
-                        <motion.span
-                          layoutId="nav-active"
-                          className="absolute left-0 top-2 bottom-2 w-1 rounded-full bg-brand"
-                          transition={{ type: "spring", stiffness: 400, damping: 32 }}
-                        />
-                      )}
-                      <Icon className="w-[18px] h-[18px] shrink-0" strokeWidth={active ? 2.2 : 1.8} />
+                      <span
+                        className={`shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                          active ? "bg-brand text-brand-ink shadow-[0_6px_14px_-6px_var(--brand)]" : "bg-brand-soft text-brand group-hover:bg-brand group-hover:text-brand-ink"
+                        }`}
+                      >
+                        <Icon className="w-[17px] h-[17px]" strokeWidth={2} />
+                      </span>
                       <span className="truncate">{item.name}</span>
                     </Link>
                   </li>
@@ -111,9 +116,13 @@ export function Sidebar() {
         >
           {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
-        <div className="bg-white rounded-lg px-2 py-0.5 border border-line">
-          <Logo variant="mark" size={30} />
-        </div>
+        <Link href="/" className="flex items-center gap-2" aria-label="Bosh sahifa">
+          <span className="bg-white rounded-lg p-1 border border-line">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-mark.png" alt="" width={26} height={26} style={{ height: 26, width: "auto" }} />
+          </span>
+          <span className="font-display font-semibold text-ink">Biokompetensiya</span>
+        </Link>
         <ThemeToggle />
       </div>
 
@@ -130,7 +139,7 @@ export function Sidebar() {
       </AnimatePresence>
 
       <aside
-        className={`print-hide w-72 h-screen fixed left-0 top-0 z-50 bg-surface border-r border-line transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        className={`print-hide w-72 h-screen fixed left-0 top-0 z-50 bg-surface border-r border-line shadow-[var(--shadow-sm)] transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
           isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         }`}
       >

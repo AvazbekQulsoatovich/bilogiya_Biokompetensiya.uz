@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { authenticate, authorize } from '../middleware/auth';
+import { prisma } from '../lib/prisma';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // Get all books
 router.get('/', async (req, res) => {
@@ -16,9 +16,7 @@ router.get('/', async (req, res) => {
 });
 
 // Create a new book
-router.post('/', async (req: any, res) => {
-  console.log('--- POST /api/books ---');
-  console.log('Body:', req.body);
+router.post('/', authenticate, authorize(['SUPER_ADMIN']), async (req: any, res) => {
   try {
     const { title, author, coverUrl, pdfUrl } = req.body;
     if (!title || !pdfUrl) {
@@ -33,11 +31,11 @@ router.post('/', async (req: any, res) => {
 });
 
 // Update a book
-router.put('/:id', async (req: any, res) => {
+router.put('/:id', authenticate, authorize(['SUPER_ADMIN']), async (req: any, res) => {
   try {
     const { title, author, coverUrl, pdfUrl } = req.body;
     const book = await prisma.book.update({
-      where: { id: req.params.id },
+      where: { id: req.params.id as string },
       data: { title, author, coverUrl, pdfUrl }
     });
     res.json(book);
@@ -48,9 +46,9 @@ router.put('/:id', async (req: any, res) => {
 });
 
 // Delete a book
-router.delete('/:id', async (req: any, res) => {
+router.delete('/:id', authenticate, authorize(['SUPER_ADMIN']), async (req: any, res) => {
   try {
-    await prisma.book.delete({ where: { id: req.params.id } });
+    await prisma.book.delete({ where: { id: req.params.id as string } });
     res.json({ message: 'Book deleted successfully' });
   } catch (error) {
     console.error('Delete book error:', error);

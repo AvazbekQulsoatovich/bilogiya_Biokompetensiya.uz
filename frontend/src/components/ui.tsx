@@ -2,8 +2,10 @@
 
 import { useEffect, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, SearchX } from "lucide-react";
+import { X, SearchX, Search } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { toneForPath } from "./tones";
 
 /* ───────── Sahifa sarlavhasi ───────── */
 export function PageHeader({
@@ -22,32 +24,60 @@ export function PageHeader({
   children?: ReactNode;
 }) {
   return (
-    <header className="mb-8 md:mb-10">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-5">
-        <div className="flex items-start gap-4 min-w-0">
+    <header className="page-hero mb-8 md:mb-10 px-5 py-6 sm:px-8 sm:py-8 md:px-10 md:py-9">
+      <div className="relative z-[1] flex flex-col md:flex-row md:items-end justify-between gap-5">
+        <div className="flex items-start gap-4 sm:gap-5 min-w-0">
           {Icon && (
-            <div className="shrink-0 w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-brand-soft text-brand flex items-center justify-center">
-              <Icon className="w-6 h-6 md:w-7 md:h-7" strokeWidth={1.8} />
+            <div className="hero-icon shrink-0 w-14 h-14 md:w-16 md:h-16 rounded-[1.25rem] flex items-center justify-center">
+              <Icon className="w-7 h-7 md:w-8 md:h-8" strokeWidth={1.8} />
             </div>
           )}
           <div className="min-w-0">
             {eyebrow && <p className="eyebrow mb-1.5">{eyebrow}</p>}
-            <h1 className="font-display text-3xl md:text-4xl font-semibold text-ink leading-tight">{title}</h1>
-            {subtitle && <p className="text-muted mt-2 max-w-2xl text-[0.98rem]">{subtitle}</p>}
+            <h1 className="font-display text-[1.75rem] sm:text-3xl md:text-[2.5rem] font-semibold text-ink leading-[1.12] text-balance">{title}</h1>
+            {subtitle && <p className="text-muted mt-2.5 max-w-2xl text-[0.98rem] leading-relaxed">{subtitle}</p>}
           </div>
         </div>
         {actions && <div className="flex items-center gap-3 shrink-0">{actions}</div>}
       </div>
-      {children && <div className="mt-6">{children}</div>}
+      {children && <div className="relative z-[1] mt-6">{children}</div>}
     </header>
   );
 }
 
 /* ───────── Sahifa konteyneri ───────── */
 export function Page({ children, narrow = false }: { children: ReactNode; narrow?: boolean }) {
+  const tone = toneForPath(usePathname());
   return (
-    <div className={`w-full mx-auto px-4 sm:px-6 lg:px-10 py-6 md:py-10 ${narrow ? "max-w-4xl" : "max-w-7xl"}`}>
+    <div className={`tone-${tone} page-in w-full mx-auto px-4 sm:px-6 lg:px-10 py-6 md:py-10 ${narrow ? "max-w-4xl" : "max-w-7xl"}`}>
       {children}
+    </div>
+  );
+}
+
+/* ───────── Qidiruv maydoni ───────── */
+export function SearchInput({
+  value,
+  onChange,
+  placeholder,
+  className = "",
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+  className?: string;
+}) {
+  return (
+    <div className={`search-wrap ${className}`}>
+      <Search className="w-[18px] h-[18px]" aria-hidden />
+      <input
+        type="search"
+        className="input"
+        placeholder={placeholder}
+        aria-label={placeholder}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
     </div>
   );
 }

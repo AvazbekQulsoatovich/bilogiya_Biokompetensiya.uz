@@ -116,18 +116,21 @@ export default function TopicsPage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: Math.min(i, 8) * 0.03 }}
-              className="card p-6"
+              className="card card-hover group p-5 sm:p-6"
             >
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <Link href={`/topics/${topic.id}`} className="group inline-block">
-                    <h2 className="font-display text-xl font-semibold group-hover:text-brand transition-colors">
-                      {topic.title}
-                    </h2>
-                  </Link>
-                  <p className="text-sm text-muted mt-1">Qoʻshilgan sana: {formatDateUz(topic.createdAt)}</p>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-start gap-4 min-w-0">
+                  <span className="tile shrink-0 w-12 h-12 font-display text-lg font-semibold" aria-hidden>{i + 1}</span>
+                  <div className="min-w-0">
+                    <Link href={`/topics/${topic.id}`} className="inline-block">
+                      <h2 className="font-display text-xl font-semibold group-hover:text-brand transition-colors text-balance">
+                        {topic.title}
+                      </h2>
+                    </Link>
+                    <p className="text-sm text-muted mt-1">Qoʻshilgan sana: {formatDateUz(topic.createdAt)}</p>
+                  </div>
                 </div>
-                <Link href={`/topics/${topic.id}`} className="btn btn-soft btn-sm shrink-0 self-start">
+                <Link href={`/topics/${topic.id}`} className="btn btn-soft btn-sm shrink-0 self-start sm:self-center">
                   Oʻqish <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>

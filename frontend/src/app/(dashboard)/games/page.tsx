@@ -188,17 +188,22 @@ export default function GamesPage() {
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}
-                  className="card card-hover flex flex-col p-7"
+                  className="card card-hover group relative flex flex-col p-7 overflow-hidden"
                 >
-                  <div className="flex items-center justify-between mb-5">
-                    <span className="w-12 h-12 rounded-2xl bg-brand-soft text-brand flex items-center justify-center">
-                      <Icon className="w-6 h-6" strokeWidth={1.8} />
+                  <div
+                    className="absolute -right-12 -top-12 w-44 h-44 rounded-full opacity-70 group-hover:opacity-100 transition-opacity"
+                    style={{ background: "radial-gradient(closest-side, color-mix(in srgb, var(--brand) 16%, transparent), transparent)" }}
+                    aria-hidden
+                  />
+                  <div className="relative flex items-center justify-between mb-5">
+                    <span className="tile w-14 h-14">
+                      <Icon className="w-7 h-7" strokeWidth={1.8} />
                     </span>
                     <span className="chip">{meta.label}</span>
                   </div>
-                  <h2 className="font-display text-xl font-semibold leading-snug mb-2">{game.title}</h2>
-                  <p className="text-muted flex-1 mb-6">{game.description}</p>
-                  <button onClick={() => startGame(game)} className="btn btn-primary w-full">
+                  <h2 className="relative font-display text-xl font-semibold leading-snug mb-2 text-balance">{game.title}</h2>
+                  <p className="relative text-muted flex-1 mb-6">{game.description}</p>
+                  <button onClick={() => startGame(game)} className="relative btn btn-primary w-full">
                     <Play className="w-4 h-4 fill-current" /> Oʻynash
                   </button>
                 </motion.div>
@@ -286,10 +291,10 @@ export default function GamesPage() {
                       style={{ transformStyle: "preserve-3d" }}
                     >
                       <div
-                        className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#0b7a5c] to-[#075c45] flex items-center justify-center shadow-[var(--shadow-sm)]"
+                        className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[var(--brand)] to-[var(--brand-strong)] flex items-center justify-center shadow-[var(--shadow-sm)]"
                         style={{ backfaceVisibility: "hidden" }}
                       >
-                        <Brain className="w-8 h-8 text-white/50" />
+                        <Brain className="w-8 h-8 text-[var(--brand-ink)] opacity-50" />
                       </div>
                       <div
                         className={`absolute inset-0 rounded-2xl border-2 flex flex-col items-center justify-center p-1.5 ${

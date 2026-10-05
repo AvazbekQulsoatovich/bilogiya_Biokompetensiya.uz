@@ -1,10 +1,9 @@
-import { Router, Request } from 'express';
-import jwt from 'jsonwebtoken';
-import { PrismaClient } from '@prisma/client';
-import { authenticate, authorize, AuthRequest } from '../middleware/auth';
+import { Router } from 'express';
+import { prisma } from '../lib/prisma';
+import { authenticate, authorize, optionalAuth, AuthRequest } from '../middleware/auth';
+import { grantXp } from '../lib/xp';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // Get all extracurricular tasks
 router.get('/', async (req, res) => {
@@ -47,59 +46,33 @@ router.post('/', authenticate, authorize(['SUPER_ADMIN']), async (req, res) => {
   }
 });
 
-// Submit a task and check answer
-router.post('/:id/submit', async (req: Request, res) => {
+// Topshiriqni topshirish. XP faqat tizimga kirgan foydalanuvchiga va bir marta beriladi.
+router.post('/:id/submit', optionalAuth, async (req: AuthRequest, res) => {
   try {
     const id = req.params.id as string;
-    const { content } = req.body;
-    
-    // Optional auth extraction since it's not strictly using authenticate middleware
-    let userId: string | undefined;
-    const authHeader = req.headers.authorization;
-    if (authHeader) {
-      const token = authHeader.split(' ')[1];
-      if (token) {
-        try {
-          const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret') as any;
-          userId = decoded.id;
-        } catch(e) {}
-      }
-    }
+    const content = typeof req.body?.content === 'string' ? req.body.content.slice(0, 5000) : '';
+    const userId: string | undefined = req.user?.id;
 
     const task = await prisma.extracurricularTask.findUnique({ where: { id } });
     if (!task) return res.status(404).json({ error: 'Task not found' });
 
-    // Basic validation
-    const answer = (content || '').trim();
+    const answer = content.trim();
     if (answer.length < 15) {
-      return res.status(400).json({ error: "Javobingiz juda qisqa yoki noto'g'ri. Iltimos to'liqroq yozing." });
+      return res.status(400).json({ error: "Javobingiz juda qisqa. Iltimos, toʻliqroq yozing." });
     }
-    const words = answer.split(/\s+/);
-    if (words.length < 3) {
-      return res.status(400).json({ error: "Iltimos, haqiqiy ma'noli javob yozing (kamida 3-4 ta so'zdan iborat bo'lsin)." });
-    }
-
-    if (userId) {
-      // Update progress for logged in users
-      await prisma.user.update({
-        where: { id: userId },
-        data: { xp: { increment: task.xpReward } }
-      });
-
-      await prisma.extracurricularTaskSubmission.create({
-        data: {
-          userId,
-          taskId: id,
-          content: content || 'Bajarildi',
-          status: 'COMPLETED'
-        }
-      });
+    if (answer.split(/\s+/).length < 3) {
+      return res.status(400).json({ error: "Iltimos, haqiqiy maʼnoli javob yozing (kamida 3-4 ta soʻz)." });
     }
 
-    res.json({ success: true, rewardXp: task.xpReward });
-  } catch (error: any) {
-    console.error('Submit Extracurricular Error:', error);
-    res.status(500).json({ error: 'Failed to submit task: ' + error.message });
+    if (!userId) return res.json({ success: true, rewardXp: 0, guest: true });
+
+    const already = await prisma.extracurricularTaskSubmission.findFirst({ where: { userId, taskId: id } });
+    await prisma.extracurricularTaskSubmission.create({ data: { userId, taskId: id, content: answer, status: 'COMPLETED' } });
+    const progress = await grantXp(userId, already ? 0 : task.xpReward);
+    res.json({ success: true, rewardXp: already ? 0 : task.xpReward, repeat: !!already, progress });
+  } catch (error) {
+    console.error('Submit extracurricular error:', (error as Error).message);
+    res.status(500).json({ error: "Topshiriqni yuborib boʻlmadi." });
   }
 });
 

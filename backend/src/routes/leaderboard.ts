@@ -1,25 +1,25 @@
 import { Router } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../lib/prisma';
 
 const router = Router();
-const prisma = new PrismaClient();
 
-// Get leaderboard
+// Reyting: eng koʻp XP toʻplaganlar (familiyaning faqat bosh harfi koʻrsatiladi)
 router.get('/', async (req, res) => {
   try {
-    const topUsers = await prisma.user.findMany({
-      take: 10,
-      orderBy: { xp: 'desc' },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        xp: true,
-        level: true
-      }
+    const top = await prisma.user.findMany({
+      where: { role: 'STUDENT', xp: { gt: 0 } },
+      take: 20,
+      orderBy: [{ xp: 'desc' }, { createdAt: 'asc' }],
+      select: { id: true, firstName: true, lastName: true, avatarUrl: true, xp: true, level: true },
     });
-
-    res.json(topUsers);
+    res.json(top.map((u, i) => ({
+      id: u.id,
+      rank: i + 1,
+      name: `${u.firstName} ${u.lastName && u.lastName !== '-' ? u.lastName[0] + '.' : ''}`.trim(),
+      avatarUrl: u.avatarUrl,
+      xp: u.xp,
+      level: u.level,
+    })));
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch leaderboard' });
   }

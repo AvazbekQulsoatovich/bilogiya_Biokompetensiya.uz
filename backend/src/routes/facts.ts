@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { authenticate, authorize } from '../middleware/auth';
+import { prisma } from '../lib/prisma';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // Get all facts
 router.get('/', async (req, res) => {
@@ -27,7 +27,7 @@ router.get('/', async (req, res) => {
 });
 
 // Create a new fact
-router.post('/', async (req, res) => {
+router.post('/', authenticate, authorize(['SUPER_ADMIN']), async (req, res) => {
   try {
     const { title, content, category, imageUrl } = req.body;
     if (!title || !content) {
@@ -44,11 +44,11 @@ router.post('/', async (req, res) => {
 });
 
 // Update a fact
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticate, authorize(['SUPER_ADMIN']), async (req, res) => {
   try {
     const { title, content, category, imageUrl } = req.body;
     const fact = await prisma.fact.update({
-      where: { id: req.params.id },
+      where: { id: req.params.id as string },
       data: { title, content, category, imageUrl }
     });
     res.json(fact);
@@ -58,9 +58,9 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete a fact
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticate, authorize(['SUPER_ADMIN']), async (req, res) => {
   try {
-    await prisma.fact.delete({ where: { id: req.params.id } });
+    await prisma.fact.delete({ where: { id: req.params.id as string } });
     res.json({ message: 'Deleted' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete fact' });
